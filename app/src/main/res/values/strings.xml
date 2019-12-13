@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">QKMeshDemo</string>
+
+    <string name="add">add</string>
+    <string name="get_state">Get State</string>
+    <string name="ttl">TTL</string>
+    <string name="on_off">ON / OFF</string>
+    <string name="reset">Reset</string>
+
+    <string name="connecting">connecting</string>
+    <string name="connect_failed">connect failed</string>
+    <string name="connect_success">connect success</string>
+</resources>

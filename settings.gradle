@@ -1,0 +1,2 @@
+include ':app', ':meshsdk', ':meshprovisioner'
+rootProject.name='QKMeshDemo'

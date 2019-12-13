@@ -1,0 +1,208 @@
+package qk.sdk.mesh.meshsdk.service
+
+import android.content.Context
+import android.content.Intent
+import android.os.IBinder
+import android.util.Log
+import androidx.lifecycle.LifecycleService
+import androidx.lifecycle.Observer
+import no.nordicsemi.android.meshprovisioner.*
+import no.nordicsemi.android.meshprovisioner.transport.Element
+import no.nordicsemi.android.meshprovisioner.transport.MeshMessage
+import no.nordicsemi.android.meshprovisioner.transport.MeshModel
+import no.nordicsemi.android.meshprovisioner.transport.ProvisionedMeshNode
+import no.nordicsemi.android.meshprovisioner.utils.AuthenticationOOBMethods
+import qk.sdk.mesh.meshsdk.bean.CommonErrorMsg
+import qk.sdk.mesh.meshsdk.bean.ERROR_MSG_UNICAST_UNABLED
+import qk.sdk.mesh.meshsdk.bean.ErrorMsg
+import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
+import qk.sdk.mesh.meshsdk.callbak.*
+import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
+import qk.sdk.mesh.meshsdk.mesh.NrfMeshManager
+import qk.sdk.mesh.meshsdk.util.Utils
+import java.lang.Exception
+import java.util.*
+
+open class BaseMeshService : LifecycleService() {
+    private val TAG = "BaseMeshService"
+    private var isProvisioningStarted = false
+
+    var mNrfMeshManager: NrfMeshManager? = null
+
+    override fun onBind(intent: Intent): IBinder? {
+        super.onBind(intent)
+        return null
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        mNrfMeshManager = NrfMeshManager(this, MeshManagerApi(this), BleMeshManager(this))
+    }
+
+    val PERMISSION_BLUETOOTH_REQUEST_CODE = 1000
+    val PERMISSION_BLUETOOTH_ADMIN_REQUEST_CODE = 1001
+    val PERMISSION_ACCESS_FINE_LOCATION_REQUEST_CODE = 1002
+
+    //开始扫描
+    internal fun startScan(filterUuid: UUID, scanCallback: ScanCallback?) {
+        //获取扫描结果
+        mNrfMeshManager?.getScannerResults()?.observe(this, Observer {
+            Log.e("", "get scanner result:${it.devices.size}")
+            scanCallback?.onScanResult(it.devices, it.updatedDeviceIndex)
+        })
+        // 获取扫描状态结果
+        mNrfMeshManager?.getScannerState()?.observe(this, Observer {
+            Log.e("", "scanner state changed")
+            scanCallback?.onScanStateChange()
+        })
+
+        mNrfMeshManager?.startScan(filterUuid)
+    }
+
+    //停止扫描
+    internal fun stopScan() {
+        mNrfMeshManager?.stopScan()
+    }
+
+    //开始连接
+    internal fun connect(
+        context: Context,
+        device: ExtendedBluetoothDevice,
+        connectToNetwork: Boolean, callback: ConnectCallback?
+    ) {
+        mNrfMeshManager?.isDeviceReady?.observe(this, Observer {
+            if (mNrfMeshManager?.bleMeshManager?.isDeviceReady ?: false) {
+                callback?.onConnect()
+            } else {
+                //todo 日志记录
+            }
+        })
+        mNrfMeshManager?.connectionState?.observe(this, Observer {
+            if (it != null) {
+                if (it.code == 0) {
+                    callback?.onConnectStateChange(it)
+                    Utils.printLog(TAG, it.msg)
+                } else {
+                    callback?.onError(it)
+                }
+            }
+        })
+        mNrfMeshManager?.mExtendedMeshNode?.observe(this, Observer {
+            it?.let {
+                callback?.onSelectMeshNodeChange(it)
+            }
+        })
+        mNrfMeshManager?.connect(context, device, connectToNetwork)
+    }
+
+    internal fun disConnect() {
+        mNrfMeshManager?.unprovisionedMeshNode?.removeObservers(this)
+        mNrfMeshManager?.mExtendedMeshNode?.removeObservers(this)
+        mNrfMeshManager?.connectionState?.removeObservers(this)
+        mNrfMeshManager?.isDeviceReady?.removeObservers(this)
+        mNrfMeshManager?.disconnect()
+        isProvisioningStarted = false
+    }
+
+    internal fun clearMeshCallback() {
+        mNrfMeshManager?.meshMessageLiveData?.removeObservers(this)
+    }
+
+    //开始provisioning
+    internal fun startProvisioning(device: ExtendedBluetoothDevice, callback: BaseCallback) {
+//        isProvisioningStarted = false
+        mNrfMeshManager?.unprovisionedMeshNode?.observe(this, Observer {
+            if (it != null) {
+                var capibilities = it.provisioningCapabilities
+                if (capibilities != null) {
+                    var network = mNrfMeshManager?.meshNetworkLiveData?.meshNetwork
+                    if (network != null) {
+                        try {
+                            val elementCount = capibilities.numberOfElements.toInt()
+                            val provisioner = network.selectedProvisioner
+                            val unicast =
+                                network.nextAvailableUnicastAddress(elementCount, provisioner)
+                            network.assignUnicastAddress(unicast)
+                            if (!isProvisioningStarted) {
+                                var node = mNrfMeshManager?.unprovisionedMeshNode?.value
+                                if (node != null && node.provisioningCapabilities.availableOOBTypes.size == 1 && node.provisioningCapabilities.availableOOBTypes[0] == AuthenticationOOBMethods.NO_OOB_AUTHENTICATION) {
+                                    node.nodeName = mNrfMeshManager?.meshNetworkLiveData?.nodeName
+                                    mNrfMeshManager?.meshManagerApi?.startProvisioning(node)
+                                    Utils.printLog(TAG, "开始provisioning")
+                                    isProvisioningStarted = true
+                                }
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            //todo  记录日志
+                            if (e.message == ERROR_MSG_UNICAST_UNABLED) {
+                                callback.onError(
+                                    ErrorMsg(
+                                        CommonErrorMsg.PROVISION_UNICAST_UNABLED.code,
+                                        CommonErrorMsg.PROVISION_UNICAST_UNABLED.msg
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        })
+        mNrfMeshManager?.identifyNode(device)
+    }
+
+    //获取provisioned nodes
+    internal fun getProvisionedNodes(callback: ProvisionCallback) {
+        if ((mNrfMeshManager?.nodes?.value?.size ?: 0) > 0) {
+            callback.onProvisionedNodes(mNrfMeshManager?.nodes?.value!!)
+        }
+        mNrfMeshManager?.nodes?.observe(this, Observer {
+            callback.onProvisionedNodes(it)
+        })
+    }
+
+    internal fun deleteNode(node: ProvisionedMeshNode, callback: ProvisionCallback) {
+        callback.onNodeDeleted(
+            mNrfMeshManager?.meshNetworkLiveData?.meshNetwork?.deleteNode(node) ?: false, node
+        )
+    }
+
+    internal fun setSelectedNode(node: ProvisionedMeshNode) {
+        mNrfMeshManager?.setSelectedMeshNode(node)
+    }
+
+    internal fun getSelectedNode(): ProvisionedMeshNode? {
+        return mNrfMeshManager?.mExtendedMeshNode?.value
+    }
+
+    internal fun getMeshNetwork(): MeshNetwork? {
+        return mNrfMeshManager?.meshNetworkLiveData?.meshNetwork
+    }
+
+    internal fun sendMeshPdu(dst: Int, message: MeshMessage, callback: MeshCallback?) {
+        mNrfMeshManager?.meshManagerApi?.createMeshPdu(dst, message)
+        mNrfMeshManager?.meshMessageLiveData?.observe(this, Observer {
+            callback?.onReceive(it)
+        })
+    }
+
+    internal fun setSelectedModel(
+        element: Element,
+        model: MeshModel
+    ) {
+        mNrfMeshManager?.setSelectedElement(element)
+        mNrfMeshManager?.setSelectedModel(model)
+    }
+
+    internal fun getSelectedModel(): MeshModel? {
+        return mNrfMeshManager?.selectedModel?.value
+    }
+
+    internal fun getSelectedElement(): Element? {
+        return mNrfMeshManager?.selectedElement?.value
+    }
+
+    internal fun isConnectedToProxy(): Boolean? {
+        return mNrfMeshManager?.isConnectedToProxy?.value
+    }
+}
