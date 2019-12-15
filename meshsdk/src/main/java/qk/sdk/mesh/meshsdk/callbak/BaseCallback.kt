@@ -1,7 +1,7 @@
 package qk.sdk.mesh.meshsdk.callbak
 
-import qk.sdk.mesh.meshsdk.bean.ErrorMsg
+import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 
  interface BaseCallback {
-    fun onError(errorMsg: ErrorMsg)
+    fun onError(callbackMsg: CallbackMsg)
 }

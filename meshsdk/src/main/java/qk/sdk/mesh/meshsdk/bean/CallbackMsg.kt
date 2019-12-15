@@ -1,6 +1,6 @@
 package qk.sdk.mesh.meshsdk.bean
 
-data class ErrorMsg(var code: Int, var msg: String)
+data class CallbackMsg(var code: Int, var msg: String)
 
 enum class CommonErrorMsg(var code: Int, var msg: String) {
     /*******扫描*********/
@@ -9,9 +9,10 @@ enum class CommonErrorMsg(var code: Int, var msg: String) {
     NO_STORAGE_PERMISSION(2010302, "请先开启存储权限"),
 
     /*******连接**********/
+    CONNECT_PROVISIONED_NODE_UPDATE(2010400, "匹配节点更新"),
 
     /*******provision**********/
-    PROVISION_UNICAST_UNABLED(2010303, "正在匹配中，请稍后")
+    PROVISION_UNICAST_UNABLED(2010500, "正在匹配中，请稍后")
 }
 
 val ERROR_MSG_UNICAST_UNABLED = "Unicast address is already in use."

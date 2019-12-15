@@ -7,5 +7,6 @@ enum class ConnectState(var msg: String, var code: Int = 0) {
     DEVICE_READY("连接初始化完成"),
     RECONNETCING("正在重连"),
     DISCONNECTING("正在断开连接"),
-    DISCONNECTED("连接已断开")
+    DISCONNECTED("连接已断开"),
+    PROVISIONED("已匹配")
 }

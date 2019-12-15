@@ -11,7 +11,7 @@ import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils
 import qk.sdk.mesh.demo.R
 import qk.sdk.mesh.demo.base.BaseMeshActivity
 import qk.sdk.mesh.meshsdk.MeshHelper
-import qk.sdk.mesh.meshsdk.bean.ErrorMsg
+import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
 import qk.sdk.mesh.meshsdk.callbak.ConnectCallback
 import qk.sdk.mesh.meshsdk.callbak.MeshCallback
@@ -46,7 +46,7 @@ class ConnectMeshActivity : BaseMeshActivity() {
         btn_add_app_key.isEnabled = false
         btn_add_app_key.setOnClickListener {
             if (MeshHelper.isConnectedToProxy()) {
-                addAppKeys()
+                MeshHelper.addAppKeys(meshCallback)
             } else {
                 Utils.printLog(TAG, "isn't Connected To Proxy")
             }
@@ -58,7 +58,7 @@ class ConnectMeshActivity : BaseMeshActivity() {
             if (MeshHelper.getSelectedModel()?.boundAppKeyIndexes?.isNotEmpty() ?: false) {
                 sendGenericOnOff(isChecked, 0)
             } else {
-                bindAppKey()
+                MeshHelper.bindAppKey(meshCallback)
             }
 
         }
@@ -90,7 +90,7 @@ class ConnectMeshActivity : BaseMeshActivity() {
                     false
                 )
             } else if (MeshHelper.getSelectedModel() is VendorModel) {
-                bindAppKey()
+                MeshHelper.bindAppKey(meshCallback)
             }
         }
 
@@ -114,6 +114,7 @@ class ConnectMeshActivity : BaseMeshActivity() {
                         )
                     ) {
                         startConnect(device)
+                        MeshHelper.stopScan()
                     }
                     tv_state.text = getString(R.string.connecting)
                 }
@@ -123,7 +124,7 @@ class ConnectMeshActivity : BaseMeshActivity() {
         override fun onScanStateChange() {
         }
 
-        override fun onError(errorMsg: ErrorMsg) {
+        override fun onError(callbackMsg: CallbackMsg) {
         }
     }
 
@@ -138,29 +139,10 @@ class ConnectMeshActivity : BaseMeshActivity() {
             tv_state.text = getString(R.string.connect_success)
         }
 
-        override fun onConnectStateChange(msg: ErrorMsg) {
+        override fun onConnectStateChange(msg: CallbackMsg) {
         }
 
-        override fun onSelectMeshNodeChange(node: ProvisionedMeshNode) {
-            if (node.elements.isNotEmpty()) {
-
-            }
-            if (node.addedNetKeys.isNotEmpty()) {
-//                        Utils.printLog(TAG, "node.addedNetKeys.size:${node.addedNetKeys.size}")
-            }
-            if (node.addedAppKeys.isNotEmpty()) {
-//                        Utils.printLog(TAG, "node.addedAppKeys.size:${node.addedAppKeys.size}")
-//                        if (node.elements.isEmpty()) {
-//                            getCompositionData()
-//                        }
-            }
-            if (node.ttl != null) {
-//                        Utils.printLog(TAG, "node.ttl:${node.ttl}")
-            }
-
-        }
-
-        override fun onError(errorMsg: ErrorMsg) {
+        override fun onError(callbackMsg: CallbackMsg) {
             tv_state.text = getString(R.string.connect_failed)
         }
     }
@@ -168,7 +150,7 @@ class ConnectMeshActivity : BaseMeshActivity() {
     var meshCallback = object : MeshCallback {
         override fun onReceive(msg: MeshMessage) {
             if (msg is ConfigAppKeyStatus) {
-                if (msg.isSuccessful) {
+                if (msg.isSuccessful) {//添加appkey成功
                     getCompositionData()
                     if (switch_on_off.visibility != View.VISIBLE || MeshHelper.getSelectedElement() == null) {
                         switch_on_off.visibility = View.VISIBLE
@@ -178,11 +160,13 @@ class ConnectMeshActivity : BaseMeshActivity() {
                         TAG,
                         "switch_on_off.visibility:${switch_on_off.visibility},add app key success!"
                     )
+                    btn_add_app_key.visibility = View.GONE
+                    MeshHelper.bindAppKey(this)
                 } else {
                     Utils.printLog(TAG, "add app key failed!")
                 }
             } else if (msg is ConfigModelAppStatus) {
-                if (msg.isSuccessful) {
+                if (msg.isSuccessful) {//bind appkey成功
                     Utils.printLog(TAG, "bindAppKey success!")
                 } else {
                     Utils.printLog(TAG, "bindAppKey failed:${msg.statusCodeName}")
@@ -190,7 +174,7 @@ class ConnectMeshActivity : BaseMeshActivity() {
             }
         }
 
-        override fun onError(errorMsg: ErrorMsg) {
+        override fun onError(callbackMsg: CallbackMsg) {
 
         }
     }
@@ -202,35 +186,35 @@ class ConnectMeshActivity : BaseMeshActivity() {
     /**
      * 获取appKey，默认获取第一个
      */
-    private fun addAppKeys() {
-        val applicationKey = MeshHelper.getAppKeys()?.get(0)
-        if (applicationKey != null) {
-            val networkKey = MeshHelper.getNetworkKey(applicationKey.boundNetKeyIndex)
-            if (networkKey == null) {
-                //todo 日志记录
-                Utils.printLog(TAG, "addAppKeys() networkKey is null!")
-            } else {
-                val node = MeshHelper.getSelectedMeshNode()
-                var isNodeKeyAdd = false
-                if (node != null) {
-                    isNodeKeyAdd = MeshParserUtils.isNodeKeyExists(
-                        node.addedAppKeys,
-                        applicationKey.keyIndex
-                    )
-                    val meshMessage: MeshMessage
-                    if (!isNodeKeyAdd) {
-                        meshMessage = ConfigAppKeyAdd(networkKey, applicationKey)
-                    } else {
-                        meshMessage = ConfigAppKeyDelete(networkKey, applicationKey)
-                    }
-                    sendMessage(node.unicastAddress, meshMessage, meshCallback)
-                }
-            }
-        } else {
-            //todo 日志记录
-            Utils.printLog(TAG, "addAppKeys() applicationKey is null!")
-        }
-    }
+//    private fun addAppKeys() {
+//        val applicationKey = MeshHelper.getAppKeys()?.get(0)
+//        if (applicationKey != null) {
+//            val networkKey = MeshHelper.getNetworkKey(applicationKey.boundNetKeyIndex)
+//            if (networkKey == null) {
+//                //todo 日志记录
+//                Utils.printLog(TAG, "addAppKeys() networkKey is null!")
+//            } else {
+//                val node = MeshHelper.getSelectedMeshNode()
+//                var isNodeKeyAdd = false
+//                if (node != null) {
+//                    isNodeKeyAdd = MeshParserUtils.isNodeKeyExists(
+//                        node.addedAppKeys,
+//                        applicationKey.keyIndex
+//                    )
+//                    val meshMessage: MeshMessage
+//                    if (!isNodeKeyAdd) {
+//                        meshMessage = ConfigAppKeyAdd(networkKey, applicationKey)
+//                    } else {
+//                        meshMessage = ConfigAppKeyDelete(networkKey, applicationKey)
+//                    }
+//                    sendMessage(node.unicastAddress, meshMessage, meshCallback)
+//                }
+//            }
+//        } else {
+//            //todo 日志记录
+//            Utils.printLog(TAG, "addAppKeys() applicationKey is null!")
+//        }
+//    }
 
     /**
      * 在获取到appkey之后，获取当前节点的元素列表
@@ -273,21 +257,21 @@ class ConnectMeshActivity : BaseMeshActivity() {
         }
     }
 
-    private fun bindAppKey() {
-        MeshHelper.getSelectedMeshNode()?.let {
-            val element = MeshHelper.getSelectedElement()
-            if (element != null) {
-                Utils.printLog(TAG, "getSelectedElement")
-                val model = MeshHelper.getSelectedModel()
-                if (model != null) {
-                    Utils.printLog(TAG, "getSelectedModel")
-                    val configModelAppUnbind =
-                        ConfigModelAppBind(element.elementAddress, model.modelId, 0)
-                    sendMessage(it.unicastAddress, configModelAppUnbind, meshCallback)
-                }
-            }
-        }
-    }
+//    private fun bindAppKey() {
+//        MeshHelper.getSelectedMeshNode()?.let {
+//            val element = MeshHelper.getSelectedElement()
+//            if (element != null) {
+//                Utils.printLog(TAG, "getSelectedElement")
+//                val model = MeshHelper.getSelectedModel()
+//                if (model != null) {
+//                    Utils.printLog(TAG, "getSelectedModel")
+//                    val configModelAppUnbind =
+//                        ConfigModelAppBind(element.elementAddress, model.modelId, 0)
+//                    sendMessage(it.unicastAddress, configModelAppUnbind, meshCallback)
+//                }
+//            }
+//        }
+//    }
 
     fun sendGenericOnOff(state: Boolean, delay: Int?) {
         MeshHelper.getSelectedMeshNode()?.let { node ->
@@ -360,6 +344,7 @@ class ConnectMeshActivity : BaseMeshActivity() {
         super.onDestroy()
         scanCallback = null
         connectCallback = null
+        MeshHelper.stopConnect()
         MeshHelper.clearMeshCallback()
     }
 }

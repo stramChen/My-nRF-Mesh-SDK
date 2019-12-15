@@ -14,7 +14,7 @@ import no.nordicsemi.android.meshprovisioner.transport.ProvisionedMeshNode
 import no.nordicsemi.android.meshprovisioner.utils.AuthenticationOOBMethods
 import qk.sdk.mesh.meshsdk.bean.CommonErrorMsg
 import qk.sdk.mesh.meshsdk.bean.ERROR_MSG_UNICAST_UNABLED
-import qk.sdk.mesh.meshsdk.bean.ErrorMsg
+import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
 import qk.sdk.mesh.meshsdk.callbak.*
 import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
@@ -64,6 +64,11 @@ open class BaseMeshService : LifecycleService() {
         mNrfMeshManager?.stopScan()
     }
 
+    internal fun stopConnect() {
+        mNrfMeshManager?.connectionState?.removeObservers(this)
+
+    }
+
     //开始连接
     internal fun connect(
         context: Context,
@@ -87,17 +92,20 @@ open class BaseMeshService : LifecycleService() {
                 }
             }
         })
-        mNrfMeshManager?.mExtendedMeshNode?.observe(this, Observer {
-            it?.let {
-                callback?.onSelectMeshNodeChange(it)
-            }
+        mNrfMeshManager?.provisionedNodes?.observe(this, Observer {
+            callback?.onConnectStateChange(
+                CallbackMsg(
+                    CommonErrorMsg.CONNECT_PROVISIONED_NODE_UPDATE.code,
+                    CommonErrorMsg.CONNECT_PROVISIONED_NODE_UPDATE.msg
+                )
+            )
         })
         mNrfMeshManager?.connect(context, device, connectToNetwork)
     }
 
     internal fun disConnect() {
         mNrfMeshManager?.unprovisionedMeshNode?.removeObservers(this)
-        mNrfMeshManager?.mExtendedMeshNode?.removeObservers(this)
+//        mNrfMeshManager?.mExtendedMeshNode?.removeObservers(this)
         mNrfMeshManager?.connectionState?.removeObservers(this)
         mNrfMeshManager?.isDeviceReady?.removeObservers(this)
         mNrfMeshManager?.disconnect()
@@ -137,7 +145,7 @@ open class BaseMeshService : LifecycleService() {
                             //todo  记录日志
                             if (e.message == ERROR_MSG_UNICAST_UNABLED) {
                                 callback.onError(
-                                    ErrorMsg(
+                                    CallbackMsg(
                                         CommonErrorMsg.PROVISION_UNICAST_UNABLED.code,
                                         CommonErrorMsg.PROVISION_UNICAST_UNABLED.msg
                                     )
@@ -172,7 +180,7 @@ open class BaseMeshService : LifecycleService() {
     }
 
     internal fun getSelectedNode(): ProvisionedMeshNode? {
-        return mNrfMeshManager?.mExtendedMeshNode?.value
+        return mNrfMeshManager?.mExtendedMeshNode
     }
 
     internal fun getMeshNetwork(): MeshNetwork? {
@@ -195,11 +203,11 @@ open class BaseMeshService : LifecycleService() {
     }
 
     internal fun getSelectedModel(): MeshModel? {
-        return mNrfMeshManager?.selectedModel?.value
+        return mNrfMeshManager?.mSelectedModel
     }
 
     internal fun getSelectedElement(): Element? {
-        return mNrfMeshManager?.selectedElement?.value
+        return mNrfMeshManager?.mSelectedElement
     }
 
     internal fun isConnectedToProxy(): Boolean? {

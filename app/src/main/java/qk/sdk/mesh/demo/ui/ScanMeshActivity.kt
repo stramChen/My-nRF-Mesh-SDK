@@ -3,29 +3,27 @@ package qk.sdk.mesh.demo.ui
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.styd.crm.adapter.base.BaseAdapter
 import com.styd.crm.adapter.base.BaseViewHolder
 import kotlinx.android.synthetic.main.activity_scan.*
-import kotlinx.android.synthetic.main.activity_scan.switch_on_off
 import kotlinx.android.synthetic.main.item_scan_device.view.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import no.nordicsemi.android.meshprovisioner.models.GenericOnOffServerModel
-import no.nordicsemi.android.meshprovisioner.transport.*
-import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils
+import no.nordicsemi.android.meshprovisioner.transport.Element
+import no.nordicsemi.android.meshprovisioner.transport.MeshModel
+import no.nordicsemi.android.meshprovisioner.transport.ProvisionedMeshNode
 import qk.sdk.mesh.demo.R
 import qk.sdk.mesh.demo.base.BaseMeshActivity
 import qk.sdk.mesh.demo.widget.base.OnItemClickListener
 import qk.sdk.mesh.meshsdk.MeshHelper
-import qk.sdk.mesh.meshsdk.bean.ErrorMsg
+import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
 import qk.sdk.mesh.meshsdk.bean.connect.ConnectState
 import qk.sdk.mesh.meshsdk.callbak.BaseCallback
 import qk.sdk.mesh.meshsdk.callbak.ConnectCallback
-import qk.sdk.mesh.meshsdk.callbak.MeshCallback
 import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
 import qk.sdk.mesh.meshsdk.callbak.ScanCallback
 import qk.sdk.mesh.meshsdk.util.Utils
@@ -46,6 +44,12 @@ class ScanMeshActivity : BaseMeshActivity(),
     override fun setLayoutId(): Int = R.layout.activity_scan
     override fun init() {
         initView()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        MeshHelper.stopConnect()
+        MeshHelper.disConnect()
     }
 
     fun initView() {
@@ -69,7 +73,7 @@ class ScanMeshActivity : BaseMeshActivity(),
             override fun onScanStateChange() {// 扫描状态变化，若需要一直扫描，需要在此调用startScan
             }
 
-            override fun onError(errorMsg: ErrorMsg) {
+            override fun onError(callbackMsg: CallbackMsg) {
 
             }
         })
@@ -78,19 +82,14 @@ class ScanMeshActivity : BaseMeshActivity(),
     fun startConnect(data: ExtendedBluetoothDevice) {
         MeshHelper.connect(this, data, false, object : ConnectCallback {
             override fun onConnect() {
-//                if (isProxy) {
-//                    addAppKeys()
-//                } else {
                 MeshHelper.startProvision(data, object : BaseCallback {
-                    override fun onError(errorMsg: ErrorMsg) {
+                    override fun onError(callbackMsg: CallbackMsg) {
 
                     }
                 })
-//                }
             }
 
-            override fun onConnectStateChange(msg: ErrorMsg) {
-//                if (msg.msg == ConnectState.DISCONNECTED.msg && !isProxy) {
+            override fun onConnectStateChange(msg: CallbackMsg) {
                 if (msg.msg == ConnectState.DISCONNECTED.msg) {
                     var node = MeshHelper.getProvisionNode()
                     node?.let {
@@ -100,12 +99,12 @@ class ScanMeshActivity : BaseMeshActivity(),
                                     data.getAddress()
                                 )
                             ) {
-//                                MeshHelper.setSelectedMeshNode(it)
                                 MeshHelper.stopScan()
                                 runBlocking {
                                     launch {
                                         delay(1000)
                                         MeshHelper.setSelectedMeshNode(it)
+//                                        bindModel(it)
                                         startActivity(
                                             Intent(
                                                 this@ScanMeshActivity,
@@ -121,10 +120,7 @@ class ScanMeshActivity : BaseMeshActivity(),
                 }
             }
 
-            override fun onSelectMeshNodeChange(node: ProvisionedMeshNode) {
-            }
-
-            override fun onError(errorMsg: ErrorMsg) {
+            override fun onError(callbackMsg: CallbackMsg) {
 
 
             }
@@ -132,6 +128,22 @@ class ScanMeshActivity : BaseMeshActivity(),
 
     }
 
+    private fun bindModel(node: ProvisionedMeshNode) {
+        var elementsMap = node.elements.values
+        var elements = ArrayList<Element>()
+        elements.addAll(elementsMap)
+        if (elements.size > 0)
+            elements[0].let { element ->
+                var modelsMap = element.meshModels.values
+                var models = ArrayList<MeshModel>()
+                models.addAll(modelsMap)
+                models.forEach { model ->
+                    if (model is GenericOnOffServerModel) {
+                        MeshHelper.setSelectedModel(element, model)
+                    }
+                }
+            }
+    }
 
     override fun onItemClick(data: ExtendedBluetoothDevice, position: Int) {
         MeshHelper.stopScan()

@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.activity_scan.*
 import no.nordicsemi.android.meshprovisioner.models.GenericOnOffServerModel
 import no.nordicsemi.android.meshprovisioner.transport.Element
 import no.nordicsemi.android.meshprovisioner.transport.MeshModel
@@ -16,7 +15,7 @@ import qk.sdk.mesh.demo.ui.adapter.NodeAdapter
 import qk.sdk.mesh.demo.widget.base.OnItemClickListener
 import qk.sdk.mesh.demo.widget.base.OnItemLongClickListener
 import qk.sdk.mesh.meshsdk.MeshHelper
-import qk.sdk.mesh.meshsdk.bean.ErrorMsg
+import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.callbak.ProvisionCallback
 
 class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
@@ -32,7 +31,7 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
             mNodeAdapter?.notifyDataSetChanged()
         }
 
-        override fun onError(errorMsg: ErrorMsg) {
+        override fun onError(callbackMsg: CallbackMsg) {
 
         }
     }
@@ -53,7 +52,7 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
         rv_provisioned_nodes.layoutManager = LinearLayoutManager(this)
         mNodeAdapter = NodeAdapter(
             this,
-            ArrayList()
+            MeshHelper.getProvisionNode() ?: ArrayList()
         )
         rv_provisioned_nodes.adapter = mNodeAdapter
         mNodeAdapter?.setOnItemLongClickListener(object :

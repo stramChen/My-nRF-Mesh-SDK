@@ -70,7 +70,6 @@ import qk.sdk.mesh.meshsdk.bean.*
 import qk.sdk.mesh.meshsdk.bean.connect.ConnectState
 import qk.sdk.mesh.meshsdk.bean.scan.ScannerLiveData
 import qk.sdk.mesh.meshsdk.bean.scan.ScannerStateLiveData
-import qk.sdk.mesh.meshsdk.util.ByteUtil
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -92,7 +91,7 @@ class NrfMeshManager(
     private val mOnDeviceReady = MutableLiveData<Void>()
 
     // Updates the connection state while connecting to a peripheral
-    private val mConnectionState = MutableLiveData<ErrorMsg>()
+    private val mConnectionState = MutableLiveData<CallbackMsg>()
 
     // Flag to determine if a reconnection is in the progress when provisioning has completed
     private val mIsReconnecting = SingleLiveData<Boolean>()
@@ -104,13 +103,13 @@ class NrfMeshManager(
         private set // Flag to determine if provisioning was completed
 
     // Holds the selected MeshNode to configure
-    internal val mExtendedMeshNode = MutableLiveData<ProvisionedMeshNode>()
+    internal var mExtendedMeshNode: ProvisionedMeshNode? = null
 
     // Holds the selected Element to configure
-    private val mSelectedElement = MutableLiveData<Element>()
+    internal var mSelectedElement: Element? = null
 
     // Holds the selected mesh model to configure
-    private val mSelectedModel = MutableLiveData<MeshModel>()
+    internal var mSelectedModel: MeshModel? = null
     // Holds the selected app key to configure
     private val mSelectedNetKey = MutableLiveData<NetworkKey>()
     // Holds the selected app key to configure
@@ -195,7 +194,7 @@ class NrfMeshManager(
     /**
      * Returns [SingleLiveData] containing the device ready state.
      */
-    internal val connectionState: LiveData<ErrorMsg>
+    internal val connectionState: LiveData<CallbackMsg>
         get() = mConnectionState
 
     /**
@@ -225,6 +224,9 @@ class NrfMeshManager(
     internal val transactionStatus: LiveData<TransactionStatus>
         get() = mTransactionStatus
 
+    internal val provisionedNodes: LiveData<ProvisionedMeshNode>
+        get() = mProvisionedMeshNodeLiveData
+
     /**
      * Returns the [MeshMessageLiveData] live data object containing the mesh message
      */
@@ -249,8 +251,8 @@ class NrfMeshManager(
     /**
      * Returns the selected element
      */
-    internal val selectedElement: LiveData<Element>
-        get() = mSelectedElement
+//    internal val selectedElement: Element?
+//        get() = mSelectedElement
 
     /**
      * Returns the selected mesh model
@@ -267,8 +269,8 @@ class NrfMeshManager(
     /**
      * Returns the selected mesh model
      */
-    internal val selectedModel: LiveData<MeshModel>
-        get() = mSelectedModel
+//    internal val selectedModel: LiveData<MeshModel>
+//        get() = mSelectedModel
 
     init {
         this.meshManagerApi.setMeshManagerCallbacks(this)
@@ -326,7 +328,7 @@ class NrfMeshManager(
         val bluetoothDevice = device.device
         initIsConnectedLiveData(connectToNetwork)
         mConnectionState.postValue(
-            ErrorMsg(
+            CallbackMsg(
                 ConnectState.CONNECTING.code,
                 ConnectState.CONNECTING.msg
             )
@@ -349,7 +351,7 @@ class NrfMeshManager(
     private fun connectToProxy(device: ExtendedBluetoothDevice) {
         initIsConnectedLiveData(true)
         mConnectionState.postValue(
-            ErrorMsg(
+            CallbackMsg(
                 ConnectState.CONNECTING.code,
                 ConnectState.CONNECTING.msg
             )
@@ -407,7 +409,7 @@ class NrfMeshManager(
     }
 
     private fun clearExtendedMeshNode() {
-        mExtendedMeshNode.postValue(null)
+        mExtendedMeshNode = null
     }
 
     /**
@@ -416,7 +418,7 @@ class NrfMeshManager(
      * @param node provisioned mesh node
      */
     internal fun setSelectedMeshNode(node: ProvisionedMeshNode) {
-        mExtendedMeshNode.postValue(node)
+        mExtendedMeshNode = (node)
     }
 
     /**
@@ -424,7 +426,9 @@ class NrfMeshManager(
      *
      * @param element element
      */
-    internal fun setSelectedElement(element: Element) = mSelectedElement.postValue(element)
+    internal fun setSelectedElement(element: Element) {
+        mSelectedElement = element
+    }
 
     /**
      * Set the selected model to be configured
@@ -446,7 +450,9 @@ class NrfMeshManager(
      *
      * @param model mesh model
      */
-    internal fun setSelectedModel(model: MeshModel) = mSelectedModel.postValue(model)
+    internal fun setSelectedModel(model: MeshModel) {
+        mSelectedModel = model
+    }
 
     override fun onDataReceived(bluetoothDevice: BluetoothDevice, mtu: Int, pdu: ByteArray) {
         meshManagerApi.handleNotifications(mtu, pdu)
@@ -459,7 +465,7 @@ class NrfMeshManager(
 
     override fun onDeviceConnecting(device: BluetoothDevice) {
         mConnectionState.postValue(
-            ErrorMsg(
+            CallbackMsg(
                 ConnectState.CONNECTING.code,
                 ConnectState.CONNECTING.msg
             )
@@ -469,7 +475,7 @@ class NrfMeshManager(
     override fun onDeviceConnected(device: BluetoothDevice) {
         mIsConnected!!.postValue(true)
         mConnectionState.postValue(
-            ErrorMsg(
+            CallbackMsg(
                 ConnectState.DISCOVERING_SERVICE.code,
                 ConnectState.DISCOVERING_SERVICE.msg
             )
@@ -481,14 +487,14 @@ class NrfMeshManager(
         Utils.printLog(TAG, "Disconnecting...")
         if (mIsReconnectingFlag) {
             mConnectionState.postValue(
-                ErrorMsg(
+                CallbackMsg(
                     ConnectState.RECONNETCING.code,
                     ConnectState.RECONNETCING.msg
                 )
             )
         } else {
             mConnectionState.postValue(
-                ErrorMsg(
+                CallbackMsg(
                     ConnectState.DISCONNECTING.code,
                     ConnectState.DISCONNECTING.msg
                 )
@@ -499,7 +505,7 @@ class NrfMeshManager(
     override fun onDeviceDisconnected(device: BluetoothDevice) {
         Utils.printLog(TAG, "Disconnected")
         mConnectionState.postValue(
-            ErrorMsg(
+            CallbackMsg(
                 ConnectState.DISCONNECTED.code,
                 ConnectState.DISCONNECTED.msg
             )
@@ -530,7 +536,7 @@ class NrfMeshManager(
 
     override fun onServicesDiscovered(device: BluetoothDevice, optionalServicesFound: Boolean) {
         mConnectionState.postValue(
-            ErrorMsg(
+            CallbackMsg(
                 ConnectState.INITIALIZING.code,
                 ConnectState.INITIALIZING.msg
             )
@@ -580,7 +586,7 @@ class NrfMeshManager(
         if (errorCode == 133) {
             bleMeshManager?.clearGatt()
         }
-        mConnectionState.postValue(ErrorMsg(errorCode, message))
+        mConnectionState.postValue(CallbackMsg(errorCode, message))
     }
 
     override fun onDeviceNotSupported(device: BluetoothDevice) {
@@ -674,7 +680,7 @@ class NrfMeshManager(
         data: ByteArray
     ) {
         mProvisionedMeshNode = meshNode
-        mExtendedMeshNode.postValue(meshNode)
+        mExtendedMeshNode = meshNode
         mUnprovisionedMeshNodeLiveData.postValue(null)
         mProvisionedMeshNodeLiveData.postValue(meshNode)
         if (state == ProvisioningState.States.PROVISIONING_COMPLETE) {
@@ -850,9 +856,9 @@ class NrfMeshManager(
                 if (updateNode(node)) {
                     val element = node.elements[meshMessage.elementAddress]
                     if (node.elements.containsKey(meshMessage.elementAddress)) {
-                        mSelectedElement.postValue(element)
+                        mSelectedElement = element
                         val model = element!!.meshModels[meshMessage.modelIdentifier]
-                        mSelectedModel.postValue(model)
+                        mSelectedModel = model
                     }
                 }
 
@@ -861,9 +867,9 @@ class NrfMeshManager(
                 if (updateNode(node)) {
                     if (node.elements.containsKey(meshMessage.elementAddress)) {
                         val element = node.elements[meshMessage.elementAddress]
-                        mSelectedElement.postValue(element)
+                        mSelectedElement = element
                         val model = element!!.meshModels[meshMessage.modelIdentifier]
-                        mSelectedModel.postValue(model)
+                        mSelectedModel = model
                     }
                 }
 
@@ -872,15 +878,15 @@ class NrfMeshManager(
                 if (updateNode(node)) {
                     if (node.elements.containsKey(meshMessage.elementAddress)) {
                         val element = node.elements[meshMessage.elementAddress]
-                        mSelectedElement.postValue(element)
+                        mSelectedElement = element
                         val model = element!!.meshModels[meshMessage.modelIdentifier]
-                        mSelectedModel.postValue(model)
+                        mSelectedModel = model
                     }
                 }
 
             } else if (meshMessage is ConfigNodeResetStatus) {
                 bleMeshManager!!.setClearCacheRequired()
-                mExtendedMeshNode.postValue(null)
+                mExtendedMeshNode = null
                 loadNodes()
                 mMeshMessageLiveData.postValue(meshMessage)
 
@@ -898,10 +904,10 @@ class NrfMeshManager(
                 if (updateNode(node)) {
                     if (node.elements.containsKey(meshMessage.srcAddress)) {
                         val element = node.elements[meshMessage.srcAddress]
-                        mSelectedElement.postValue(element)
+                        mSelectedElement = element
                         val model =
                             element!!.meshModels[SigModelParser.GENERIC_ON_OFF_SERVER.toInt()]
-                        mSelectedModel.postValue(model)
+                        mSelectedModel = model
                     }
                 }
             } else if (meshMessage is GenericLevelStatus) {
@@ -909,10 +915,10 @@ class NrfMeshManager(
                 if (updateNode(node)) {
                     if (node.elements.containsKey(meshMessage.srcAddress)) {
                         val element = node.elements[meshMessage.srcAddress]
-                        mSelectedElement.postValue(element)
+                        mSelectedElement = element
                         val model =
                             element!!.meshModels[SigModelParser.GENERIC_LEVEL_SERVER.toInt()]
-                        mSelectedModel.postValue(model)
+                        mSelectedModel = model
                     }
                 }
 
@@ -921,9 +927,9 @@ class NrfMeshManager(
                 if (updateNode(node)) {
                     if (node.elements.containsKey(meshMessage.srcAddress)) {
                         val element = node.elements[meshMessage.srcAddress]
-                        mSelectedElement.postValue(element)
+                        mSelectedElement = element
                         val model = element!!.meshModels[meshMessage.modelIdentifier]
-                        mSelectedModel.postValue(model)
+                        mSelectedModel = model
                     }
                 }
             }
@@ -961,7 +967,7 @@ class NrfMeshManager(
 
 //            val node = mExtendedMeshNode.value
 //            if (node != null) {
-            mExtendedMeshNode.postValue(mMeshNetwork!!.getNode(mExtendedMeshNode.value?.uuid))
+            mExtendedMeshNode = mMeshNetwork!!.getNode(mExtendedMeshNode?.uuid)
 //            }
         }
     }
@@ -972,7 +978,7 @@ class NrfMeshManager(
     private fun updateNode(node: ProvisionedMeshNode): Boolean {
         if (mProvisionedMeshNode!!.unicastAddress == node.unicastAddress) {
             mProvisionedMeshNode = node
-            mExtendedMeshNode.postValue(node)
+            mExtendedMeshNode = node
             return true
         }
         return false
@@ -1093,7 +1099,7 @@ class NrfMeshManager(
                                     stopScan()
                                     //TODO
                                     mConnectionState.postValue(
-                                        ErrorMsg(
+                                        CallbackMsg(
                                             0,
                                             "Provisioned node found"
                                         )
