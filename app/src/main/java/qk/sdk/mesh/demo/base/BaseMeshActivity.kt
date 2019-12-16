@@ -12,6 +12,9 @@ import qk.sdk.mesh.meshsdk.util.Utils
 import java.util.*
 
 abstract class BaseMeshActivity : AppCompatActivity() {
+    internal var BUNDLE_CONNECT_EXTRA = "isReConnect"
+
+    internal var mPingMills = 0L
 
     abstract fun init()
     abstract fun setLayoutId(): Int
@@ -24,6 +27,7 @@ abstract class BaseMeshActivity : AppCompatActivity() {
 
     internal fun sendMessage(address: Int, message: MeshMessage, callback: MeshCallback? = null) {
         try {
+            mPingMills = System.currentTimeMillis()
             MeshHelper.sendMeshPdu(address, message, callback)
         } catch (ex: IllegalArgumentException) {
             ex.printStackTrace()
@@ -47,6 +51,8 @@ abstract class BaseMeshActivity : AppCompatActivity() {
         })
 
     }
+
+
 
     override fun onBackPressed() {
         super.onBackPressed()

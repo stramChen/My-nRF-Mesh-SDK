@@ -164,6 +164,8 @@ class NrfMeshManager(
         private set
     private val uri: Uri? = null
 
+    internal var mConnectDevice: ExtendedBluetoothDevice? = null
+
     /**
      * scan
      */
@@ -322,6 +324,7 @@ class NrfMeshManager(
         isDefaultTtlReceived = false
         isAppKeyAddCompleted = false
         isNetworkRetransmitSetCompleted = false
+        mConnectDevice = device
         //clearExtendedMeshNode();
         val logSession = Logger.newSession(context, null, device.getAddress(), device.name ?: "")
         bleMeshManager?.setLogger(logSession)
@@ -426,7 +429,7 @@ class NrfMeshManager(
      *
      * @param element element
      */
-    internal fun setSelectedElement(element: Element) {
+    internal fun setSelectedElement(element: Element?) {
         mSelectedElement = element
     }
 
@@ -450,7 +453,7 @@ class NrfMeshManager(
      *
      * @param model mesh model
      */
-    internal fun setSelectedModel(model: MeshModel) {
+    internal fun setSelectedModel(model: MeshModel?) {
         mSelectedModel = model
     }
 
@@ -484,7 +487,10 @@ class NrfMeshManager(
     }
 
     override fun onDeviceDisconnecting(device: BluetoothDevice) {
-        Utils.printLog(TAG, "Disconnecting...")
+        Utils.printLog(
+            TAG,
+            "Disconnecting...，connect devicd:${mConnectDevice?.getAddress()},disConnect device:${device.address}"
+        )
         if (mIsReconnectingFlag) {
             mConnectionState.postValue(
                 CallbackMsg(
@@ -544,7 +550,10 @@ class NrfMeshManager(
     }
 
     override fun onDeviceReady(device: BluetoothDevice) {
-        Utils.printLog(TAG, "onDeviceReady")
+        Utils.printLog(
+            TAG,
+            "onDeviceReady:${device.address},connect device:${mConnectDevice?.getAddress()}"
+        )
         mOnDeviceReady.postValue(null)
 
         if (bleMeshManager!!.isProvisioningComplete) {
@@ -1026,7 +1035,6 @@ class NrfMeshManager(
         var scanner = BluetoothLeScannerCompat.getScanner()
         scanner.stopScan(mScanCallbacks)
         mIsScanning = false
-        mScannerLiveData
         mScannerStateLiveData.scanningStopped()
 
         unregisterBroadcastReceivers()

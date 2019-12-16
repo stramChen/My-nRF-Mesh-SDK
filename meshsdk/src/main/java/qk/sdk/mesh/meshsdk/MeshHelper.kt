@@ -7,7 +7,9 @@ import com.joker.api.wrapper.ListenerWrapper
 import no.nordicsemi.android.meshprovisioner.ApplicationKey
 import no.nordicsemi.android.meshprovisioner.MeshNetwork
 import no.nordicsemi.android.meshprovisioner.NetworkKey
+import no.nordicsemi.android.meshprovisioner.models.VendorModel
 import no.nordicsemi.android.meshprovisioner.transport.*
+import no.nordicsemi.android.meshprovisioner.utils.MeshAddress
 import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
 import qk.sdk.mesh.meshsdk.callbak.*
@@ -19,6 +21,7 @@ import kotlin.collections.ArrayList
 
 object MeshHelper {
     private val TAG = "MeshHelper"
+    private var mProvisionCallback: ProvisionCallback? = null
 
     fun initMesh(context: Context) {
         context.startService(Intent(context, MeshProxyService::class.java))
@@ -45,11 +48,19 @@ object MeshHelper {
         MeshProxyService.mMeshProxyService?.connect(context, device, connectToNetwork, callback)
     }
 
+    fun addConnectCallback(callback: ConnectCallback) {
+        MeshProxyService.mMeshProxyService?.addConnectCallback(callback)
+    }
+
+    fun getConnectedDevice(): ExtendedBluetoothDevice? {
+        return MeshProxyService.mMeshProxyService?.getConnectingDevice()
+    }
+
     fun disConnect() {
         MeshProxyService.mMeshProxyService?.disConnect()
     }
 
-    fun stopConnect(){
+    fun stopConnect() {
         MeshProxyService.mMeshProxyService?.stopConnect()
     }
 
@@ -62,6 +73,7 @@ object MeshHelper {
     }
 
     fun getProvisionedNodeByCallback(callback: ProvisionCallback) {
+        mProvisionCallback = callback
         MeshProxyService.mMeshProxyService?.getProvisionedNodes(callback)
     }
 
@@ -89,10 +101,10 @@ object MeshHelper {
         return MeshProxyService.mMeshProxyService?.getMeshNetwork()?.appKeys
     }
 
-    fun addAppKeys(meshCallback: MeshCallback) {
-        val applicationKey = MeshHelper.getAppKeys()?.get(0)
+    fun addAppKeys(meshCallback: MeshCallback?) {
+        val applicationKey = getAppKeys()?.get(0)
         if (applicationKey != null) {
-            val networkKey = MeshHelper.getNetworkKey(applicationKey.boundNetKeyIndex)
+            val networkKey = getNetworkKey(applicationKey.boundNetKeyIndex)
             if (networkKey == null) {
                 //todo 日志记录
                 Utils.printLog(TAG, "addAppKeys() networkKey is null!")
@@ -119,7 +131,7 @@ object MeshHelper {
         }
     }
 
-    fun bindAppKey(meshCallback: MeshCallback) {
+    fun bindAppKey(meshCallback: MeshCallback?) {
         getSelectedMeshNode()?.let {
             val element = MeshHelper.getSelectedElement()
             if (element != null) {
@@ -153,8 +165,8 @@ object MeshHelper {
     }
 
     fun setSelectedModel(
-        element: Element,
-        model: MeshModel
+        element: Element?,
+        model: MeshModel?
     ) {
         MeshProxyService.mMeshProxyService?.setSelectedModel(element, model)
     }
@@ -171,6 +183,104 @@ object MeshHelper {
         return MeshProxyService.mMeshProxyService?.isConnectedToProxy() ?: false
     }
 
+    fun sendGenericOnOffGet(meshCallback: MeshCallback?) {
+        val element = MeshHelper.getSelectedElement()
+        if (element != null) {
+            val model = MeshHelper.getSelectedModel()
+            if (model != null) {
+                if (model.boundAppKeyIndexes.isNotEmpty()) {
+                    val appKeyIndex = model.boundAppKeyIndexes[0]
+                    val appKey =
+                        MeshHelper.getMeshNetwork()?.getAppKey(appKeyIndex)
+
+                    appKey?.let {
+                        val address = element.elementAddress
+                        Utils.printLog(
+                            TAG,
+                            "Sending message to element's unicast address: " + MeshAddress.formatAddress(
+                                address,
+                                true
+                            )
+                        )
+
+                        val genericOnOffSet = GenericOnOffGet(appKey)
+                        sendMessage(address, genericOnOffSet, meshCallback)
+                    }
+                } else {
+                    //todo 日志记录
+                    Utils.printLog(TAG, "sendGenericOnOffGet failed!")
+                }
+            }
+        }
+    }
+
+    fun sendGenericOnOff(state: Boolean, delay: Int?) {
+        getSelectedMeshNode()?.let { node ->
+            getSelectedElement()?.let { element ->
+                getSelectedModel()?.let { model ->
+                    if (model.boundAppKeyIndexes.isNotEmpty()) {
+                        val appKeyIndex = model.boundAppKeyIndexes[0]
+                        val appKey =
+                            getMeshNetwork()?.getAppKey(appKeyIndex)
+                        val address = element.elementAddress
+                        if (appKey != null) {
+                            val genericOnOffSet = GenericOnOffSet(
+                                appKey,
+                                state,
+                                node.sequenceNumber,
+                                0,
+                                0,
+                                delay
+                            )
+                            sendMessage(address, genericOnOffSet)
+                        }
+                    } else {
+                        Utils.printLog(TAG, "boundAppKeyIndexes is null!")
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Send vendor model acknowledged message
+     *
+     * @param opcode     opcode of the message
+     * @param parameters parameters of the message
+     */
+    fun sendVendorModelMessage(opcode: Int, parameters: ByteArray?, acknowledged: Boolean) {
+        val element = MeshHelper.getSelectedElement()
+        if (element != null) {
+            val model = MeshHelper.getSelectedModel() as VendorModel
+            if (model != null) {
+                val appKeyIndex = model.boundAppKeyIndexes[0]
+                val appKey = MeshHelper.getMeshNetwork()?.getAppKey(appKeyIndex)
+                val message: MeshMessage
+                if (appKey != null) {
+                    if (acknowledged) {
+                        message = VendorModelMessageAcked(
+                            appKey,
+                            model.modelId,
+                            model.companyIdentifier,
+                            opcode,
+                            parameters!!
+                        )
+                        sendMessage(element.elementAddress, message)
+                    } else {
+                        message = VendorModelMessageUnacked(
+                            appKey,
+                            model.modelId,
+                            model.companyIdentifier,
+                            opcode,
+                            parameters
+                        )
+                        sendMessage(element.elementAddress, message)
+                    }
+                }
+            }
+        }
+    }
+
     internal class MeshProxyService : BaseMeshService() {
         companion object {
             var mMeshProxyService: MeshProxyService? = null
@@ -180,7 +290,8 @@ object MeshHelper {
         override fun onCreate() {
             super.onCreate()
             mMeshProxyService = this
-
+            if (mProvisionCallback != null)
+                getProvisionedNodes(mProvisionCallback!!)
         }
     }
 }

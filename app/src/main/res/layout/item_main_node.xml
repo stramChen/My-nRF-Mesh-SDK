@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ Copyright (c) 2018, Nordic Semiconductor
   ~ All rights reserved.
   ~
@@ -21,15 +20,13 @@
   ~ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   -->
 
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/colorAccent"
-    >
+    android:background="@color/colorAccent">
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/icon_delete"
@@ -38,7 +35,7 @@
         android:layout_gravity="center_vertical"
         android:layout_marginStart="@dimen/activity_horizontal_margin"
         android:layout_marginEnd="@dimen/activity_horizontal_margin"
-        app:srcCompat="@drawable/ic_delete_white"/>
+        app:srcCompat="@drawable/ic_delete_white" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/removable"
@@ -55,20 +52,20 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-<!--            <androidx.appcompat.widget.AppCompatImageView-->
-<!--                android:id="@+id/icon"-->
-<!--                android:layout_width="48dp"-->
-<!--                android:layout_height="48dp"-->
-<!--                android:layout_marginStart="@dimen/activity_horizontal_margin"-->
-<!--                android:background="@drawable/ic_device_bg"-->
-<!--                android:importantForAccessibility="no"-->
-<!--                android:padding="@dimen/mesh_list_icon_padding"-->
-<!--                android:scaleType="centerInside"-->
-<!--                app:layout_constraintBottom_toBottomOf="@id/configured_node_info_container"-->
-<!--                app:layout_constraintEnd_toStartOf="@id/node_name"-->
-<!--                app:layout_constraintStart_toStartOf="parent"-->
-<!--                app:layout_constraintTop_toTopOf="@id/node_name"-->
-<!--                app:srcCompat="@drawable/ic_mesh_48dp"/>-->
+            <!--            <androidx.appcompat.widget.AppCompatImageView-->
+            <!--                android:id="@+id/icon"-->
+            <!--                android:layout_width="48dp"-->
+            <!--                android:layout_height="48dp"-->
+            <!--                android:layout_marginStart="@dimen/activity_horizontal_margin"-->
+            <!--                android:background="@drawable/ic_device_bg"-->
+            <!--                android:importantForAccessibility="no"-->
+            <!--                android:padding="@dimen/mesh_list_icon_padding"-->
+            <!--                android:scaleType="centerInside"-->
+            <!--                app:layout_constraintBottom_toBottomOf="@id/configured_node_info_container"-->
+            <!--                app:layout_constraintEnd_toStartOf="@id/node_name"-->
+            <!--                app:layout_constraintStart_toStartOf="parent"-->
+            <!--                app:layout_constraintTop_toTopOf="@id/node_name"-->
+            <!--                app:srcCompat="@drawable/ic_mesh_48dp"/>-->
 
             <TextView
                 android:id="@+id/tv_node_name"
@@ -77,69 +74,66 @@
                 android:layout_margin="@dimen/activity_horizontal_margin"
                 android:ellipsize="marquee"
                 android:singleLine="true"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"/>
+                android:text="nodename"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/configured_node_info_container"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:visibility="visible"
-                app:layout_constraintEnd_toEndOf="@id/tv_node_name"
-                app:layout_constraintStart_toStartOf="@id/tv_node_name"
+                app:layout_constraintLeft_toLeftOf="@+id/tv_node_name"
                 app:layout_constraintTop_toBottomOf="@id/tv_node_name">
 
                 <TextView
-                    android:id="@+id/unicast_title"
+                    android:id="@+id/tv_unicast_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Address:"
                     android:textSize="14sp"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    tools:ignore="HardcodedText"/>
+                    tools:ignore="HardcodedText" />
 
                 <TextView
-                    android:id="@+id/unicast"
-                    android:layout_width="0dp"
+                    android:id="@+id/tv_unicast"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:text="0x0001"
+                    android:text="12:34:56:78:90"
                     android:textSize="14sp"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/unicast_title"
-                    app:layout_constraintTop_toTopOf="@id/unicast_title"
-                    tools:ignore="HardcodedText"/>
+                    app:layout_constraintLeft_toRightOf="@id/tv_unicast_title"
+                    app:layout_constraintTop_toTopOf="@id/tv_unicast_title"
+                    tools:ignore="HardcodedText" />
 
                 <TextView
                     android:id="@+id/company_identifier_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:text="company:"
                     android:textSize="14sp"
-                    app:layout_constraintStart_toStartOf="@+id/unicast_title"
-                    app:layout_constraintTop_toBottomOf="@+id/unicast"/>
+                    app:layout_constraintStart_toStartOf="@+id/tv_unicast_title"
+                    app:layout_constraintTop_toBottomOf="@+id/tv_unicast" />
 
                 <TextView
-                    android:id="@+id/company_identifier"
+                    android:id="@+id/tv_company_identifier"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:ellipsize="end"
                     android:maxLines="1"
                     android:textSize="14sp"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="@+id/unicast"
-                    app:layout_constraintTop_toBottomOf="@+id/unicast"
-                    tools:ignore="RtlSymmetry"/>
+                    app:layout_constraintLeft_toRightOf="@+id/company_identifier_title"
+                    app:layout_constraintTop_toBottomOf="@+id/tv_unicast"
+                    tools:ignore="RtlSymmetry" />
 
                 <TextView
                     android:id="@+id/elements_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:text="element size:"
                     android:textSize="14sp"
-                    app:layout_constraintStart_toStartOf="@+id/unicast_title"
-                    app:layout_constraintTop_toBottomOf="@+id/company_identifier"/>
+                    app:layout_constraintStart_toStartOf="@+id/tv_unicast_title"
+                    app:layout_constraintTop_toBottomOf="@+id/tv_company_identifier" />
 
                 <TextView
                     android:id="@+id/elements"
@@ -147,17 +141,18 @@
                     android:layout_height="wrap_content"
                     android:text="4"
                     android:textSize="14sp"
-                    app:layout_constraintStart_toStartOf="@+id/unicast"
-                    app:layout_constraintTop_toBottomOf="@+id/company_identifier"
-                    tools:ignore="HardcodedText"/>
+                    app:layout_constraintLeft_toRightOf="@+id/elements_title"
+                    app:layout_constraintTop_toBottomOf="@+id/tv_company_identifier"
+                    tools:ignore="HardcodedText" />
 
                 <TextView
                     android:id="@+id/models_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:text="models size:"
                     android:textSize="14sp"
-                    app:layout_constraintStart_toStartOf="@+id/unicast_title"
-                    app:layout_constraintTop_toBottomOf="@+id/elements"/>
+                    app:layout_constraintStart_toStartOf="@+id/tv_unicast_title"
+                    app:layout_constraintTop_toBottomOf="@+id/elements" />
 
                 <TextView
                     android:id="@+id/models"
@@ -165,9 +160,9 @@
                     android:layout_height="wrap_content"
                     android:text="29"
                     android:textSize="14sp"
-                    app:layout_constraintStart_toStartOf="@+id/unicast"
+                    app:layout_constraintLeft_toRightOf="@+id/models_title"
                     app:layout_constraintTop_toBottomOf="@+id/elements"
-                    tools:ignore="HardcodedText"/>
+                    tools:ignore="HardcodedText" />
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>

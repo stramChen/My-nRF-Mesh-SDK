@@ -5,6 +5,8 @@ import android.os.Bundle
 import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import no.nordicsemi.android.meshprovisioner.models.GenericOnOffServerModel
 import no.nordicsemi.android.meshprovisioner.transport.Element
 import no.nordicsemi.android.meshprovisioner.transport.MeshModel
@@ -19,7 +21,6 @@ import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.callbak.ProvisionCallback
 
 class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
-
     private var mNodeAdapter: NodeAdapter? = null
     private var mNodesCallback: ProvisionCallback = object : ProvisionCallback {
         override fun onProvisionedNodes(nodes: ArrayList<ProvisionedMeshNode>) {
@@ -47,7 +48,6 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
 
     fun initView() {
         tv_add.setOnClickListener(this)
-
 
         rv_provisioned_nodes.layoutManager = LinearLayoutManager(this)
         mNodeAdapter = NodeAdapter(

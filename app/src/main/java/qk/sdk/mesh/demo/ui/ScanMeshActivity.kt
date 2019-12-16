@@ -3,6 +3,7 @@ package qk.sdk.mesh.demo.ui
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.styd.crm.adapter.base.BaseAdapter
 import com.styd.crm.adapter.base.BaseViewHolder
@@ -46,12 +47,6 @@ class ScanMeshActivity : BaseMeshActivity(),
         initView()
     }
 
-    override fun onStart() {
-        super.onStart()
-        MeshHelper.stopConnect()
-        MeshHelper.disConnect()
-    }
-
     fun initView() {
         mDeviceAdapter = DevicesAdapter(this)
         rv_devices.layoutManager = LinearLayoutManager(this)
@@ -77,9 +72,23 @@ class ScanMeshActivity : BaseMeshActivity(),
 
             }
         })
+
+        btn_serach.setOnClickListener {
+            var address = et_address.text.toString()
+            address.let {
+                mDevice?.forEach {
+                    if (it.getAddress().endsWith(address)) {
+                        MeshHelper.stopScan()
+                        mDeviceAdapter?.setData(arrayListOf(it))
+                    }
+                }
+            }
+        }
     }
 
     fun startConnect(data: ExtendedBluetoothDevice) {
+//        MeshHelper.disConnect()
+        MeshHelper.stopScan()
         MeshHelper.connect(this, data, false, object : ConnectCallback {
             override fun onConnect() {
                 MeshHelper.startProvision(data, object : BaseCallback {
@@ -90,6 +99,8 @@ class ScanMeshActivity : BaseMeshActivity(),
             }
 
             override fun onConnectStateChange(msg: CallbackMsg) {
+                tv_status.visibility = View.VISIBLE
+                tv_status.text = msg.msg
                 if (msg.msg == ConnectState.DISCONNECTED.msg) {
                     var node = MeshHelper.getProvisionNode()
                     node?.let {
@@ -104,6 +115,7 @@ class ScanMeshActivity : BaseMeshActivity(),
                                     launch {
                                         delay(1000)
                                         MeshHelper.setSelectedMeshNode(it)
+                                        MeshHelper.setSelectedModel(null, null)
 //                                        bindModel(it)
                                         startActivity(
                                             Intent(
@@ -126,23 +138,6 @@ class ScanMeshActivity : BaseMeshActivity(),
             }
         })
 
-    }
-
-    private fun bindModel(node: ProvisionedMeshNode) {
-        var elementsMap = node.elements.values
-        var elements = ArrayList<Element>()
-        elements.addAll(elementsMap)
-        if (elements.size > 0)
-            elements[0].let { element ->
-                var modelsMap = element.meshModels.values
-                var models = ArrayList<MeshModel>()
-                models.addAll(modelsMap)
-                models.forEach { model ->
-                    if (model is GenericOnOffServerModel) {
-                        MeshHelper.setSelectedModel(element, model)
-                    }
-                }
-            }
     }
 
     override fun onItemClick(data: ExtendedBluetoothDevice, position: Int) {
@@ -179,6 +174,14 @@ class ScanMeshActivity : BaseMeshActivity(),
             } else {
                 setData(mDevice)
                 notifyDataSetChanged()
+            }
+        }
+
+        fun search(address: String) {
+            mDevice?.forEach {
+                if (it.getAddress().endsWith(address)) {
+
+                }
             }
         }
     }

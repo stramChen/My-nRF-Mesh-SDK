@@ -28,6 +28,8 @@ open class BaseMeshService : LifecycleService() {
     private var isProvisioningStarted = false
 
     var mNrfMeshManager: NrfMeshManager? = null
+    var mConnectCallback: ConnectCallback? = null
+    var mScanCallback: ScanCallback? = null
 
     override fun onBind(intent: Intent): IBinder? {
         super.onBind(intent)
@@ -45,15 +47,16 @@ open class BaseMeshService : LifecycleService() {
 
     //开始扫描
     internal fun startScan(filterUuid: UUID, scanCallback: ScanCallback?) {
+        mScanCallback = scanCallback
         //获取扫描结果
         mNrfMeshManager?.getScannerResults()?.observe(this, Observer {
             Log.e("", "get scanner result:${it.devices.size}")
-            scanCallback?.onScanResult(it.devices, it.updatedDeviceIndex)
+            mScanCallback?.onScanResult(it.devices, it.updatedDeviceIndex)
         })
         // 获取扫描状态结果
         mNrfMeshManager?.getScannerState()?.observe(this, Observer {
             Log.e("", "scanner state changed")
-            scanCallback?.onScanStateChange()
+            mScanCallback?.onScanStateChange()
         })
 
         mNrfMeshManager?.startScan(filterUuid)
@@ -61,12 +64,27 @@ open class BaseMeshService : LifecycleService() {
 
     //停止扫描
     internal fun stopScan() {
+        mScanCallback = null
         mNrfMeshManager?.stopScan()
+        mNrfMeshManager?.getScannerResults()?.removeObservers(this)
+        // 获取扫描状态结果
+        mNrfMeshManager?.getScannerState()?.removeObservers(this)
     }
 
     internal fun stopConnect() {
         mNrfMeshManager?.connectionState?.removeObservers(this)
+        mNrfMeshManager?.isDeviceReady?.removeObservers(this)
+        mConnectCallback = null
 
+    }
+
+    internal fun getConnectingDevice(): ExtendedBluetoothDevice? {
+        return mNrfMeshManager?.mConnectDevice
+    }
+
+    internal fun addConnectCallback(callback: ConnectCallback) {
+        mConnectCallback = callback
+        setConnectObserver()
     }
 
     //开始连接
@@ -75,9 +93,15 @@ open class BaseMeshService : LifecycleService() {
         device: ExtendedBluetoothDevice,
         connectToNetwork: Boolean, callback: ConnectCallback?
     ) {
+        mConnectCallback = callback
+        setConnectObserver()
+        mNrfMeshManager?.connect(context, device, connectToNetwork)
+    }
+
+    private fun setConnectObserver() {
         mNrfMeshManager?.isDeviceReady?.observe(this, Observer {
             if (mNrfMeshManager?.bleMeshManager?.isDeviceReady ?: false) {
-                callback?.onConnect()
+                mConnectCallback?.onConnect()
             } else {
                 //todo 日志记录
             }
@@ -85,22 +109,21 @@ open class BaseMeshService : LifecycleService() {
         mNrfMeshManager?.connectionState?.observe(this, Observer {
             if (it != null) {
                 if (it.code == 0) {
-                    callback?.onConnectStateChange(it)
+                    mConnectCallback?.onConnectStateChange(it)
                     Utils.printLog(TAG, it.msg)
                 } else {
-                    callback?.onError(it)
+                    mConnectCallback?.onError(it)
                 }
             }
         })
         mNrfMeshManager?.provisionedNodes?.observe(this, Observer {
-            callback?.onConnectStateChange(
+            mConnectCallback?.onConnectStateChange(
                 CallbackMsg(
                     CommonErrorMsg.CONNECT_PROVISIONED_NODE_UPDATE.code,
                     CommonErrorMsg.CONNECT_PROVISIONED_NODE_UPDATE.msg
                 )
             )
         })
-        mNrfMeshManager?.connect(context, device, connectToNetwork)
     }
 
     internal fun disConnect() {
@@ -195,8 +218,8 @@ open class BaseMeshService : LifecycleService() {
     }
 
     internal fun setSelectedModel(
-        element: Element,
-        model: MeshModel
+        element: Element?,
+        model: MeshModel?
     ) {
         mNrfMeshManager?.setSelectedElement(element)
         mNrfMeshManager?.setSelectedModel(model)

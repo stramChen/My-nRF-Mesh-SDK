@@ -32,15 +32,27 @@ import kotlinx.android.synthetic.main.item_main_node.view.*
 
 import no.nordicsemi.android.meshprovisioner.transport.Element
 import no.nordicsemi.android.meshprovisioner.transport.ProvisionedMeshNode
+import no.nordicsemi.android.meshprovisioner.utils.CompanyIdentifiers
+import no.nordicsemi.android.meshprovisioner.utils.MeshAddress
+import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils
 import qk.sdk.mesh.demo.R
 import qk.sdk.mesh.demo.widget.RemovableViewHolder
+import java.lang.Exception
 
 class NodeAdapter(context: Context, data: ArrayList<ProvisionedMeshNode>) :
     BaseAdapter<ProvisionedMeshNode>(context, data, R.layout.item_main_node) {
 
     override fun bindData(holder: BaseViewHolder, data: ProvisionedMeshNode, position: Int) {
-        holder.itemView.tv_node_name.text = data.nodeName
-        //todo 其他信息补足
+        try {
+            holder.itemView.tv_node_name.text = data.nodeName
+            holder.itemView.tv_unicast.text = data.uuid
+            holder.itemView.tv_company_identifier.text =
+                CompanyIdentifiers.getCompanyName(data.companyIdentifier.toShort())
+            holder.itemView.elements.text = "${data.elements.size}"
+            holder.itemView.models.text = "${getModels(data.elements)}"
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     private fun getModels(elements: Map<Int, Element>): Int {
