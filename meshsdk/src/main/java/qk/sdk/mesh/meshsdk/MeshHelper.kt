@@ -23,22 +23,33 @@ object MeshHelper {
     private val TAG = "MeshHelper"
     private var mProvisionCallback: ProvisionCallback? = null
 
+    // 初始化 mesh
     fun initMesh(context: Context) {
         context.startService(Intent(context, MeshProxyService::class.java))
     }
 
+    // 检查蓝牙权限
+    // 希望不需要传递 Activity
     fun checkPermission(activity: Activity, listener: ListenerWrapper.PermissionRequestListener) {
         PermissionUtil.checkMeshPermission(activity, listener)
     }
 
+    // 扫描蓝牙节点
+    // TODO: UUID 定义为一个通用的字符串，标明扫描到的设备类型（已加入 mesh 网络的，未加入的）
+    // TODO: scanCallback -> 2 个方法，onStatusChange, onScanResult
     fun startScan(filterUuid: UUID, scanCallback: ScanCallback?) {
         MeshProxyService.mMeshProxyService?.startScan(filterUuid, scanCallback)
     }
 
+    // 停止蓝牙扫描
     fun stopScan() {
         MeshProxyService.mMeshProxyService?.stopScan()
     }
 
+    // ⚠️ Q: 此处是否仅建立蓝牙连接？
+    // 建立连接
+    // TODO: device 修改为传递唯一标识符 string | number
+    // TODO: 能多函数多函数，参数最好是基础类型
     fun connect(
         context: Context,
         device: ExtendedBluetoothDevice,
@@ -48,59 +59,99 @@ object MeshHelper {
         MeshProxyService.mMeshProxyService?.connect(context, device, connectToNetwork, callback)
     }
 
+    // 添加蓝牙连接回调
+    // 当前连接的 mesh 代理节点状态变化时，回调通知应用层
+    // TODO: 合并 callback 为一个方法，定义并给出 callback 参数定义 - 连接、断开、连接中，等等
+    // TODO: addConnectStatusChangedCallback
     fun addConnectCallback(callback: ConnectCallback) {
         MeshProxyService.mMeshProxyService?.addConnectCallback(callback)
     }
 
+    // 获取当前已连接的蓝牙设备
+    // TODO: getCurrentConnectedDevice()
+    // TODO: ExtendedBluetoothDevice 转换为 HashMap
+    // TODO: ExtendedBluetoothDevice 包含属性（暂定）
+    // TODO: UUID, mac(address), name, rssi
     fun getConnectedDevice(): ExtendedBluetoothDevice? {
         return MeshProxyService.mMeshProxyService?.getConnectingDevice()
     }
-
+    
+    // 断开当前蓝牙连接
     fun disConnect() {
         MeshProxyService.mMeshProxyService?.disConnect()
     }
 
+    // 停止蓝牙连接 - 正在连接的时候
     fun stopConnect() {
         MeshProxyService.mMeshProxyService?.stopConnect()
     }
 
+    // 清除 mesh 回调，清除 mesh 业务逻辑中所有设定的 callback
     fun clearMeshCallback() {
         MeshProxyService.mMeshProxyService?.clearMeshCallback()
     }
 
+    // 开启启动网络配置
+    // TODO: ExtendedBluetoothDevice 转换为 HashMap
+    // TODO: callback 同上
     fun startProvision(device: ExtendedBluetoothDevice, callback: BaseCallback) {
         MeshProxyService.mMeshProxyService?.startProvisioning(device, callback)
     }
 
+    // ??? 获取已经配置的网络的节点列表？
+    // TODO: callback 同上
+    // TODO: getProvisionedDeviceListForCurrentMeshNetwork()
     fun getProvisionedNodeByCallback(callback: ProvisionCallback) {
         mProvisionCallback = callback
         MeshProxyService.mMeshProxyService?.getProvisionedNodes(callback)
     }
 
+    // ??? 获取已经配置的网络的节点列表？—— 和上面函数的区别？
+    // Warning!!!!!!!!!!!!!!!!!!!!!!!! 最好 React Native 层不要用这个方法
     fun getProvisionNode(): ArrayList<ProvisionedMeshNode>? {
         return MeshProxyService.mMeshProxyService?.mNrfMeshManager?.nodes?.value
     }
 
+    // 移除已经配置的 mesh 网络节点
+    // TODO: ProvisionedMeshNode 同上
+    // TODO: callback 同上
+    // TODO: deleteProvisionNodeFormLocalMeshNetworkDataBase
     fun deleteProvisionNode(node: ProvisionedMeshNode, callback: ProvisionCallback) {
         MeshProxyService.mMeshProxyService?.deleteNode(node, callback)
     }
 
+    // ？？？
+    // 设置要操作的节点
+    // TODO: node -> string MAC 地址
     fun setSelectedMeshNode(node: ProvisionedMeshNode) {
         MeshProxyService.mMeshProxyService?.setSelectedNode(node)
     }
 
+    // ？？？
     fun getSelectedMeshNode(): ProvisionedMeshNode? {
         return MeshProxyService.mMeshProxyService?.getSelectedNode()
     }
 
+    // ？？？
     fun getMeshNetwork(): MeshNetwork? {
         return MeshProxyService.mMeshProxyService?.getMeshNetwork()
     }
 
+    // 获取 mesh 网络中已有的 application key
     fun getAppKeys(): List<ApplicationKey>? {
         return MeshProxyService.mMeshProxyService?.getMeshNetwork()?.appKeys
     }
 
+    // 选择要操作的元素和 model
+    fun setSelectedModel(
+        element: Element?,
+        model: MeshModel?
+    ) {
+        MeshProxyService.mMeshProxyService?.setSelectedModel(element, model)
+    }
+
+    // 在当前 mesh 网络中创建一个新的 application key，并存储
+    // TODO: 传入 APP Key 序号
     fun addAppKeys(meshCallback: MeshCallback?) {
         val applicationKey = getAppKeys()?.get(0)
         if (applicationKey != null) {
@@ -131,6 +182,9 @@ object MeshHelper {
         }
     }
 
+    // 绑定 application key
+    // TODO: 传入 APP Key 序号
+    // TODO: 在这个过程中对目标 modelxN 进行 bindAppKey 操作，直接遍历所有 model 并绑定
     fun bindAppKey(meshCallback: MeshCallback?) {
         getSelectedMeshNode()?.let {
             val element = MeshHelper.getSelectedElement()
@@ -147,6 +201,7 @@ object MeshHelper {
         }
     }
 
+    // 向设备发送指令
     fun sendMessage(address: Int, message: MeshMessage, callback: MeshCallback? = null) {
         try {
             sendMeshPdu(address, message, callback)
@@ -156,33 +211,37 @@ object MeshHelper {
         }
     }
 
+    // 获取当前 mesh 网络的 network key
     fun getNetworkKey(index: Int): NetworkKey? {
         return MeshProxyService.mMeshProxyService?.getMeshNetwork()?.netKeys?.get(index)
     }
 
+    // 传送 mesh 数据包
+    // 传递控制参数给 mesh 设备
+    // TODO: 修改为原始类型数据
+    // TODO: sendMeshPDU
     fun sendMeshPdu(dst: Int, message: MeshMessage, callback: MeshCallback?) {
         MeshProxyService.mMeshProxyService?.sendMeshPdu(dst, message, callback)
     }
 
-    fun setSelectedModel(
-        element: Element?,
-        model: MeshModel?
-    ) {
-        MeshProxyService.mMeshProxyService?.setSelectedModel(element, model)
-    }
-
+    // 获取选中的 model
+    // TODO: 修改为原始类型数据
     fun getSelectedModel(): MeshModel? {
         return MeshProxyService.mMeshProxyService?.getSelectedModel()
     }
 
+    // TODO: 修改为原始类型数据
     fun getSelectedElement(): Element? {
         return MeshProxyService.mMeshProxyService?.getSelectedElement()
     }
 
+    // 是否已经成功连接代理节点
     fun isConnectedToProxy(): Boolean {
         return MeshProxyService.mMeshProxyService?.isConnectedToProxy() ?: false
     }
 
+    // 设定通用开关状态 ？？？GET？？？
+    // Android 封装好的方法
     fun sendGenericOnOffGet(meshCallback: MeshCallback?) {
         val element = MeshHelper.getSelectedElement()
         if (element != null) {
@@ -213,7 +272,7 @@ object MeshHelper {
             }
         }
     }
-
+    // 设定开关状态？
     fun sendGenericOnOff(state: Boolean, delay: Int?) {
         getSelectedMeshNode()?.let { node ->
             getSelectedElement()?.let { element ->
@@ -248,6 +307,7 @@ object MeshHelper {
      * @param opcode     opcode of the message
      * @param parameters parameters of the message
      */
+    // 私有协议 opcode, value
     fun sendVendorModelMessage(opcode: Int, parameters: ByteArray?, acknowledged: Boolean) {
         val element = MeshHelper.getSelectedElement()
         if (element != null) {

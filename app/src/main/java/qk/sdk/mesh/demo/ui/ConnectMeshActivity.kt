@@ -202,6 +202,7 @@ class ConnectMeshActivity : BaseMeshActivity() {
             } else if (msg is ConfigModelAppStatus) {
                 if (msg.isSuccessful) {//bind appkey成功
                     Utils.printLog(TAG, "bindAppKey success!")
+                    //todo 轮询model列表，
                 } else {
                     Utils.printLog(TAG, "bindAppKey failed:${msg.statusCodeName}")
                 }
