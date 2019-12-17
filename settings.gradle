@@ -1,2 +1,12 @@
-include ':app', ':meshsdk', ':meshprovisioner'
-rootProject.name='QKMeshDemo'
+include ':app', ':meshsdk', ':meshprovisioner', ':mxnrfmesh'
+setBinding(new Binding([gradle: this]))
+evaluate(new File(
+  settingsDir,
+  'flutter_mxnrfmesh/.android/include_flutter.groovy'
+))
+rootProject.name = 'QKMeshDemo'
+
+include ':MXCommonSDK'
+project(':MXCommonSDK').projectDir = new File("../MXCommonSDK")
+include ':MXCommonSDK:http'
+include ':MXCommonSDK:util'
