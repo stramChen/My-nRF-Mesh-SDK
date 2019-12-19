@@ -28,7 +28,7 @@ object Constants {
 
     enum class ConnectState(var msg: String, var code: Int = 1000) {
         SDK_NOT_INIT("SDK_NOT_INIT_MSG", 101),
-        CANNOT_FIND_DEVICE_BY_MAC("找不到mac地址对应的设备", 102),//provision传参错误，找不到mac地址对应的设备
+        CANNOT_FIND_DEVICE_BY_MAC("找不到mac地址对应的设备", 102),//传参错误，找不到mac地址对应的设备
         CONNECT_FAILED("未释放蓝牙资源", 133),
 
         PROVISION_SUCCESS("provisioned", 200),//provision 成功

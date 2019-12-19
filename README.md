@@ -98,16 +98,17 @@ MainMeshActivity.bindModel()
 发送 `MeshMessage`。其中 `GenericOnOffModel`、`VenderModel` 已经将 `opCode` 等参数固定，可直接传相应的 `MeshMessage` 实例来进行通信；同时也提供直接传原始参数接口（待定义）。
 
 # 4. 错误码定义
-
-## 错误码说明：int 类型
-## SDK全局错误码：100起，如未初始化SDK的错误码为101,未释放蓝牙资源133
-## PROVISION错误码：300起
+```
+ 错误码说明：int 类型
+ SDK全局错误码：100起，如未初始化SDK的错误码为101,未释放蓝牙资源133
+ PROVISION错误码：200起
+```
 
 ```java
 enum class ConnectState(var msg: String, var code: Int = 1000) {
         SDK_NOT_INIT("SDK_NOT_INIT_MSG", 101),//未初始化sdk
-        CANNOT_FIND_DEVICE_BY_MAC("找不到mac地址对应的设备", 102),//provision传参错误，找不到mac地址对应的设备
-        CONNECT_FAILED("未释放蓝牙资源", 133),
+        CANNOT_FIND_DEVICE_BY_MAC("找不到mac地址对应的设备", 102),//传参错误，找不到mac地址对应的设备
+        CONNECT_FAILED("未释放蓝牙资源", 133),//未释放蓝牙资源,android native层定义的错误码
 
         PROVISION_SUCCESS("provisioned", 200),//provision 成功
 
