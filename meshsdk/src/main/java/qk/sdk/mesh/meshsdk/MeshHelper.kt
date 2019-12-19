@@ -75,7 +75,7 @@ object MeshHelper {
     fun getConnectedDevice(): ExtendedBluetoothDevice? {
         return MeshProxyService.mMeshProxyService?.getConnectingDevice()
     }
-    
+
     // 断开当前蓝牙连接
     fun disConnect() {
         MeshProxyService.mMeshProxyService?.disConnect()
@@ -160,8 +160,8 @@ object MeshHelper {
                 //todo 日志记录
                 Utils.printLog(TAG, "addAppKeys() networkKey is null!")
             } else {
-                val node = MeshHelper.getSelectedMeshNode()
-                var isNodeKeyAdd = false
+                val node = getSelectedMeshNode()
+                var isNodeKeyAdd: Boolean
                 if (node != null) {
                     isNodeKeyAdd = MeshParserUtils.isNodeKeyExists(
                         node.addedAppKeys,
@@ -272,6 +272,7 @@ object MeshHelper {
             }
         }
     }
+
     // 设定开关状态？
     fun sendGenericOnOff(state: Boolean, delay: Int?) {
         getSelectedMeshNode()?.let { node ->
@@ -309,12 +310,12 @@ object MeshHelper {
      */
     // 私有协议 opcode, value
     fun sendVendorModelMessage(opcode: Int, parameters: ByteArray?, acknowledged: Boolean) {
-        val element = MeshHelper.getSelectedElement()
+        val element = getSelectedElement()
         if (element != null) {
-            val model = MeshHelper.getSelectedModel() as VendorModel
-            if (model != null) {
+            val model = getSelectedModel()
+            if (model != null && model is VendorModel) {
                 val appKeyIndex = model.boundAppKeyIndexes[0]
-                val appKey = MeshHelper.getMeshNetwork()?.getAppKey(appKeyIndex)
+                val appKey = getMeshNetwork()?.getAppKey(appKeyIndex)
                 val message: MeshMessage
                 if (appKey != null) {
                     if (acknowledged) {

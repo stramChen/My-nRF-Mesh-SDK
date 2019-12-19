@@ -1,26 +1,22 @@
 package qk.sdk.mesh.demo.ui
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import kotlinx.android.synthetic.main.activity_connect.*
-import kotlinx.android.synthetic.main.activity_main.*
 import no.nordicsemi.android.meshprovisioner.models.GenericOnOffServerModel
 import no.nordicsemi.android.meshprovisioner.models.VendorModel
 import no.nordicsemi.android.meshprovisioner.transport.*
-import no.nordicsemi.android.meshprovisioner.utils.MeshAddress
-import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils
 import qk.sdk.mesh.demo.R
 import qk.sdk.mesh.demo.base.BaseMeshActivity
 import qk.sdk.mesh.meshsdk.MeshHelper
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
-import qk.sdk.mesh.meshsdk.bean.connect.ConnectState
 import qk.sdk.mesh.meshsdk.callbak.ConnectCallback
 import qk.sdk.mesh.meshsdk.callbak.MeshCallback
 import qk.sdk.mesh.meshsdk.callbak.ScanCallback
 import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
 import qk.sdk.mesh.meshsdk.util.ByteUtil
+import qk.sdk.mesh.meshsdk.util.Constants
 import qk.sdk.mesh.meshsdk.util.Utils
 import java.lang.StringBuilder
 
@@ -150,9 +146,6 @@ class ConnectMeshActivity : BaseMeshActivity() {
             }
         }
 
-        override fun onScanStateChange() {
-        }
-
         override fun onError(callbackMsg: CallbackMsg) {
         }
     }
@@ -170,7 +163,7 @@ class ConnectMeshActivity : BaseMeshActivity() {
         }
 
         override fun onConnectStateChange(msg: CallbackMsg) {
-            if (msg.msg == ConnectState.DISCONNECTED.msg) {//连接断开，自动寻找代理节点重连
+            if (msg.msg == Constants.ConnectState.DISCONNECTED.msg) {//连接断开，自动寻找代理节点重连
                 startScan(BleMeshManager.MESH_PROXY_UUID, scanCallback)
             }
             tv_state.text = msg.msg

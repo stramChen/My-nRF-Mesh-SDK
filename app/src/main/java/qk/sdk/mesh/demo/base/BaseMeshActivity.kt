@@ -6,12 +6,14 @@ import com.joker.api.wrapper.ListenerWrapper
 import no.nordicsemi.android.meshprovisioner.transport.MeshMessage
 import qk.sdk.mesh.demo.R
 import qk.sdk.mesh.meshsdk.MeshHelper
-import qk.sdk.mesh.meshsdk.callbak.MeshCallback
-import qk.sdk.mesh.meshsdk.callbak.ScanCallback
+import qk.sdk.mesh.meshsdk.MeshSDK
+import qk.sdk.mesh.meshsdk.callbak.*
+import qk.sdk.mesh.meshsdk.util.Constants
 import qk.sdk.mesh.meshsdk.util.Utils
 import java.util.*
 
 abstract class BaseMeshActivity : AppCompatActivity() {
+    private val TAG = "BaseMeshActivity"
     internal var BUNDLE_CONNECT_EXTRA = "isReConnect"
 
     internal var mPingMills = 0L
@@ -52,7 +54,22 @@ abstract class BaseMeshActivity : AppCompatActivity() {
 
     }
 
+    internal fun startScan(type: String, callback: ArrayMapCallback) {
+        MeshSDK.checkPermission(object : StringCallback {
+            override fun onResultMsg(msg: String) {
+                if (msg == Constants.PERMISSION_GRANTED) {
+                    MeshSDK.startScan(type, callback, object : IntCallback {
+                        override fun onResultMsg(code: Int) {
+                            Utils.printLog(TAG, "scan error:$code")
+                        }
+                    })
+                } else {
+                    Utils.printLog(TAG, "PERMISSION:$msg")
+                }
+            }
+        })
 
+    }
 
     override fun onBackPressed() {
         super.onBackPressed()

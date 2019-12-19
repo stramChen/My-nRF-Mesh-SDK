@@ -56,7 +56,6 @@ open class BaseMeshService : LifecycleService() {
         // 获取扫描状态结果
         mNrfMeshManager?.getScannerState()?.observe(this, Observer {
             Log.e("", "scanner state changed")
-            mScanCallback?.onScanStateChange()
         })
 
         mNrfMeshManager?.startScan(filterUuid)
@@ -108,12 +107,12 @@ open class BaseMeshService : LifecycleService() {
         })
         mNrfMeshManager?.connectionState?.observe(this, Observer {
             if (it != null) {
-                if (it.code == 0) {
-                    mConnectCallback?.onConnectStateChange(it)
-                    Utils.printLog(TAG, it.msg)
-                } else {
-                    mConnectCallback?.onError(it)
-                }
+//                if (it.code == 0) {
+                mConnectCallback?.onConnectStateChange(it)
+                Utils.printLog(TAG, it.msg)
+//                } else {
+//                    mConnectCallback?.onError(it)
+//                }
             }
         })
         mNrfMeshManager?.provisionedNodes?.observe(this, Observer {

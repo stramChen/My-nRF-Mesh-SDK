@@ -12,27 +12,22 @@ import kotlinx.android.synthetic.main.item_scan_device.view.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import no.nordicsemi.android.meshprovisioner.models.GenericOnOffServerModel
-import no.nordicsemi.android.meshprovisioner.transport.Element
-import no.nordicsemi.android.meshprovisioner.transport.MeshModel
-import no.nordicsemi.android.meshprovisioner.transport.ProvisionedMeshNode
 import qk.sdk.mesh.demo.R
 import qk.sdk.mesh.demo.base.BaseMeshActivity
 import qk.sdk.mesh.demo.widget.base.OnItemClickListener
 import qk.sdk.mesh.meshsdk.MeshHelper
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
-import qk.sdk.mesh.meshsdk.bean.connect.ConnectState
 import qk.sdk.mesh.meshsdk.callbak.BaseCallback
 import qk.sdk.mesh.meshsdk.callbak.ConnectCallback
 import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
 import qk.sdk.mesh.meshsdk.callbak.ScanCallback
+import qk.sdk.mesh.meshsdk.util.Constants
 import qk.sdk.mesh.meshsdk.util.Utils
 import kotlin.collections.ArrayList
 
 class ScanMeshActivity : BaseMeshActivity(),
     OnItemClickListener<ExtendedBluetoothDevice> {
-    //    private val INTENT_EXTRA = "scan_mode"
     private val TAG = "ScanMeshActivity"
 
     private var mDeviceAdapter: DevicesAdapter? = null
@@ -65,25 +60,10 @@ class ScanMeshActivity : BaseMeshActivity(),
                 }
             }
 
-            override fun onScanStateChange() {// 扫描状态变化，若需要一直扫描，需要在此调用startScan
-            }
-
             override fun onError(callbackMsg: CallbackMsg) {
 
             }
         })
-
-        btn_serach.setOnClickListener {
-            var address = et_address.text.toString()
-            address.let {
-                mDevice?.forEach {
-                    if (it.getAddress().endsWith(address)) {
-                        MeshHelper.stopScan()
-                        mDeviceAdapter?.setData(arrayListOf(it))
-                    }
-                }
-            }
-        }
     }
 
     fun startConnect(data: ExtendedBluetoothDevice) {
@@ -101,7 +81,7 @@ class ScanMeshActivity : BaseMeshActivity(),
             override fun onConnectStateChange(msg: CallbackMsg) {
                 tv_status.visibility = View.VISIBLE
                 tv_status.text = msg.msg
-                if (msg.msg == ConnectState.DISCONNECTED.msg) {
+                if (msg.msg == Constants.ConnectState.DISCONNECTED.msg) {
                     var node = MeshHelper.getProvisionNode()
                     node?.let {
                         node.forEach {

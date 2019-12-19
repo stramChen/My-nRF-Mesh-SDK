@@ -47,5 +47,5 @@ dependencies {
     implementation group: 'androidx.appcompat', name: 'appcompat', version: '1.1.0'
 
     api project(':meshsdk')
-    implementation project(path: ':flutter')
+//    implementation project(path: ':flutter')
 }

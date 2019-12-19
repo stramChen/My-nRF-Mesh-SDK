@@ -67,9 +67,10 @@ import qk.sdk.mesh.meshsdk.util.Utils
 
 import no.nordicsemi.android.meshprovisioner.MeshManagerApi.MESH_PROXY_UUID
 import qk.sdk.mesh.meshsdk.bean.*
-import qk.sdk.mesh.meshsdk.bean.connect.ConnectState
 import qk.sdk.mesh.meshsdk.bean.scan.ScannerLiveData
 import qk.sdk.mesh.meshsdk.bean.scan.ScannerStateLiveData
+import qk.sdk.mesh.meshsdk.util.Constants
+import qk.sdk.mesh.meshsdk.util.Constants.ConnectState.*
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -332,8 +333,8 @@ class NrfMeshManager(
         initIsConnectedLiveData(connectToNetwork)
         mConnectionState.postValue(
             CallbackMsg(
-                ConnectState.CONNECTING.code,
-                ConnectState.CONNECTING.msg
+                CONNECTING.code,
+                CONNECTING.msg
             )
         )
         //Added a 1 second delay for connection, mostly to wait for a disconnection to complete before connecting.
@@ -355,8 +356,8 @@ class NrfMeshManager(
         initIsConnectedLiveData(true)
         mConnectionState.postValue(
             CallbackMsg(
-                ConnectState.CONNECTING.code,
-                ConnectState.CONNECTING.msg
+                CONNECTING.code,
+                CONNECTING.msg
             )
         )
         if (device.device != null) {
@@ -469,8 +470,8 @@ class NrfMeshManager(
     override fun onDeviceConnecting(device: BluetoothDevice) {
         mConnectionState.postValue(
             CallbackMsg(
-                ConnectState.CONNECTING.code,
-                ConnectState.CONNECTING.msg
+                CONNECTING.code,
+                CONNECTING.msg
             )
         )
     }
@@ -479,8 +480,8 @@ class NrfMeshManager(
         mIsConnected!!.postValue(true)
         mConnectionState.postValue(
             CallbackMsg(
-                ConnectState.DISCOVERING_SERVICE.code,
-                ConnectState.DISCOVERING_SERVICE.msg
+                DISCOVERING_SERVICE.code,
+                DISCOVERING_SERVICE.msg
             )
         )
         mIsConnectedToProxy.postValue(true)
@@ -494,15 +495,15 @@ class NrfMeshManager(
         if (mIsReconnectingFlag) {
             mConnectionState.postValue(
                 CallbackMsg(
-                    ConnectState.RECONNETCING.code,
-                    ConnectState.RECONNETCING.msg
+                    RECONNETCING.code,
+                    RECONNETCING.msg
                 )
             )
         } else {
             mConnectionState.postValue(
                 CallbackMsg(
-                    ConnectState.DISCONNECTING.code,
-                    ConnectState.DISCONNECTING.msg
+                    DISCONNECTING.code,
+                    DISCONNECTING.msg
                 )
             )
         }
@@ -512,8 +513,8 @@ class NrfMeshManager(
         Utils.printLog(TAG, "Disconnected")
         mConnectionState.postValue(
             CallbackMsg(
-                ConnectState.DISCONNECTED.code,
-                ConnectState.DISCONNECTED.msg
+                DISCONNECTED.code,
+                DISCONNECTED.msg
             )
         )
         if (mIsReconnectingFlag) {
@@ -543,17 +544,13 @@ class NrfMeshManager(
     override fun onServicesDiscovered(device: BluetoothDevice, optionalServicesFound: Boolean) {
         mConnectionState.postValue(
             CallbackMsg(
-                ConnectState.INITIALIZING.code,
-                ConnectState.INITIALIZING.msg
+                INITIALIZING.code,
+                INITIALIZING.msg
             )
         )
     }
 
     override fun onDeviceReady(device: BluetoothDevice) {
-        Utils.printLog(
-            TAG,
-            "onDeviceReady:${device.address},connect device:${mConnectDevice?.getAddress()}"
-        )
         mOnDeviceReady.postValue(null)
 
         if (bleMeshManager!!.isProvisioningComplete) {

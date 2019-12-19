@@ -92,7 +92,8 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
 
     override fun onClick(v: View) {
         if (v.id == R.id.tv_add) {
-            startActivity(Intent(this, ScanMeshActivity::class.java))
+//            startActivity(Intent(this, ScanMeshActivity::class.java))
+            startActivity(Intent(this, ScanTestActivity::class.java))
         }
     }
 
