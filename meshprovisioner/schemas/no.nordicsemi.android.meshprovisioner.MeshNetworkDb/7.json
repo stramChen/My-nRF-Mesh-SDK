@@ -62,7 +62,7 @@
       },
       {
         "tableName": "network_key",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `mesh_uuid` TEXT, `index` INTEGER NOT NULL, `name` TEXT, `key` BLOB, `old_key` BLOB, `phase` INTEGER NOT NULL, `security` INTEGER NOT NULL, `timestamp` INTEGER NOT NULL, FOREIGN KEY(`mesh_uuid`) REFERENCES `mesh_network`(`mesh_uuid`) ON UPDATE CASCADE ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `mesh_uuid` TEXT, `index` INTEGER NOT NULL, `name` TEXT, `key` BLOB, `old_key` BLOB, `phase` INTEGER NOT NULL, `security` INTEGER NOT NULL, `timestamp` INTEGER NOT NULL, `isCurrent` INTEGER NOT NULL, FOREIGN KEY(`mesh_uuid`) REFERENCES `mesh_network`(`mesh_uuid`) ON UPDATE CASCADE ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -109,6 +109,12 @@
           {
             "fieldPath": "minSecurity",
             "columnName": "security",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isCurrent",
+            "columnName": "isCurrent",
             "affinity": "INTEGER",
             "notNull": true
           },

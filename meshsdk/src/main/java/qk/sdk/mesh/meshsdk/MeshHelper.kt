@@ -14,6 +14,7 @@ import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
 import qk.sdk.mesh.meshsdk.callbak.*
 import qk.sdk.mesh.meshsdk.service.BaseMeshService
+import qk.sdk.mesh.meshsdk.util.ByteUtil
 import qk.sdk.mesh.meshsdk.util.PermissionUtil
 import qk.sdk.mesh.meshsdk.util.Utils
 import java.util.*
@@ -182,6 +183,40 @@ object MeshHelper {
         }
     }
 
+    //给RN用
+    fun addAppkeys(meshCallback: MeshCallback?) {
+        getAppKeys()?.forEach { applicationKey ->
+            if (applicationKey.boundNetKeyIndex == getCurrentNetworkKey()?.keyIndex) {
+                val node = getSelectedMeshNode()
+                var isNodeKeyAdd: Boolean
+                if (node != null) {
+                    isNodeKeyAdd = MeshParserUtils.isNodeKeyExists(
+                        node.addedAppKeys,
+                        applicationKey.keyIndex
+                    )
+                    val meshMessage: MeshMessage
+                    if (!isNodeKeyAdd) {
+                        meshMessage = ConfigAppKeyAdd(getCurrentNetworkKey()!!, applicationKey)
+                    } else {
+                        meshMessage = ConfigAppKeyDelete(getCurrentNetworkKey()!!, applicationKey)
+                    }
+                    sendMessage(node.unicastAddress, meshMessage, meshCallback)
+                }
+            }
+        }
+    }
+
+    /**
+     * 在绑定好appkey之后，获取当前节点的元素列表
+     */
+    fun getCompositionData() {
+        val configCompositionDataGet = ConfigCompositionDataGet()
+        val node = MeshHelper.getSelectedMeshNode()
+        node?.let {
+            sendMessage(it.unicastAddress, configCompositionDataGet)
+        }
+    }
+
     // 绑定 application key
     // TODO: 传入 APP Key 序号
     // TODO: 在这个过程中对目标 modelxN 进行 bindAppKey 操作，直接遍历所有 model 并绑定
@@ -197,6 +232,53 @@ object MeshHelper {
                         ConfigModelAppBind(element.elementAddress, model.modelId, 0)
                     sendMessage(it.unicastAddress, configModelAppUnbind, meshCallback)
                 }
+            }
+        }
+    }
+
+    fun createNetworkKey(key: String) {
+        var netKey =
+            MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.createNetworkKey()
+        netKey?.key = ByteUtil.hexStringToBytes(key)
+        netKey?.let {
+            MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.addNetKey(
+                netKey
+            )
+        }
+    }
+
+    fun getAllNetworkKey(): List<NetworkKey>? {
+        return MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshNetworkLiveData?.networkKeys
+    }
+
+    fun setCurrentNetworkKey(networkKey: String) {
+        MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshNetworkLiveData?.networkKeys?.forEach {
+            it.isCurrent = if (ByteUtil.bytesToHexString(it.key) == networkKey) 1 else 0
+            MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.let { meshNetwork ->
+                meshNetwork.updateNetKey(it)
+            }
+        }
+    }
+
+    fun getCurrentNetworkKey(): NetworkKey? {
+        MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshNetworkLiveData?.networkKeys?.forEach {
+            if (it.isCurrent == 1)
+                return it
+        }
+
+        return null
+    }
+
+    fun createApplicationKey(networkKey: String) {
+        getAllNetworkKey()?.forEach { it ->
+            if (ByteUtil.bytesToHexString(it.key) == networkKey) {
+                MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.createAppKey()
+                    ?.let { applicationKey ->
+                        applicationKey.boundNetKeyIndex = it.keyIndex
+                        MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.let { network ->
+                            network.updateAppKey(applicationKey)
+                        }
+                    }
             }
         }
     }

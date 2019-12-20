@@ -22,6 +22,7 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
+
 import no.nordicsemi.android.meshprovisioner.data.ApplicationKeyDao;
 import no.nordicsemi.android.meshprovisioner.data.ApplicationKeysDao;
 import no.nordicsemi.android.meshprovisioner.data.GroupDao;
@@ -49,7 +50,7 @@ import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils;
         ProvisionedMeshNode.class,
         Group.class,
         Scene.class},
-        version = 7)
+        version = 8)
 abstract class MeshNetworkDb extends RoomDatabase {
 
     private static String TAG = MeshNetworkDb.class.getSimpleName();
@@ -99,6 +100,7 @@ abstract class MeshNetworkDb extends RoomDatabase {
                             .addMigrations(MIGRATION_4_5)
                             .addMigrations(MIGRATION_5_6)
                             .addMigrations(MIGRATION_6_7)
+                            .addMigrations(MIGRATION_7_8)
                             .build();
                 }
 
@@ -810,6 +812,13 @@ abstract class MeshNetworkDb extends RoomDatabase {
         }
     };
 
+    private static final Migration MIGRATION_7_8 = new Migration(7, 8) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            migrateKeyIndexes7_8(database);
+        }
+    };
+
     private static void migrateMeshNetwork(final SupportSQLiteDatabase database) {
         database.execSQL("CREATE TABLE `mesh_network_temp` " +
                 "(`mesh_uuid` TEXT NOT NULL, " +
@@ -1324,5 +1333,9 @@ abstract class MeshNetworkDb extends RoomDatabase {
             } while (cursor.moveToNext());
             cursor.close();
         }
+    }
+
+    private static void migrateKeyIndexes7_8(@NonNull final SupportSQLiteDatabase database) {
+       database.execSQL("ALTER TABLE network_key" + " ADD COLUMN isCurrent INTEGER NOT NULL DEFAULT 0");
     }
 }

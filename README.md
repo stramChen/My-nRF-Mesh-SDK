@@ -1,6 +1,31 @@
-依赖引用：参考app/build.gradle
-初始化：MeshHelper.initMesh(applicationContext)
 
+# 前言：project内包含面对android、RN的MeshSDK接口，具体使用方法参考appModule的api调用方式
+## 依赖引用：参考app/build.gradle
+
+# RN调用步骤：
+## 1.初始化
+```
+ToApplication.kt ——> MeshSDK.init(context)
+```
+## 2.检查权限
+```
+ScanTestActivity.startScan() ——> MeshSDK.checkPermission(callback: StringCallback)
+回调返回值见RN接口文档
+
+```
+## 3.开始扫描未配对设备
+```
+ScanTestActivity.startScan() ——> MeshSDK.startScan(type: String, scanResultCallback: ArrayMapCallback, errCallback: IntCallback)
+回调返回值见RN接口文档
+```
+## 4.开始provision
+```
+ScanTestActivity.onItemClick ——> MeshSDK.provision(mac: String, callback: MapCallback)
+回调返回值见RN接口文档
+```
+
+
+# Android 调用步骤
 # 1. 开始扫描未配对节点
 
 ## 1.1 检查是否开启权限（蓝牙、定位）：

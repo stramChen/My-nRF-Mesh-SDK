@@ -20,6 +20,7 @@
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
         <activity android:name=".ui.ConnectMeshActivity" />
+        <activity android:name=".ui.ConnectTestActivity" />
         <activity android:name=".ui.MainMeshActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -30,7 +31,13 @@
 <!--        <activity-->
 <!--            android:name=".ui.ScanMeshActivity"-->
 <!--            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />-->
-        <activity android:name=".ui.ScanTestActivity"/>
+        <activity android:name=".ui.ScanTestActivity"
+            android:alwaysRetainTaskState="true"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:screenOrientation="unspecified"
+            android:theme="@style/MyTheme"/>
+
+
     </application>
 
 </manifest>

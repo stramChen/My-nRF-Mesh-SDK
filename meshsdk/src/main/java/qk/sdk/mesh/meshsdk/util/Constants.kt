@@ -29,6 +29,7 @@ object Constants {
     enum class ConnectState(var msg: String, var code: Int = 1000) {
         SDK_NOT_INIT("SDK_NOT_INIT_MSG", 101),
         CANNOT_FIND_DEVICE_BY_MAC("找不到mac地址对应的设备", 102),//传参错误，找不到mac地址对应的设备
+        CONNECT_NOT_EXIST("请先建立蓝牙连接", 103),//连接不存在：当要发送消息时，发现没有已建立的连接时，报错
         CONNECT_FAILED("未释放蓝牙资源", 133),
 
         PROVISION_SUCCESS("provisioned", 200),//provision 成功
@@ -40,5 +41,6 @@ object Constants {
         RECONNETCING("正在重连", 205),
         DISCONNECTING("正在断开连接", 206),
         DISCONNECTED("连接已断开", 207),
+
     }
 }

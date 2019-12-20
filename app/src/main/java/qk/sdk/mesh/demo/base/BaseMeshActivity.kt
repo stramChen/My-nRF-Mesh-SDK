@@ -54,23 +54,6 @@ abstract class BaseMeshActivity : AppCompatActivity() {
 
     }
 
-    internal fun startScan(type: String, callback: ArrayMapCallback) {
-        MeshSDK.checkPermission(object : StringCallback {
-            override fun onResultMsg(msg: String) {
-                if (msg == Constants.PERMISSION_GRANTED) {
-                    MeshSDK.startScan(type, callback, object : IntCallback {
-                        override fun onResultMsg(code: Int) {
-                            Utils.printLog(TAG, "scan error:$code")
-                        }
-                    })
-                } else {
-                    Utils.printLog(TAG, "PERMISSION:$msg")
-                }
-            }
-        })
-
-    }
-
     override fun onBackPressed() {
         super.onBackPressed()
         finish()

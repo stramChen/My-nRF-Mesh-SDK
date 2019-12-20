@@ -2,11 +2,6 @@ package no.nordicsemi.android.meshprovisioner;
 
 import android.os.Parcel;
 
-import com.google.gson.annotations.Expose;
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
@@ -15,6 +10,12 @@ import androidx.room.Entity;
 import androidx.room.ForeignKey;
 import androidx.room.Ignore;
 import androidx.room.Index;
+
+import com.google.gson.annotations.Expose;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
 import no.nordicsemi.android.meshprovisioner.utils.SecureUtils;
 
 import static androidx.room.ForeignKey.CASCADE;
@@ -50,6 +51,10 @@ public final class NetworkKey extends MeshKey {
     @Expose
     private long timestamp = 0x0;
 
+    @ColumnInfo(name = "isCurrent")
+    @Expose
+    private int isCurrent;
+
     @Ignore
     private byte[] identityKey;
 
@@ -76,6 +81,7 @@ public final class NetworkKey extends MeshKey {
         minSecurity = in.readByte() != 0;
         oldKey = in.createByteArray();
         timestamp = in.readLong();
+        isCurrent = in.readInt();
     }
 
     public static final Creator<NetworkKey> CREATOR = new Creator<NetworkKey>() {
@@ -100,6 +106,7 @@ public final class NetworkKey extends MeshKey {
         dest.writeByte((byte) (minSecurity ? 1 : 0));
         dest.writeByteArray(oldKey);
         dest.writeLong(timestamp);
+        dest.writeByte((byte) (isCurrent));
     }
 
     @Override
@@ -128,6 +135,14 @@ public final class NetworkKey extends MeshKey {
      */
     public boolean isMinSecurity() {
         return minSecurity;
+    }
+
+    public int getIsCurrent() {
+        return isCurrent;
+    }
+
+    public void setIsCurrent(int isCurrent) {
+        this.isCurrent = isCurrent;
     }
 
     /**

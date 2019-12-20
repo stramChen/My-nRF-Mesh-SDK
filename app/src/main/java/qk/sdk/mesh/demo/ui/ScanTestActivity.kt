@@ -14,7 +14,9 @@ import qk.sdk.mesh.demo.base.BaseMeshActivity
 import qk.sdk.mesh.demo.widget.base.OnItemClickListener
 import qk.sdk.mesh.meshsdk.MeshSDK
 import qk.sdk.mesh.meshsdk.callbak.ArrayMapCallback
+import qk.sdk.mesh.meshsdk.callbak.IntCallback
 import qk.sdk.mesh.meshsdk.callbak.MapCallback
+import qk.sdk.mesh.meshsdk.callbak.StringCallback
 import qk.sdk.mesh.meshsdk.util.Constants
 import qk.sdk.mesh.meshsdk.util.Utils
 
@@ -48,6 +50,25 @@ class ScanTestActivity : BaseMeshActivity(),
         })
     }
 
+
+    private fun startScan(type: String, callback: ArrayMapCallback) {
+        MeshSDK.checkPermission(object : StringCallback {
+            override fun onResultMsg(msg: String) {
+                if (msg == Constants.PERMISSION_GRANTED) {
+                    MeshSDK.startScan(type, callback, object : IntCallback {
+                        override fun onResultMsg(code: Int) {
+                            Utils.printLog(TAG, "scan error:$code")
+                        }
+                    })
+                } else {
+                    Utils.printLog(TAG, "PERMISSION:$msg")
+                }
+            }
+        })
+
+    }
+
+
     override fun onItemClick(data: HashMap<String, Any>, position: Int) {
         MeshSDK.stopScan()
         MeshSDK.provision(data.get("mac") as String, object : MapCallback {
@@ -58,7 +79,12 @@ class ScanTestActivity : BaseMeshActivity(),
                     tv_status.text = value as String
                     if (value == Constants.ConnectState.PROVISION_SUCCESS.msg) {//配对成功
                         Utils.printLog(TAG, "$value")
-                        startActivity(Intent(this@ScanTestActivity,ConnectMeshActivity::class.java))
+                        startActivity(
+                            Intent(
+                                this@ScanTestActivity,
+                                ConnectTestActivity::class.java
+                            ).putExtra("mac", data.get("mac") as String)
+                        )
                     }
                 }
             }
@@ -90,5 +116,9 @@ class ScanTestActivity : BaseMeshActivity(),
     override fun onStop() {
         super.onStop()
         MeshSDK.stopScan()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
     }
 }

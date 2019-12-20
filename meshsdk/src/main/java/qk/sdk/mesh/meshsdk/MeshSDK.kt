@@ -1,14 +1,20 @@
 package qk.sdk.mesh.meshsdk
 
 import android.content.Context
+import android.view.View
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import me.weyye.hipermission.PermissionCallback
+import no.nordicsemi.android.meshprovisioner.transport.ConfigAppKeyStatus
+import no.nordicsemi.android.meshprovisioner.transport.ConfigModelAppStatus
+import no.nordicsemi.android.meshprovisioner.transport.GenericOnOffStatus
+import no.nordicsemi.android.meshprovisioner.transport.MeshMessage
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
 import qk.sdk.mesh.meshsdk.callbak.*
 import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
+import qk.sdk.mesh.meshsdk.util.ByteUtil
 import qk.sdk.mesh.meshsdk.util.Constants
 import qk.sdk.mesh.meshsdk.util.PermissionUtil
 import qk.sdk.mesh.meshsdk.util.Utils
@@ -56,6 +62,8 @@ object MeshSDK {
      * @param callback Callback RN回调callback
      */
     fun startScan(type: String, scanResultCallback: ArrayMapCallback, errCallback: IntCallback) {
+        if (MeshHelper.isConnectedToProxy())
+            disConnect()
         var scanCallback: ScanCallback = object : ScanCallback {
             override fun onScanResult(devices: List<ExtendedBluetoothDevice>, updatedIndex: Int?) {
                 var resultArray = ArrayList<HashMap<String, Any>>()
@@ -87,18 +95,7 @@ object MeshSDK {
 
     fun provision(mac: String, callback: MapCallback) {
         var map = HashMap<Any, Any>()
-        if (mContext == null) {
-            map.put(Constants.SDK_NOT_INIT_CODE, Constants.SDK_NOT_INIT_MSG)
-            callback.onResult(map)
-        }
-
-        if (mExtendedBluetoothDeviceMap.get(mac) == null) {
-            map.put(
-                Constants.ConnectState.CANNOT_FIND_DEVICE_BY_MAC.code,
-                Constants.ConnectState.CANNOT_FIND_DEVICE_BY_MAC.msg
-            )
-            callback.onResult(map)
-        }
+        doBaseCheck(mac, map, callback)
 
         mContext?.let { context ->
             mExtendedBluetoothDeviceMap.get(mac)?.let { extendedBluetoothDevice ->
@@ -224,6 +221,98 @@ object MeshSDK {
         }
     }
 
+    fun isConnectedToProxy(callback: BooleanCallback) {
+        callback.onResult(MeshHelper.isConnectedToProxy())
+    }
+
+    fun getAllNetworkKey(callback: ArrayStringCallback) {
+        var keyList = ArrayList<String>()
+        MeshHelper.getAllNetworkKey()?.forEach {
+            keyList.add(ByteUtil.bytesToHexString(it.key))
+        }
+        callback.onResult(keyList)
+    }
+
+    fun setCurrentNetworkKey(networkKey: String) {
+        MeshHelper.setCurrentNetworkKey(networkKey)
+    }
+
+    fun getCurrentNetworkKey(callback: StringCallback) {
+        MeshHelper.getCurrentNetworkKey()?.let {
+            callback.onResultMsg(ByteUtil.bytesToHexString(it.key))
+        }
+        callback.onResultMsg("")
+    }
+
+    fun createNetworkKey(networkKey: String) {
+        MeshHelper.createNetworkKey(networkKey)
+    }
+
+    fun createApplicationKey(networkKey: String) {
+        MeshHelper.createApplicationKey(networkKey)
+    }
+
+    fun bindApplicationKeyForNode(mac: String, callback: MapCallback) {
+        var map = HashMap<Any, Any>()
+        doBaseCheck(mac, map, callback)
+        if (MeshHelper.isConnectedToProxy()) {
+            MeshHelper.addAppkeys(object : MeshCallback {
+                override fun onReceive(msg: MeshMessage) {
+                    if (msg is ConfigAppKeyStatus) {
+                        if (msg.isSuccessful) {//添加appkey成功
+                            MeshHelper.getCompositionData()
+                            Utils.printLog(TAG, "add app key success!")
+                            MeshHelper.bindAppKey(this)
+                        } else {
+                            Utils.printLog(TAG, "add app key failed!")
+                        }
+                    } else if (msg is ConfigModelAppStatus) {
+                        if (msg.isSuccessful) {//bind appkey成功
+                            Utils.printLog(TAG, "bindAppKey success!")
+                            //todo 轮询model列表，
+                        } else {
+                            Utils.printLog(TAG, "bindAppKey failed:${msg.statusCodeName}")
+                        }
+                    } else if (msg is GenericOnOffStatus) {
+                        Utils.printLog(TAG, "get on off status")
+                    }
+                }
+
+                override fun onError(msg: CallbackMsg) {
+
+                }
+            })
+        } else {
+            map.clear()
+            map.put(
+                Constants.ConnectState.CONNECT_NOT_EXIST.code,
+                Constants.ConnectState.CONNECT_NOT_EXIST.msg
+            )
+        }
+    }
+
+    fun bindApplicationKeyForBaseModel(mac: String, callback: MapCallback) {
+
+    }
+
+    fun disConnect() {
+        MeshHelper.disConnect()
+    }
+
+    private fun doBaseCheck(mac: String, map: HashMap<Any, Any>, callback: MapCallback) {
+        if (mContext == null) {//判断sdk是否被初始化
+            map.put(Constants.SDK_NOT_INIT_CODE, Constants.SDK_NOT_INIT_MSG)
+            callback.onResult(map)
+        }
+
+        if (mExtendedBluetoothDeviceMap.get(mac) == null) {//判断是否存在此设备
+            map.put(
+                Constants.ConnectState.CANNOT_FIND_DEVICE_BY_MAC.code,
+                Constants.ConnectState.CANNOT_FIND_DEVICE_BY_MAC.msg
+            )
+            callback.onResult(map)
+        }
+    }
 //    fun getWritableMap(map: HashMap<String, Object>): WritableNativeMap {
 //        var nativeMap = WritableNativeMap()
 //        map.forEach { key, value ->
