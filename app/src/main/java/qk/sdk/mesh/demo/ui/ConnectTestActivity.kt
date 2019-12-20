@@ -33,6 +33,10 @@ class ConnectTestActivity : BaseMeshActivity() {
 
     override fun init() {
         mMac = intent.getStringExtra("mac") ?: ""
+        if (mMac.isEmpty()) {
+            finish()
+            return
+        }
         initView()
 //        if (!MeshSDK.isConnectedToProxy()) {
 ////            startScan(Constants.SCAN_PROVISIONED, scanCallback)
@@ -46,7 +50,8 @@ class ConnectTestActivity : BaseMeshActivity() {
     override fun setLayoutId(): Int = R.layout.activity_connect
 
     fun initView() {
-        btn_add_app_key.isEnabled = false
+        btn_add_app_key.isEnabled = true
+        btn_add_app_key.visibility = View.VISIBLE
         tv_address.text = MeshHelper.getSelectedMeshNode()?.uuid ?: ""
         tv_proxy_address.text = MeshHelper.getConnectedDevice()?.getAddress() ?: ""
         tv_ttl.text = "${MeshHelper.getSelectedMeshNode()?.ttl ?: ""}"
@@ -61,17 +66,13 @@ class ConnectTestActivity : BaseMeshActivity() {
                 Utils.printLog(TAG, "isn't Connected To Proxy")
             }
         }
-//        switch_on_off.setOnCheckedChangeListener { buttonView, isChecked ->
-//            if (!(MeshHelper.getSelectedModel() is GenericOnOffServerModel)) {
-////                bindModel(MODEL_TYPE_GENERIC)
-//            }
-//            if (MeshHelper.getSelectedModel()?.boundAppKeyIndexes?.isNotEmpty() ?: false) {
-//                MeshHelper.sendGenericOnOff(isChecked, 0)
-//            } else {
-////                MeshHelper.bindAppKey(meshCallback)
-//            }
-//
-//        }
+        switch_on_off.setOnCheckedChangeListener { buttonView, isChecked ->
+            MeshSDK.setGenericOnOff(mMac, isChecked, object : BooleanCallback {
+                override fun onResult(boolean: Boolean) {
+
+                }
+            })
+        }
 //
 //        btn_send_vendor.setOnClickListener {
 //            MeshHelper.getSelectedModel()?.let {
@@ -110,7 +111,7 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
 
         tv_ping.setOnClickListener {
-//            MeshHelper.sendGenericOnOffGet(meshCallback)
+            //            MeshHelper.sendGenericOnOffGet(meshCallback)
         }
     }
 //

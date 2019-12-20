@@ -33,6 +33,8 @@ object Constants {
         CONNECT_FAILED("未释放蓝牙资源", 133),
 
         PROVISION_SUCCESS("provisioned", 200),//provision 成功
+        BIND_APP_KEY_FOR_NODE_FAILED("",208),//绑定
+        BIND_APP_KEY_FOR_NODE_SUCCESS("",208),//绑定
 
         CONNECTING("连接中", 201),
         DISCOVERING_SERVICE("检查服务中", 202),

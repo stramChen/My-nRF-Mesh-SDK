@@ -222,10 +222,10 @@ object MeshHelper {
     // TODO: 在这个过程中对目标 modelxN 进行 bindAppKey 操作，直接遍历所有 model 并绑定
     fun bindAppKey(meshCallback: MeshCallback?) {
         getSelectedMeshNode()?.let {
-            val element = MeshHelper.getSelectedElement()
+            val element = getSelectedElement()
             if (element != null) {
                 Utils.printLog(TAG, "getSelectedElement")
-                val model = MeshHelper.getSelectedModel()
+                val model = getSelectedModel()
                 if (model != null) {
                     Utils.printLog(TAG, "getSelectedModel")
                     val configModelAppUnbind =
@@ -235,6 +235,21 @@ object MeshHelper {
             }
         }
     }
+
+//    fun bindAppKey(modelIndex: Int, meshCallback: MeshCallback?) {
+//        getSelectedMeshNode()?.let {
+//            val element = getSelectedElement()
+//            if (element != null) {
+//                val model = getSelectedModel()
+//                if (model != null) {
+//                    Utils.printLog(TAG, "getSelectedModel")
+//                    val configModelAppUnbind =
+//                        ConfigModelAppBind(element.elementAddress, model.modelId, 0)
+//                    sendMessage(it.unicastAddress, configModelAppUnbind, meshCallback)
+//                }
+//            }
+//        }
+//    }
 
     fun createNetworkKey(key: String) {
         var netKey =
@@ -252,7 +267,7 @@ object MeshHelper {
     }
 
     fun setCurrentNetworkKey(networkKey: String) {
-        MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshNetworkLiveData?.networkKeys?.forEach {
+        getAllNetworkKey()?.forEach {
             it.isCurrent = if (ByteUtil.bytesToHexString(it.key) == networkKey) 1 else 0
             MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.let { meshNetwork ->
                 meshNetwork.updateNetKey(it)
@@ -271,11 +286,16 @@ object MeshHelper {
 
     fun createApplicationKey(networkKey: String) {
         getAllNetworkKey()?.forEach { it ->
+            Utils.printLog(
+                TAG,
+                "createApplicationKey,networkKey:${ByteUtil.bytesToHexString(it.key)}"
+            )
             if (ByteUtil.bytesToHexString(it.key) == networkKey) {
                 MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.createAppKey()
                     ?.let { applicationKey ->
                         applicationKey.boundNetKeyIndex = it.keyIndex
                         MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.let { network ->
+                            network.addAppKey(applicationKey)
                             network.updateAppKey(applicationKey)
                         }
                     }

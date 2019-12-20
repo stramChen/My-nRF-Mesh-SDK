@@ -20,6 +20,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 apply plugin: 'com.android.library'
+apply plugin: 'maven-publish'
 
 android {
 
@@ -66,8 +67,8 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.mockito:mockito-core:2.18.0'
     androidTestImplementation 'org.mockito:mockito-android:2.6.3'
-    api 'androidx.annotation:annotation:1.1.0'
-    api 'no.nordicsemi.android:log:2.2.0'
+    api('androidx.annotation:annotation:1.1.0')
+    api('no.nordicsemi.android:log:2.2.0')
     // Spongycastle - Android implementation of Bouncy Castle
     api 'com.madgag.spongycastle:core:1.58.0.0'
     api 'com.madgag.spongycastle:prov:1.58.0.0'
@@ -76,5 +77,54 @@ dependencies {
     api 'androidx.room:room-runtime:2.2.2'
     annotationProcessor 'androidx.room:room-compiler:2.2.2'
     androidTestImplementation 'androidx.room:room-testing:2.2.2'
+    implementation 'com.novoda:bintray-release:0.2.7'
+}
 
+//uploadArchives {
+//    repositories {
+//        mavenDeployer {
+//            repository(url: "http://10.0.0.40:8081/repository/meshprovisioner/") {
+//                authentication(userName: "admin", password: "518215wybalw")
+//            }
+//            pom.project {
+//                name 'meshprovisioner'
+//                version '0.0.1'
+//                artifactId 'meshprovisioner'
+//                groupId 'cn.mxchip.meshprovisioner.test'
+//                packaging 'aar'
+//                description 'meshprovisioner for mxchip'
+//            }
+//        }
+//    }
+//}
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId 'cn.mxchip.meshprovisioner.test'
+            artifactId 'meshprovisioner'
+            version '0.0.1'
+            artifact "$buildDir/outputs/aar/meshprovisioner.aar"
+//            name 'meshprovisioner'
+//            packaging 'aar'
+//            description 'meshprovisioner for mxchip'
+
+            pom.withXml {
+                def dependenciesNode = asNode().appenNode('dependencies')
+                configurations.implementation.allDependencies.each { dependency ->
+                    if (!"unspecified".equals(dependenciesNode.name)) {
+                        def dependencyNode = dependenciesNode.appendNode('dependency')
+                        dependencyNode.appendNode('groupId', dependency.group)
+                        dependencyNode.appendNode('artifactId', dependency.name)
+                        dependencyNode.appendNode('version', dependency.version)
+                    }
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            url "$buildDir/repo"
+        }
+    }
 }

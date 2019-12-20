@@ -814,6 +814,7 @@ class NrfMeshManager(
                         val configDefaultTtlGet = ConfigDefaultTtlGet()
                         meshManagerApi.createMeshPdu(node.unicastAddress, configDefaultTtlGet)
                     }, 500)
+                    mMeshMessageLiveData.postValue(meshMessage)
                 } else {
                     updateNode(node)
                 }

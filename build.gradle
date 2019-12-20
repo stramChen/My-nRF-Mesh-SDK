@@ -8,7 +8,9 @@ buildscript {
     repositories {
         google()
         jcenter()
-
+        flatDir {
+            dirs '../repo'
+        }
     }
     dependencies {
         classpath "com.android.tools.build:gradle:$gradle_version"
@@ -23,7 +25,15 @@ allprojects {
         google()
         jcenter()
         maven { url 'https://jitpack.io' }
-
+//        maven {
+//            url "http://10.0.0.40:8081/repository/meshprovisioner/"
+//        }
+//        maven {
+//            url "http://10.0.0.40:8081/repository/meshsdk/"
+//        }
+        flatDir {
+            dirs '../repo'
+        }
     }
 }
 

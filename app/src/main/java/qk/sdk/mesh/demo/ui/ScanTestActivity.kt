@@ -71,6 +71,12 @@ class ScanTestActivity : BaseMeshActivity(),
 
     override fun onItemClick(data: HashMap<String, Any>, position: Int) {
         MeshSDK.stopScan()
+
+        var netKey = "${System.currentTimeMillis()}0000011111111010101"
+        MeshSDK.createNetworkKey(netKey)
+        MeshSDK.createApplicationKey(netKey)
+        MeshSDK.setCurrentNetworkKey(netKey)
+
         MeshSDK.provision(data.get("mac") as String, object : MapCallback {
             override fun onResult(msg: HashMap<Any, Any>) {
                 tv_status.visibility = View.VISIBLE
@@ -79,12 +85,14 @@ class ScanTestActivity : BaseMeshActivity(),
                     tv_status.text = value as String
                     if (value == Constants.ConnectState.PROVISION_SUCCESS.msg) {//配对成功
                         Utils.printLog(TAG, "$value")
+
                         startActivity(
                             Intent(
                                 this@ScanTestActivity,
                                 ConnectTestActivity::class.java
                             ).putExtra("mac", data.get("mac") as String)
                         )
+                        finish()
                     }
                 }
             }
