@@ -44,6 +44,9 @@ public class ByteUtil {
     }
 
     public static String bytesToHexString(byte[] src) {
+        if (src == null) {
+            return "";
+        }
         StringBuilder stringBuilder = new StringBuilder("");
         if (src == null || src.length <= 0) {
             return null;
@@ -69,7 +72,6 @@ public class ByteUtil {
     }
 
     public static byte[] hexStringToBytes(String hex) {
-        Utils.INSTANCE.printLog(TAG, hex);
         int m = 0, n = 0;
         int byteLen = hex.length() / 2; // 每两个字符描述一个字节
         byte[] ret = new byte[byteLen];
@@ -79,7 +81,6 @@ public class ByteUtil {
             int intVal = Integer.decode("0x" + hex.substring(i * 2, m) + hex.substring(m, n));
             ret[i] = Byte.valueOf((byte) intVal);
         }
-        Utils.INSTANCE.printLog(TAG, bytesToHexString(ret));
         return ret;
     }
 

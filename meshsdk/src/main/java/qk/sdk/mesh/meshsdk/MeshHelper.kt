@@ -14,9 +14,7 @@ import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
 import qk.sdk.mesh.meshsdk.callbak.*
 import qk.sdk.mesh.meshsdk.service.BaseMeshService
-import qk.sdk.mesh.meshsdk.util.ByteUtil
-import qk.sdk.mesh.meshsdk.util.PermissionUtil
-import qk.sdk.mesh.meshsdk.util.Utils
+import qk.sdk.mesh.meshsdk.util.*
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -27,6 +25,7 @@ object MeshHelper {
     // 初始化 mesh
     fun initMesh(context: Context) {
         context.startService(Intent(context, MeshProxyService::class.java))
+        LocalPreferences.init(context)
     }
 
     // 检查蓝牙权限
@@ -184,9 +183,9 @@ object MeshHelper {
     }
 
     //给RN用
-    fun addAppkeys(meshCallback: MeshCallback?) {
-        getAppKeys()?.forEach { applicationKey ->
-            if (applicationKey.boundNetKeyIndex == getCurrentNetworkKey()?.keyIndex) {
+    fun addAppkeys(index: Int,meshCallback: MeshCallback?) {
+        getAppKeys()?.get(index)?.let { applicationKey ->
+            getNetworkKey(applicationKey.boundNetKeyIndex)?.let { networkKey ->
                 val node = getSelectedMeshNode()
                 var isNodeKeyAdd: Boolean
                 if (node != null) {
@@ -204,6 +203,26 @@ object MeshHelper {
                 }
             }
         }
+//        getAppKeys()?.forEach { applicationKey ->
+//            if (applicationKey.boundNetKeyIndex == getCurrentNetworkKey()?.keyIndex) {
+//                getAppKeys()?.get()
+//                val node = getSelectedMeshNode()
+//                var isNodeKeyAdd: Boolean
+//                if (node != null) {
+//                    isNodeKeyAdd = MeshParserUtils.isNodeKeyExists(
+//                        node.addedAppKeys,
+//                        applicationKey.keyIndex
+//                    )
+//                    val meshMessage: MeshMessage
+//                    if (!isNodeKeyAdd) {
+//                        meshMessage = ConfigAppKeyAdd(getCurrentNetworkKey()!!, applicationKey)
+//                    } else {
+//                        meshMessage = ConfigAppKeyDelete(getCurrentNetworkKey()!!, applicationKey)
+//                    }
+//                    sendMessage(node.unicastAddress, meshMessage, meshCallback)
+//                }
+//            }
+//        }
     }
 
     /**
@@ -218,8 +237,6 @@ object MeshHelper {
     }
 
     // 绑定 application key
-    // TODO: 传入 APP Key 序号
-    // TODO: 在这个过程中对目标 modelxN 进行 bindAppKey 操作，直接遍历所有 model 并绑定
     fun bindAppKey(meshCallback: MeshCallback?) {
         getSelectedMeshNode()?.let {
             val element = getSelectedElement()
@@ -267,36 +284,27 @@ object MeshHelper {
     }
 
     fun setCurrentNetworkKey(networkKey: String) {
-        getAllNetworkKey()?.forEach {
-            it.isCurrent = if (ByteUtil.bytesToHexString(it.key) == networkKey) 1 else 0
-            MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.let { meshNetwork ->
-                meshNetwork.updateNetKey(it)
-            }
-        }
+        MeshProxyService.mMeshProxyService?.setCurrentNetworkKey(networkKey)
     }
 
     fun getCurrentNetworkKey(): NetworkKey? {
-        MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshNetworkLiveData?.networkKeys?.forEach {
-            if (it.isCurrent == 1)
-                return it
-        }
+        return MeshProxyService.mMeshProxyService?.getCurrentNetworkKey()
+    }
 
-        return null
+    fun getCurrentNetworkKeyStr(): String? {
+        return MeshProxyService.mMeshProxyService?.getCurrentNetworkKeyStr()
     }
 
     fun createApplicationKey(networkKey: String) {
-        getAllNetworkKey()?.forEach { it ->
-            Utils.printLog(
-                TAG,
-                "createApplicationKey,networkKey:${ByteUtil.bytesToHexString(it.key)}"
-            )
-            if (ByteUtil.bytesToHexString(it.key) == networkKey) {
+        getAllNetworkKey()?.forEach { netKey ->
+            if (ByteUtil.bytesToHexString(netKey.key) == networkKey) {
                 MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.createAppKey()
                     ?.let { applicationKey ->
-                        applicationKey.boundNetKeyIndex = it.keyIndex
+                        Utils.printLog(TAG, "")
+                        applicationKey.boundNetKeyIndex = netKey.keyIndex
                         MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.let { network ->
                             network.addAppKey(applicationKey)
-                            network.updateAppKey(applicationKey)
+//                            network.updateAppKey(applicationKey)
                         }
                     }
             }
@@ -377,6 +385,35 @@ object MeshHelper {
 
     // 设定开关状态？
     fun sendGenericOnOff(state: Boolean, delay: Int?) {
+        getSelectedMeshNode()?.let { node ->
+            getSelectedElement()?.let { element ->
+                getSelectedModel()?.let { model ->
+                    if (model.boundAppKeyIndexes.isNotEmpty()) {
+                        val appKeyIndex = model.boundAppKeyIndexes[0]
+                        val appKey =
+                            getMeshNetwork()?.getAppKey(appKeyIndex)
+                        val address = element.elementAddress
+                        if (appKey != null) {
+                            val genericOnOffSet = GenericOnOffSet(
+                                appKey,
+                                state,
+                                node.sequenceNumber,
+                                0,
+                                0,
+                                delay
+                            )
+                            sendMessage(address, genericOnOffSet)
+                        }
+                    } else {
+                        Utils.printLog(TAG, "boundAppKeyIndexes is null!")
+                    }
+                }
+            }
+        }
+    }
+
+    // 设定开关状态？
+    fun sendGenericOnOff(state: Boolean, delay: Int?,meshCallback: MeshCallback?) {
         getSelectedMeshNode()?.let { node ->
             getSelectedElement()?.let { element ->
                 getSelectedModel()?.let { model ->

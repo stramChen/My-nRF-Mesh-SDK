@@ -17,8 +17,11 @@ import qk.sdk.mesh.demo.ui.adapter.NodeAdapter
 import qk.sdk.mesh.demo.widget.base.OnItemClickListener
 import qk.sdk.mesh.demo.widget.base.OnItemLongClickListener
 import qk.sdk.mesh.meshsdk.MeshHelper
+import qk.sdk.mesh.meshsdk.MeshSDK
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.callbak.ProvisionCallback
+import qk.sdk.mesh.meshsdk.callbak.StringCallback
+import qk.sdk.mesh.meshsdk.util.Utils
 
 class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
     private var mNodeAdapter: NodeAdapter? = null

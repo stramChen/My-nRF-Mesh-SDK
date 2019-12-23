@@ -57,7 +57,7 @@ class ConnectTestActivity : BaseMeshActivity() {
         tv_ttl.text = "${MeshHelper.getSelectedMeshNode()?.ttl ?: ""}"
         btn_add_app_key.setOnClickListener {
             if (MeshHelper.isConnectedToProxy()) {
-                MeshSDK.bindApplicationKeyForNode(mMac, object : MapCallback {
+                MeshSDK.bindApplicationKeyForNode(mMac, 10, object : MapCallback {
                     override fun onResult(result: HashMap<Any, Any>) {
 
                     }
@@ -66,49 +66,39 @@ class ConnectTestActivity : BaseMeshActivity() {
                 Utils.printLog(TAG, "isn't Connected To Proxy")
             }
         }
-        
+
         switch_on_off.setOnCheckedChangeListener { buttonView, isChecked ->
             MeshSDK.setGenericOnOff(mMac, isChecked, object : BooleanCallback {
                 override fun onResult(boolean: Boolean) {
-
+                    MeshSDK.setGenericOnOff(mMac, isChecked, object : BooleanCallback {
+                        override fun onResult(boolean: Boolean) {
+                            Utils.printLog(TAG, "setGenericOnOff result:$boolean")
+                        }
+                    })
                 }
             })
         }
-//
-//        btn_send_vendor.setOnClickListener {
-//            MeshHelper.getSelectedModel()?.let {
-//                if (!(it is VendorModel)) {
-//                    bindModel(MODEL_TYPE_VENDOR)
-//                }
-//                return@let MeshHelper.getSelectedModel()
-//            }?.let {
-//                Utils.printLog(TAG, "model is vendor${it is VendorModel}")
-//            }
+
+        btn_send_vendor.setOnClickListener {
 //            if (MeshHelper.getSelectedModel() is VendorModel && MeshHelper.getSelectedModel()?.boundAppKeyIndexes?.isNotEmpty() ?: false) {
-//                Utils.printLog(TAG, "${sb_vendor_c.progress}")
-//                var c = sb_vendor_c.progress * 255 / 100
-//                var w = sb_vendor_w.progress * 255 / 100
-//                var r = sb_vendor_r.progress * 255 / 100
-//                var g = sb_vendor_g.progress * 255 / 100
-//                var b = sb_vendor_b.progress * 255 / 100
-//                var params = StringBuilder(
-//                    "${ByteUtil.rgbtoHex(c)}${ByteUtil.rgbtoHex(w)}${ByteUtil.rgbtoHex(r)}${ByteUtil.rgbtoHex(
-//                        g
-//                    )}${ByteUtil.rgbtoHex(b)}"
-//                )
-//                MeshHelper.sendVendorModelMessage(
-//                    Integer.valueOf("05", 16),
-//                    ByteUtil.hexStringToBytes(params.toString()),
-//                    false
-//                )
+                Utils.printLog(TAG, "${sb_vendor_c.progress}")
+                var c = sb_vendor_c.progress * 255 / 100
+                var w = sb_vendor_w.progress * 255 / 100
+                var r = sb_vendor_r.progress * 255 / 100
+                var g = sb_vendor_g.progress * 255 / 100
+                var b = sb_vendor_b.progress * 255 / 100
+                MeshSDK.setLightProperties(mMac, c, w, r, g, b, object : BooleanCallback {
+                    override fun onResult(boolean: Boolean) {
+
+                    }
+                })
 //            } else if (MeshHelper.getSelectedModel() is VendorModel) {
 ////                MeshHelper.bindAppKey(meshCallback)
 //            }
-//        }
+        }
 
         btn_reset.setOnClickListener {
-            val configNodeReset = ConfigNodeReset()
-            sendMessage(MeshHelper.getSelectedMeshNode()?.unicastAddress ?: 0, configNodeReset)
+            MeshSDK.resetNode(mMac)
         }
 
         tv_ping.setOnClickListener {

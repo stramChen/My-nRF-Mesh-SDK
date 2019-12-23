@@ -7,6 +7,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import me.weyye.hipermission.PermissionCallback
 import no.nordicsemi.android.meshprovisioner.models.GenericOnOffServerModel
+import no.nordicsemi.android.meshprovisioner.models.VendorModel
 import no.nordicsemi.android.meshprovisioner.transport.*
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
@@ -16,6 +17,7 @@ import qk.sdk.mesh.meshsdk.util.ByteUtil
 import qk.sdk.mesh.meshsdk.util.Constants
 import qk.sdk.mesh.meshsdk.util.PermissionUtil
 import qk.sdk.mesh.meshsdk.util.Utils
+import java.lang.StringBuilder
 import kotlin.collections.HashMap
 
 object MeshSDK {
@@ -234,10 +236,7 @@ object MeshSDK {
     }
 
     fun getCurrentNetworkKey(callback: StringCallback) {
-        MeshHelper.getCurrentNetworkKey()?.let {
-            callback.onResultMsg(ByteUtil.bytesToHexString(it.key))
-        }
-        callback.onResultMsg("")
+        callback.onResultMsg(MeshHelper.getCurrentNetworkKeyStr() ?: "")
     }
 
     fun createNetworkKey(networkKey: String) {
@@ -249,7 +248,7 @@ object MeshSDK {
         MeshHelper.createApplicationKey(networkKey)
     }
 
-    fun bindApplicationKeyForNode(mac: String, callback: MapCallback) {
+    fun bindApplicationKeyForNode(mac: String, appKeyIndex: Int, callback: MapCallback) {
         var map = HashMap<Any, Any>()
         MeshHelper.getProvisionNode()?.forEach { node ->
             if (Utils.isUUIDEqualsMac(
@@ -265,12 +264,12 @@ object MeshSDK {
         doBaseCheck(mac, map, callback)
         if (MeshHelper.isConnectedToProxy()) {
             var bindedIndex = 0
-            MeshHelper.addAppkeys(object : MeshCallback {
+            MeshHelper.addAppkeys(appKeyIndex, object : MeshCallback {
                 override fun onReceive(msg: MeshMessage) {
                     if (msg is ConfigAppKeyStatus) {
-                        MeshHelper.getCompositionData()
                         if (msg.isSuccessful) {//添加appkey成功
                             Utils.printLog(TAG, "add app key success!")
+                            MeshHelper.getCompositionData()
                         } else {
                             Utils.printLog(TAG, "add app key failed!")
                         }
@@ -314,14 +313,25 @@ object MeshSDK {
                     } else if (msg is GenericOnOffStatus) {
                         Utils.printLog(TAG, "get on off status")
                     } else if (msg is ConfigCompositionDataStatus) {
+                        Utils.printLog(TAG, "get getCompositionData success!")
                         bindedIndex = 0
                         MeshHelper.getSelectedMeshNode()?.let { node ->
                             node.elements?.forEach { eleKey, eleValue ->
-                                eleKey
                                 eleValue.meshModels?.forEach { modelKey, modelValue ->
-                                    modelKey
+                                    //                                    if (modelValue is GenericOnOffServerModel || modelValue is VendorModel) {
+                                    Utils.printLog(
+                                        TAG,
+                                        "elements.key:$eleKey,modelKey:$modelKey"
+                                    )
+                                    if (modelValue is VendorModel){
+                                        Utils.printLog(
+                                            TAG,
+                                            "vendor elements.key:$eleKey,vendor modelKey:$modelKey"
+                                        )
+                                    }
                                     MeshHelper.setSelectedModel(eleValue, modelValue)
                                     MeshHelper.bindAppKey(this)
+//                                    }
                                 }
                             }
                         }
@@ -366,18 +376,58 @@ object MeshSDK {
         }
     }
 
-    fun setGenericOnOff(mac: String, onOff: Boolean, callback: BooleanCallback) {
-        //todo 记录操作日志
-        MeshHelper.getSelectedMeshNode()?.let { node ->
-            //todo 记录操作日志
-            node.elements?.get(0)?.let { element ->
-                element.meshModels?.forEach { model ->
-                    if (model is GenericOnOffServerModel) {
-                        MeshHelper.sendGenericOnOff(onOff, 0)
-                    }
-                }
-            }
-        }
+    fun setGenericOnOff(uuid: String, onOff: Boolean, callback: BooleanCallback) {
+// todo       MeshHelper.getProvisionNode()?.forEach { node ->
+//            if (node.meshUuid == uuid) {
+//                MeshHelper.setSelectedMeshNode(node)
+//            }
+//        }
+
+        MeshHelper.setSelectedModel(
+            MeshHelper.getSelectedMeshNode()?.elements?.get(2),
+            MeshHelper.getSelectedElement()?.meshModels?.get(4096)
+        )
+        MeshHelper.sendGenericOnOff(onOff, 0)
+    }
+
+    fun setLightProperties(
+        mac: String, c: Int, w: Int, r: Int,
+        g: Int, b: Int, callback: BooleanCallback
+    ) {
+        // todo       MeshHelper.getProvisionNode()?.forEach { node ->
+//            if (node.meshUuid == uuid) {
+//                MeshHelper.setSelectedMeshNode(node)
+//            }
+//        }
+
+        MeshHelper.setSelectedModel(
+            MeshHelper.getSelectedMeshNode()?.elements?.get(2),
+            MeshHelper.getSelectedElement()?.meshModels?.get(6094848)
+        )
+        var params = StringBuilder(
+            "${ByteUtil.rgbtoHex(c)}${ByteUtil.rgbtoHex(w)}${ByteUtil.rgbtoHex(r)}${ByteUtil.rgbtoHex(
+                g
+            )}${ByteUtil.rgbtoHex(b)}"
+        )
+        MeshHelper.sendVendorModelMessage(
+            Integer.valueOf("05", 16),
+            ByteUtil.hexStringToBytes(params.toString()),
+            false
+        )
+    }
+
+    fun resetNode(uuid: String) {
+        // todo       MeshHelper.getProvisionNode()?.forEach { node ->
+//            if (node.meshUuid == uuid) {
+//                MeshHelper.setSelectedMeshNode(node)
+//            }
+//        }
+
+        val configNodeReset = ConfigNodeReset()
+        MeshHelper.sendMessage(
+            MeshHelper.getSelectedMeshNode()?.unicastAddress ?: 0,
+            configNodeReset
+        )
     }
 //    fun getWritableMap(map: HashMap<String, Object>): WritableNativeMap {
 //        var nativeMap = WritableNativeMap()

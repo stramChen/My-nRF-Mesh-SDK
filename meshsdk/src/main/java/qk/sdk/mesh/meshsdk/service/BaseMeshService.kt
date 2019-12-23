@@ -12,6 +12,7 @@ import no.nordicsemi.android.meshprovisioner.transport.MeshMessage
 import no.nordicsemi.android.meshprovisioner.transport.MeshModel
 import no.nordicsemi.android.meshprovisioner.transport.ProvisionedMeshNode
 import no.nordicsemi.android.meshprovisioner.utils.AuthenticationOOBMethods
+import qk.sdk.mesh.meshsdk.MeshHelper
 import qk.sdk.mesh.meshsdk.bean.CommonErrorMsg
 import qk.sdk.mesh.meshsdk.bean.ERROR_MSG_UNICAST_UNABLED
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
@@ -19,6 +20,8 @@ import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
 import qk.sdk.mesh.meshsdk.callbak.*
 import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
 import qk.sdk.mesh.meshsdk.mesh.NrfMeshManager
+import qk.sdk.mesh.meshsdk.util.ByteUtil
+import qk.sdk.mesh.meshsdk.util.LocalPreferences
 import qk.sdk.mesh.meshsdk.util.Utils
 import java.lang.Exception
 import java.util.*
@@ -30,6 +33,7 @@ open class BaseMeshService : LifecycleService() {
     var mNrfMeshManager: NrfMeshManager? = null
     var mConnectCallback: ConnectCallback? = null
     var mScanCallback: ScanCallback? = null
+    var mCurrentNetworkKey: NetworkKey? = null
 
     override fun onBind(intent: Intent): IBinder? {
         super.onBind(intent)
@@ -234,5 +238,45 @@ open class BaseMeshService : LifecycleService() {
 
     internal fun isConnectedToProxy(): Boolean? {
         return mNrfMeshManager?.isConnectedToProxy?.value
+    }
+
+    internal fun setCurrentNetworkKey(networkKey: String) {
+        MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshNetworkLiveData?.networkKeys?.forEach {
+            if (ByteUtil.bytesToHexString(it.key) == networkKey) {
+                mCurrentNetworkKey = it
+                it.isCurrent = 1
+                LocalPreferences.setCurrentNetKey(networkKey)
+            } else {
+                it.isCurrent = 0
+            }
+            Utils.printLog(
+                TAG,
+                "setCurrentNetworkKey:${ByteUtil.bytesToHexString(it.key)},isCurrent:${it.isCurrent}"
+            )
+            MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.let { meshNetwork ->
+              meshNetwork.updateNetKey(it)
+            }
+        }
+    }
+
+    internal fun getCurrentNetworkKey(): NetworkKey? {
+        if (mCurrentNetworkKey != null)
+            return mCurrentNetworkKey!!
+
+        mNrfMeshManager?.meshNetworkLiveData?.networkKeys?.forEach {
+            if (ByteUtil.bytesToHexString(it.key) == LocalPreferences.getCurrentNetKey()) {
+                mCurrentNetworkKey = it
+                return it
+            }
+        }
+
+        return null
+    }
+
+    internal fun getCurrentNetworkKeyStr(): String? {
+        if (mCurrentNetworkKey != null)
+            return ByteUtil.bytesToHexString(mCurrentNetworkKey!!.key)
+
+        return LocalPreferences.getCurrentNetKey()
     }
 }
