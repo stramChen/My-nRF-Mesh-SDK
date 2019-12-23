@@ -14,7 +14,7 @@ import java.util.Locale;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RestrictTo;
+//import androidx.annotation.RestrictTo;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
@@ -38,7 +38,7 @@ import static androidx.room.ForeignKey.CASCADE;
                 childColumns = "mesh_uuid",
                 onUpdate = CASCADE, onDelete = CASCADE),
         indices = @Index("mesh_uuid"))
-@RestrictTo(RestrictTo.Scope.LIBRARY)
+//@RestrictTo(RestrictTo.Scope.LIBRARY)
 public class Provisioner implements Parcelable {
 
     @ColumnInfo(name = "mesh_uuid")
@@ -265,7 +265,7 @@ public class Provisioner implements Parcelable {
      *
      * @param address address of the provisioner
      */
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
+//    @RestrictTo(RestrictTo.Scope.LIBRARY)
     public void setProvisionerAddress(@Nullable final Integer address) throws IllegalArgumentException {
         if (address != null && !MeshAddress.isValidUnicastAddress(address)) {
             throw new IllegalArgumentException("Unicast address must range between 0x0001 to 0x7FFF.");
@@ -313,12 +313,12 @@ public class Provisioner implements Parcelable {
         this.globalTtl = ttl;
     }
 
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
+//    @RestrictTo(RestrictTo.Scope.LIBRARY)
     public boolean isLastSelected() {
         return lastSelected;
     }
 
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
+//    @RestrictTo(RestrictTo.Scope.LIBRARY)
     public void setLastSelected(final boolean lastSelected) {
         this.lastSelected = lastSelected;
     }

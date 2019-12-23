@@ -73,9 +73,16 @@ class ScanTestActivity : BaseMeshActivity(),
         MeshSDK.stopScan()
 
         var netKey = "${System.currentTimeMillis()}0000011111111010101"
-        MeshSDK.createNetworkKey(netKey)
-        MeshSDK.createApplicationKey(netKey)
-        MeshSDK.setCurrentNetworkKey(netKey)
+
+        MeshSDK.getCurrentNetworkKey(object : StringCallback {
+            override fun onResultMsg(msg: String) {
+                if (msg.isEmpty()) {
+                    MeshSDK.createNetworkKey(netKey)
+                    MeshSDK.createApplicationKey(netKey)
+                    MeshSDK.setCurrentNetworkKey(netKey)
+                }
+            }
+        })
 
         MeshSDK.provision(data.get("mac") as String, object : MapCallback {
             override fun onResult(msg: HashMap<Any, Any>) {

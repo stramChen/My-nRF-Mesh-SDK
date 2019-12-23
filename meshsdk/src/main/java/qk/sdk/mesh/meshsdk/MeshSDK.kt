@@ -317,7 +317,9 @@ object MeshSDK {
                         bindedIndex = 0
                         MeshHelper.getSelectedMeshNode()?.let { node ->
                             node.elements?.forEach { eleKey, eleValue ->
+                                eleKey
                                 eleValue.meshModels?.forEach { modelKey, modelValue ->
+                                    modelKey
                                     MeshHelper.setSelectedModel(eleValue, modelValue)
                                     MeshHelper.bindAppKey(this)
                                 }

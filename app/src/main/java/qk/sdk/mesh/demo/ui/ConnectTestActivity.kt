@@ -66,6 +66,7 @@ class ConnectTestActivity : BaseMeshActivity() {
                 Utils.printLog(TAG, "isn't Connected To Proxy")
             }
         }
+        
         switch_on_off.setOnCheckedChangeListener { buttonView, isChecked ->
             MeshSDK.setGenericOnOff(mMac, isChecked, object : BooleanCallback {
                 override fun onResult(boolean: Boolean) {

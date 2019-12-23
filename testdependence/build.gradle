@@ -1,0 +1,66 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+
+def cfg = rootProject.ext.projectConfig
+def support = rootProject.ext.projectSupport
+def libs = rootProject.ext.projectLibraries
+android {
+    compileSdkVersion 29
+    buildToolsVersion "29.0.2"
+
+
+    defaultConfig {
+        applicationId "mxchip.sdk.testdependence"
+        minSdkVersion 24
+        targetSdkVersion 29
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = 1.8
+        targetCompatibility = 1.8
+    }
+
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+//    implementation support.multidex
+
+    implementation libs.kotlin_stdlib
+
+//    implementation support.cardview_v7
+//    implementation support.design
+//    implementation support.appcompat_v7
+    implementation support.constraint_layout
+
+//    api project(':meshsdk'){
+//        exclude group:'android.suppor.v4'
+//    }
+    api(name: 'meshsdk-0.0.8', ext: 'aar') {
+        exclude group: 'android.suppor.v4'
+        exclude group: 'androidx.lifecycle'
+    }
+    api(name: 'meshprovisioner-0.0.3', ext: 'aar'){
+        exclude group:'android.support.v4'
+    }
+
+    //运行时权限
+//    api 'com.github.jokermonn:permissions4m:2.1.2-lib'
+//    annotationProcessor 'com.github.jokermonn:permissions4m:2.1.2-processor'
+    //运行时权限
+//    api ('me.weyye.hipermission:library:1.0.8'){
+//        exclude group:'android.support.v4'
+//    }
+}

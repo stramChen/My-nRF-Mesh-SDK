@@ -17,7 +17,7 @@ import androidx.lifecycle.MutableLiveData
 
 import java.io.File
 
-import no.nordicsemi.android.log.Logger
+//import no.nordicsemi.android.log.Logger
 import no.nordicsemi.android.meshprovisioner.ApplicationKey
 import no.nordicsemi.android.meshprovisioner.Group
 import no.nordicsemi.android.meshprovisioner.MeshManagerApi
@@ -327,8 +327,8 @@ class NrfMeshManager(
         isNetworkRetransmitSetCompleted = false
         mConnectDevice = device
         //clearExtendedMeshNode();
-        val logSession = Logger.newSession(context, null, device.getAddress(), device.name ?: "")
-        bleMeshManager?.setLogger(logSession)
+//        val logSession = Logger.newSession(context, null, device.getAddress(), device.name ?: "")
+//        bleMeshManager?.setLogger(logSession)
         val bluetoothDevice = device.device
         initIsConnectedLiveData(connectToNetwork)
         mConnectionState.postValue(
