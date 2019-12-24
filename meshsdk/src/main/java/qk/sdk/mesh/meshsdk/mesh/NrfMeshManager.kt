@@ -702,10 +702,10 @@ class NrfMeshManager(
         bleMeshManager!!.disconnect().enqueue()
         loadNodes()
 //        mHandler.post { mConnectionState.postValue("Scanning for provisioned node") }
-        mHandler.postDelayed(
-            mReconnectRunnable,
-            1000
-        ) //Added a slight delay to disconnect and refresh the cache
+//        mHandler.postDelayed(
+//            mReconnectRunnable,
+//            1000
+//        ) //Added a slight delay to disconnect and refresh the cache
     }
 
     /**
@@ -1235,7 +1235,7 @@ class NrfMeshManager(
      *
      * @param filterUuid UUID to filter scan results with
      */
-    fun startScan(filterUuid: UUID) {
+    fun startScan(filterUuid: UUID, callback: qk.sdk.mesh.meshsdk.callbak.ScanCallback? = null) {
         try {
             mFilterUuid = filterUuid
 
@@ -1275,6 +1275,7 @@ class NrfMeshManager(
             registerBroadcastReceivers()
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
+            callback?.onError(CallbackMsg(BLE_NOT_AVAILABLE.code, BLE_NOT_AVAILABLE.msg))
         }
     }
 

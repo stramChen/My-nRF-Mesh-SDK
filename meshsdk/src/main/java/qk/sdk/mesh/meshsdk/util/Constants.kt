@@ -30,11 +30,13 @@ object Constants {
         SDK_NOT_INIT("SDK_NOT_INIT_MSG", 101),
         CANNOT_FIND_DEVICE_BY_MAC("找不到mac地址对应的设备", 102),//传参错误，找不到mac地址对应的设备
         CONNECT_NOT_EXIST("请先建立蓝牙连接", 103),//连接不存在：当要发送消息时，发现没有已建立的连接时，报错
-        CONNECT_FAILED("未释放蓝牙资源", 133),
+        CONNECT_BLE_RESOURCE_FAILED("未释放蓝牙资源", 133),
+        BLE_NOT_AVAILABLE("蓝牙未开启", 104),//未开启蓝牙
 
         PROVISION_SUCCESS("provisioned", 200),//provision 成功
-        BIND_APP_KEY_FOR_NODE_FAILED("",208),//绑定
-        BIND_APP_KEY_FOR_NODE_SUCCESS("",208),//绑定
+        COMMON_SUCCESS("success", 200),// 全局通用，操作成功
+        BIND_APP_KEY_FOR_NODE_FAILED("", 208),//绑定appkey失败
+        BIND_APP_KEY_FOR_NODE_SUCCESS("", 200),//绑定appkey成功
 
         CONNECTING("连接中", 201),
         DISCOVERING_SERVICE("检查服务中", 202),
@@ -43,6 +45,10 @@ object Constants {
         RECONNETCING("正在重连", 205),
         DISCONNECTING("正在断开连接", 206),
         DISCONNECTED("连接已断开", 207),
+
+
+        NET_KEY_DELETE_FAILED("", 401),//netKey正在使用中，需先删除netKey对应的设备
+        APP_KEY_DELETE_FAILED("", 402),//appKey正在使用中，需先删除appKey对应的设备
 
     }
 }

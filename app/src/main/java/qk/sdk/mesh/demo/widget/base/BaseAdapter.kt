@@ -1,4 +1,4 @@
-package com.styd.crm.adapter.base
+package qk.sdk.mesh.demo.widget.base
 
 import android.content.Context
 import android.view.LayoutInflater

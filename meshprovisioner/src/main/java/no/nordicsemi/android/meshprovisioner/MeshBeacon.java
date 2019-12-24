@@ -34,4 +34,7 @@ public abstract class MeshBeacon implements Parcelable {
      */
     public abstract int getBeaconType();
 
+    public byte[] getBeaconData() {
+        return beaconData;
+    }
 }

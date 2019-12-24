@@ -5,12 +5,14 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.styd.crm.adapter.base.BaseAdapter
-import com.styd.crm.adapter.base.BaseViewHolder
 import kotlinx.android.synthetic.main.activity_scan.*
 import kotlinx.android.synthetic.main.item_scan_device.view.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import qk.sdk.mesh.demo.R
 import qk.sdk.mesh.demo.base.BaseMeshActivity
+import qk.sdk.mesh.demo.widget.base.BaseAdapter
+import qk.sdk.mesh.demo.widget.base.BaseViewHolder
 import qk.sdk.mesh.demo.widget.base.OnItemClickListener
 import qk.sdk.mesh.meshsdk.MeshSDK
 import qk.sdk.mesh.meshsdk.callbak.ArrayMapCallback
@@ -41,13 +43,28 @@ class ScanTestActivity : BaseMeshActivity(),
         rv_devices.adapter = mDeviceAdapter
         mDeviceAdapter?.setOnItemClickListener(this)
 
-        startScan(Constants.SCAN_UNPROVISIONED, object :
-            ArrayMapCallback {
-            override fun onResult(result: ArrayList<HashMap<String, Any>>) {
-                mDevice = result
-                mDeviceAdapter?.setData(result)
-            }
-        })
+        Thread(Runnable {
+                startScan(Constants.SCAN_UNPROVISIONED, object :
+                    ArrayMapCallback {
+                    override fun onResult(result: ArrayList<HashMap<String, Any>>) {
+                        mDevice = result
+                        mDeviceAdapter?.setData(result)
+                    }
+                })
+                }).start()
+
+//        Utils.printLog(TAG, "runBlocking:${this.}")
+//        startScan(Constants.SCAN_UNPROVISIONED, object :
+//            ArrayMapCallback {
+//            override fun onResult(result: ArrayList<HashMap<String, Any>>) {
+//                mDevice = result
+//                mDeviceAdapter?.setData(result)
+//            }
+//        })
+
+        btn_manage_keys.setOnClickListener {
+            startActivity(Intent(this, NetKeyActivity::class.java))
+        }
     }
 
 
@@ -84,7 +101,7 @@ class ScanTestActivity : BaseMeshActivity(),
             }
         })
 
-        MeshSDK.provision(data.get("mac") as String, object : MapCallback {
+        MeshSDK.provision(data.get("uuid") as String, object : MapCallback {
             override fun onResult(msg: HashMap<Any, Any>) {
                 tv_status.visibility = View.VISIBLE
                 msg.forEach { key, value ->
@@ -114,8 +131,8 @@ class ScanTestActivity : BaseMeshActivity(),
             data: HashMap<String, Any>,
             position: Int
         ) {
-            holder.itemView.tv_device_address.text = mDevice[position].get("mac") as String
-            holder.itemView.tv_device_name.text = mDevice[position].get("name") as String
+            holder.itemView.tv_device_address.text = mDevice[position].get("uuid") as String
+            holder.itemView.tv_device_name.text = mDevice[position].get("mac") as String
         }
 
         fun notify(updatedIndex: Int?) {

@@ -55,11 +55,25 @@ class ConnectTestActivity : BaseMeshActivity() {
         tv_address.text = MeshHelper.getSelectedMeshNode()?.uuid ?: ""
         tv_proxy_address.text = MeshHelper.getConnectedDevice()?.getAddress() ?: ""
         tv_ttl.text = "${MeshHelper.getSelectedMeshNode()?.ttl ?: ""}"
+
         btn_add_app_key.setOnClickListener {
             if (MeshHelper.isConnectedToProxy()) {
-                MeshSDK.bindApplicationKeyForNode(mMac, 10, object : MapCallback {
-                    override fun onResult(result: HashMap<Any, Any>) {
-
+                MeshSDK.getCurrentNetworkKey(object : StringCallback {
+                    override fun onResultMsg(msg: String) {
+                        var appIndex =
+                            MeshSDK.getAllApplicationKey(msg, object : ArrayStringCallback {
+                                override fun onResult(result: ArrayList<String>) {
+                                    if (result.size > 0) {
+                                        MeshSDK.bindApplicationKeyForNode(
+                                            mMac,
+                                            result.get(0),
+                                            object : MapCallback {
+                                                override fun onResult(result: HashMap<Any, Any>) {
+                                                }
+                                            })
+                                    }
+                                }
+                            })
                     }
                 })
             } else {
@@ -80,18 +94,18 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
 
         btn_send_vendor.setOnClickListener {
-//            if (MeshHelper.getSelectedModel() is VendorModel && MeshHelper.getSelectedModel()?.boundAppKeyIndexes?.isNotEmpty() ?: false) {
-                Utils.printLog(TAG, "${sb_vendor_c.progress}")
-                var c = sb_vendor_c.progress * 255 / 100
-                var w = sb_vendor_w.progress * 255 / 100
-                var r = sb_vendor_r.progress * 255 / 100
-                var g = sb_vendor_g.progress * 255 / 100
-                var b = sb_vendor_b.progress * 255 / 100
-                MeshSDK.setLightProperties(mMac, c, w, r, g, b, object : BooleanCallback {
-                    override fun onResult(boolean: Boolean) {
+            //            if (MeshHelper.getSelectedModel() is VendorModel && MeshHelper.getSelectedModel()?.boundAppKeyIndexes?.isNotEmpty() ?: false) {
+            Utils.printLog(TAG, "${sb_vendor_c.progress}")
+            var c = sb_vendor_c.progress * 255 / 100
+            var w = sb_vendor_w.progress * 255 / 100
+            var r = sb_vendor_r.progress * 255 / 100
+            var g = sb_vendor_g.progress * 255 / 100
+            var b = sb_vendor_b.progress * 255 / 100
+            MeshSDK.setLightProperties(mMac, c, w, r, g, b, object : BooleanCallback {
+                override fun onResult(boolean: Boolean) {
 
-                    }
-                })
+                }
+            })
 //            } else if (MeshHelper.getSelectedModel() is VendorModel) {
 ////                MeshHelper.bindAppKey(meshCallback)
 //            }

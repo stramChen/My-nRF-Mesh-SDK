@@ -15,6 +15,7 @@ import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
 import qk.sdk.mesh.meshsdk.callbak.*
 import qk.sdk.mesh.meshsdk.service.BaseMeshService
 import qk.sdk.mesh.meshsdk.util.*
+import rx.android.schedulers.AndroidSchedulers
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -38,12 +39,18 @@ object MeshHelper {
     // TODO: UUID 定义为一个通用的字符串，标明扫描到的设备类型（已加入 mesh 网络的，未加入的）
     // TODO: scanCallback -> 2 个方法，onStatusChange, onScanResult
     fun startScan(filterUuid: UUID, scanCallback: ScanCallback?) {
-        MeshProxyService.mMeshProxyService?.startScan(filterUuid, scanCallback)
+        rx.Observable.create<String> {
+        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+            MeshProxyService.mMeshProxyService?.startScan(filterUuid, scanCallback)
+        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
     // 停止蓝牙扫描
     fun stopScan() {
-        MeshProxyService.mMeshProxyService?.stopScan()
+        rx.Observable.create<String> {
+        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+            MeshProxyService.mMeshProxyService?.stopScan()
+        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
     // ⚠️ Q: 此处是否仅建立蓝牙连接？
@@ -56,7 +63,10 @@ object MeshHelper {
         connectToNetwork: Boolean,
         callback: ConnectCallback?
     ) {
-        MeshProxyService.mMeshProxyService?.connect(context, device, connectToNetwork, callback)
+        rx.Observable.create<String> {
+        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+            MeshProxyService.mMeshProxyService?.connect(context, device, connectToNetwork, callback)
+        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
     // 添加蓝牙连接回调
@@ -64,7 +74,10 @@ object MeshHelper {
     // TODO: 合并 callback 为一个方法，定义并给出 callback 参数定义 - 连接、断开、连接中，等等
     // TODO: addConnectStatusChangedCallback
     fun addConnectCallback(callback: ConnectCallback) {
-        MeshProxyService.mMeshProxyService?.addConnectCallback(callback)
+        rx.Observable.create<String> {
+        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+            MeshProxyService.mMeshProxyService?.addConnectCallback(callback)
+        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
     // 获取当前已连接的蓝牙设备
@@ -73,7 +86,12 @@ object MeshHelper {
     // TODO: ExtendedBluetoothDevice 包含属性（暂定）
     // TODO: UUID, mac(address), name, rssi
     fun getConnectedDevice(): ExtendedBluetoothDevice? {
-        return MeshProxyService.mMeshProxyService?.getConnectingDevice()
+//        rx.Observable.create<EXTE> {
+//        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+            return MeshProxyService.mMeshProxyService?.getConnectingDevice()
+//        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe(Observer { o, arg ->
+//
+//        })
     }
 
     // 断开当前蓝牙连接
@@ -142,6 +160,15 @@ object MeshHelper {
         return MeshProxyService.mMeshProxyService?.getMeshNetwork()?.appKeys
     }
 
+    fun getAppkeyByKeyName(key: String): ApplicationKey? {
+        MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.appKeys?.forEach {
+            if (key == ByteUtil.bytesToHexString(it.key))
+                return it
+        }
+
+        return null
+    }
+
     // 选择要操作的元素和 model
     fun setSelectedModel(
         element: Element?,
@@ -183,9 +210,18 @@ object MeshHelper {
     }
 
     //给RN用
-    fun addAppkeys(index: Int,meshCallback: MeshCallback?) {
-        getAppKeys()?.get(index)?.let { applicationKey ->
-            getNetworkKey(applicationKey.boundNetKeyIndex)?.let { networkKey ->
+    fun addAppkeys(index: Int, meshCallback: MeshCallback?) {
+        val applicationKey = getAppKeys()?.get(index)
+        if (applicationKey != null) {
+            val networkKey = getNetworkKey(applicationKey.boundNetKeyIndex)
+            Utils.printLog(
+                TAG,
+                "networkKey.keyIndex:${networkKey?.keyIndex},applicationKey.boundNetKeyIndex:${applicationKey.boundNetKeyIndex}"
+            )
+            if (networkKey == null || networkKey.keyIndex != applicationKey.boundNetKeyIndex) {
+                //todo 日志记录
+                Utils.printLog(TAG, "addAppKeys() networkKey is null!")
+            } else {
                 val node = getSelectedMeshNode()
                 var isNodeKeyAdd: Boolean
                 if (node != null) {
@@ -195,17 +231,19 @@ object MeshHelper {
                     )
                     val meshMessage: MeshMessage
                     if (!isNodeKeyAdd) {
-                        meshMessage = ConfigAppKeyAdd(getCurrentNetworkKey()!!, applicationKey)
+                        meshMessage = ConfigAppKeyAdd(networkKey, applicationKey)
                     } else {
-                        meshMessage = ConfigAppKeyDelete(getCurrentNetworkKey()!!, applicationKey)
+                        meshMessage = ConfigAppKeyDelete(networkKey, applicationKey)
                     }
                     sendMessage(node.unicastAddress, meshMessage, meshCallback)
                 }
             }
+        } else {
+            //todo 日志记录
+            Utils.printLog(TAG, "addAppKeys() applicationKey is null!")
         }
-//        getAppKeys()?.forEach { applicationKey ->
-//            if (applicationKey.boundNetKeyIndex == getCurrentNetworkKey()?.keyIndex) {
-//                getAppKeys()?.get()
+//        getAppKeys()?.get(index)?.let { applicationKey ->
+//            getNetworkKey(applicationKey.boundNetKeyIndex)?.let { networkKey ->
 //                val node = getSelectedMeshNode()
 //                var isNodeKeyAdd: Boolean
 //                if (node != null) {
@@ -279,6 +317,28 @@ object MeshHelper {
         }
     }
 
+    fun removeNetworkKey(key: String, callback: IntCallback) {
+        var netKey: NetworkKey? = null
+        getAllNetworkKey()?.forEach {
+            if (ByteUtil.bytesToHexString(it.key) == key) {
+                netKey = it
+            }
+        }
+        netKey?.let {
+            if (!(MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.removeNetKey(
+                    it
+                ) ?: false)
+            ) {
+                callback.onResultMsg(Constants.ConnectState.NET_KEY_DELETE_FAILED.code)
+            } else {
+                callback.onResultMsg(Constants.ConnectState.COMMON_SUCCESS.code)
+                if (LocalPreferences.getCurrentNetKey() == ByteUtil.bytesToHexString(it.key)) {
+                    LocalPreferences.setCurrentNetKey("")
+                }
+            }
+        }
+    }
+
     fun getAllNetworkKey(): List<NetworkKey>? {
         return MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshNetworkLiveData?.networkKeys
     }
@@ -307,6 +367,50 @@ object MeshHelper {
 //                            network.updateAppKey(applicationKey)
                         }
                     }
+            }
+        }
+    }
+
+
+    fun getNetKeyByKeyName(networkKey: String): NetworkKey? {
+        getAllNetworkKey()?.forEach { netKey ->
+            if (ByteUtil.bytesToHexString(netKey.key) == networkKey) {
+                return netKey
+            }
+        }
+        return null
+    }
+
+    fun getAllApplicationKey(networkKey: String, callback: ArrayStringCallback) {
+        var appKeys = ArrayList<String>()
+        var netKey = getNetKeyByKeyName(networkKey)
+        getAppKeys()?.forEach {
+            if (it.boundNetKeyIndex == netKey?.keyIndex) {
+                appKeys.add(ByteUtil.bytesToHexString(it.key))
+            }
+        }
+        callback.onResult(appKeys)
+    }
+
+    fun removeApplicationKey(appKey: String, networkKey: String, callback: IntCallback) {
+        var applicationKey: ApplicationKey? = null
+        getAppKeys()?.forEach {
+            if (ByteUtil.bytesToHexString(it.key) == appKey) {
+                applicationKey = it
+            }
+        }
+
+        applicationKey?.let {
+            if (!(MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.removeAppKey(
+                    it
+                ) ?: false)
+            ) {
+                callback.onResultMsg(Constants.ConnectState.APP_KEY_DELETE_FAILED.code)
+            } else {
+                callback.onResultMsg(Constants.ConnectState.COMMON_SUCCESS.code)
+                if (LocalPreferences.getCurrentNetKey() == ByteUtil.bytesToHexString(it.key)) {
+                    LocalPreferences.setCurrentNetKey("")
+                }
             }
         }
     }
@@ -413,7 +517,7 @@ object MeshHelper {
     }
 
     // 设定开关状态？
-    fun sendGenericOnOff(state: Boolean, delay: Int?,meshCallback: MeshCallback?) {
+    fun sendGenericOnOff(state: Boolean, delay: Int?, meshCallback: MeshCallback?) {
         getSelectedMeshNode()?.let { node ->
             getSelectedElement()?.let { element ->
                 getSelectedModel()?.let { model ->

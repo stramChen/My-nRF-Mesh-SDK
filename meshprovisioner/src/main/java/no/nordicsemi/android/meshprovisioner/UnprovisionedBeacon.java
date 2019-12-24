@@ -25,7 +25,7 @@ public class UnprovisionedBeacon extends MeshBeacon {
      * @param beaconData beacon data advertised by the mesh beacon
      * @throws IllegalArgumentException if advertisement data provide is empty or null
      */
-    UnprovisionedBeacon(@NonNull final byte[] beaconData) {
+    public UnprovisionedBeacon(@NonNull final byte[] beaconData) {
         super(beaconData);
         if(beaconData.length < UnprovisionedBeacon.BEACON_DATA_LENGTH)
             throw new IllegalArgumentException("Invalid unprovisioned beacon data");

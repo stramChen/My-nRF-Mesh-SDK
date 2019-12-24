@@ -589,7 +589,7 @@ public final class MeshNetwork extends BaseMeshNetwork {
      * Returns a list of {@link NetworkKey} belonging to the mesh network
      */
     public List<NetworkKey> getNetKeys() {
-        return Collections.unmodifiableList(netKeys);
+        return netKeys;
     }
 
     public NetworkKey getPrimaryNetworkKey() {

@@ -9,6 +9,5 @@ class ToApplication : Application() {
         super.onCreate()
 //        MeshHelper.initMesh(applicationContext)
         MeshSDK.init(this)
-
     }
 }

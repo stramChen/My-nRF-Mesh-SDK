@@ -23,10 +23,10 @@
 package qk.sdk.mesh.demo.ui.adapter
 
 import android.content.Context
-import com.styd.crm.adapter.base.BaseAdapter
-import com.styd.crm.adapter.base.BaseViewHolder
 import kotlinx.android.synthetic.main.item_scan_device.view.*
 import qk.sdk.mesh.demo.R
+import qk.sdk.mesh.demo.widget.base.BaseAdapter
+import qk.sdk.mesh.demo.widget.base.BaseViewHolder
 
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
 

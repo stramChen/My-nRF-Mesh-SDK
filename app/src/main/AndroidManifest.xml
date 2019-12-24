@@ -19,6 +19,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
+        <activity android:name=".ui.NetKeyActivity"></activity>
         <activity android:name=".ui.ConnectMeshActivity" />
         <activity android:name=".ui.ConnectTestActivity" />
         <activity android:name=".ui.MainMeshActivity">
@@ -27,17 +28,15 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-<!--        <activity-->
-<!--            android:name=".ui.ScanMeshActivity"-->
-<!--            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />-->
-        <activity android:name=".ui.ScanTestActivity"
+        </activity> <!-- <activity -->
+        <!-- android:name=".ui.ScanMeshActivity" -->
+        <!-- android:theme="@style/Theme.AppCompat.Light.NoActionBar" /> -->
+        <activity
+            android:name=".ui.ScanTestActivity"
             android:alwaysRetainTaskState="true"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:screenOrientation="unspecified"
-            android:theme="@style/MyTheme"/>
-
-
+            android:theme="@style/MyTheme" />
     </application>
 
 </manifest>

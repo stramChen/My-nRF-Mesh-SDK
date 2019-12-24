@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,6 +25,7 @@ import androidx.room.ColumnInfo;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
+
 import no.nordicsemi.android.meshprovisioner.transport.Element;
 import no.nordicsemi.android.meshprovisioner.transport.ProvisionedMeshNode;
 import no.nordicsemi.android.meshprovisioner.utils.MeshAddress;
@@ -244,16 +246,27 @@ abstract class BaseMeshNetwork {
      * @param networkKey key to be removed
      * @throws IllegalArgumentException if the key is in use or if it does not exist in the list of keys
      */
-    public boolean removeNetKey(@NonNull final NetworkKey networkKey) throws IllegalArgumentException {
+    synchronized public boolean removeNetKey(@NonNull final NetworkKey networkKey) throws IllegalArgumentException {
         if (!isKeyInUse(networkKey)) {
-            if (netKeys.remove(networkKey)) {
-                notifyNetKeyDeleted(networkKey);
-                return true;
-            } else {
+            try {
+                Iterator iterator = netKeys.iterator();
+                while (iterator.hasNext()) {
+                    NetworkKey key = (NetworkKey) iterator.next();
+                    if (key.id == networkKey.id) {
+                        iterator.remove();
+                        notifyNetKeyDeleted(networkKey);
+                        return true;
+                    }
+                }
+
                 throw new IllegalArgumentException("Key does not exist.");
+            } catch (Exception e) {
+                e.printStackTrace();
+                return false;
             }
+        } else {
+            return false;
         }
-        throw new IllegalArgumentException("Unable to delete a network key that's already in use.");
     }
 
     /**
@@ -473,13 +486,13 @@ abstract class BaseMeshNetwork {
      */
     public boolean removeAppKey(@NonNull final ApplicationKey appKey) throws IllegalArgumentException {
         if (isKeyInUse(appKey)) {
-            throw new IllegalArgumentException("Unable to delete an app key that's in use");
+            return false;
         } else {
             if (appKeys.remove(appKey)) {
                 notifyAppKeyDeleted(appKey);
                 return true;
             } else {
-                throw new IllegalArgumentException("Key does not exist");
+                return false;
             }
         }
     }

@@ -99,6 +99,7 @@ class ScannerLiveData internal constructor() : LiveData<ScannerLiveData>() {
         // Update RSSI and name
         device.rssi = result.rssi
         device.name = result.scanRecord!!.deviceName
+        device.beacon = beacon
 
         postValue(this)
     }
@@ -119,7 +120,7 @@ class ScannerLiveData internal constructor() : LiveData<ScannerLiveData>() {
         return -1
     }
 
-    internal fun startScanning(){
+    internal fun startScanning() {
         mDevices.clear()
         postValue(this)
     }

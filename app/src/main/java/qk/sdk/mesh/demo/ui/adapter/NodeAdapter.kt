@@ -23,20 +23,14 @@
 package qk.sdk.mesh.demo.ui.adapter
 
 import android.content.Context
-import android.view.View
-
-import com.styd.crm.adapter.base.BaseAdapter
-import com.styd.crm.adapter.base.BaseViewHolder
-import kotlinx.android.synthetic.main.activity_main.view.*
 import kotlinx.android.synthetic.main.item_main_node.view.*
 
 import no.nordicsemi.android.meshprovisioner.transport.Element
 import no.nordicsemi.android.meshprovisioner.transport.ProvisionedMeshNode
 import no.nordicsemi.android.meshprovisioner.utils.CompanyIdentifiers
-import no.nordicsemi.android.meshprovisioner.utils.MeshAddress
-import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils
 import qk.sdk.mesh.demo.R
-import qk.sdk.mesh.demo.widget.RemovableViewHolder
+import qk.sdk.mesh.demo.widget.base.BaseAdapter
+import qk.sdk.mesh.demo.widget.base.BaseViewHolder
 import java.lang.Exception
 
 class NodeAdapter(context: Context, data: ArrayList<ProvisionedMeshNode>) :

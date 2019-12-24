@@ -5,8 +5,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.styd.crm.adapter.base.BaseAdapter
-import com.styd.crm.adapter.base.BaseViewHolder
 import kotlinx.android.synthetic.main.activity_scan.*
 import kotlinx.android.synthetic.main.item_scan_device.view.*
 import kotlinx.coroutines.delay
@@ -14,6 +12,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import qk.sdk.mesh.demo.R
 import qk.sdk.mesh.demo.base.BaseMeshActivity
+import qk.sdk.mesh.demo.widget.base.BaseAdapter
+import qk.sdk.mesh.demo.widget.base.BaseViewHolder
 import qk.sdk.mesh.demo.widget.base.OnItemClickListener
 import qk.sdk.mesh.meshsdk.MeshHelper
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg

@@ -23,6 +23,7 @@ import qk.sdk.mesh.meshsdk.mesh.NrfMeshManager
 import qk.sdk.mesh.meshsdk.util.ByteUtil
 import qk.sdk.mesh.meshsdk.util.LocalPreferences
 import qk.sdk.mesh.meshsdk.util.Utils
+import rx.android.schedulers.AndroidSchedulers
 import java.lang.Exception
 import java.util.*
 
@@ -51,18 +52,18 @@ open class BaseMeshService : LifecycleService() {
 
     //开始扫描
     internal fun startScan(filterUuid: UUID, scanCallback: ScanCallback?) {
-        mScanCallback = scanCallback
-        //获取扫描结果
-        mNrfMeshManager?.getScannerResults()?.observe(this, Observer {
-            Log.e("", "get scanner result:${it.devices.size}")
-            mScanCallback?.onScanResult(it.devices, it.updatedDeviceIndex)
-        })
-        // 获取扫描状态结果
-        mNrfMeshManager?.getScannerState()?.observe(this, Observer {
-            Log.e("", "scanner state changed")
-        })
+            mScanCallback = scanCallback
+            //获取扫描结果
+            mNrfMeshManager?.getScannerResults()?.observe(this, Observer { it ->
+                Log.e("", "get scanner result:${it.devices.size}")
+                mScanCallback?.onScanResult(it.devices, it.updatedDeviceIndex)
+            })
+            // 获取扫描状态结果
+            mNrfMeshManager?.getScannerState()?.observe(this, Observer {
+                Log.e("", "scanner state changed")
+            })
 
-        mNrfMeshManager?.startScan(filterUuid)
+            mNrfMeshManager?.startScan(filterUuid, scanCallback)
     }
 
     //停止扫描
@@ -254,7 +255,7 @@ open class BaseMeshService : LifecycleService() {
                 "setCurrentNetworkKey:${ByteUtil.bytesToHexString(it.key)},isCurrent:${it.isCurrent}"
             )
             MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.let { meshNetwork ->
-              meshNetwork.updateNetKey(it)
+                meshNetwork.updateNetKey(it)
             }
         }
     }

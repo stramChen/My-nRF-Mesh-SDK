@@ -25,9 +25,8 @@ package qk.sdk.mesh.demo.widget
 import android.view.View
 import android.widget.ImageView
 
-import androidx.recyclerview.widget.RecyclerView
-import com.styd.crm.adapter.base.BaseViewHolder
 import qk.sdk.mesh.demo.R
+import qk.sdk.mesh.demo.widget.base.BaseViewHolder
 
 open class RemovableViewHolder(itemView: View) : BaseViewHolder(itemView) {
 
