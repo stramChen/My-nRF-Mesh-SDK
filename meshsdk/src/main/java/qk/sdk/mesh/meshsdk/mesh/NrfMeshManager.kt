@@ -129,7 +129,7 @@ class NrfMeshManager(
     //Contains the MeshNetwork
     internal val meshNetworkLiveData = MeshNetworkLiveData()
     private val mNetworkImportState = SingleLiveData<String>()
-    private val mMeshMessageLiveData = SingleLiveData<MeshMessage>()
+    private val mMeshMessageLiveData = MutableLiveData<MeshMessage>()
 
     // Contains the provisioned nodes
     private val mProvisionedNodes = MutableLiveData<ArrayList<ProvisionedMeshNode>>()
@@ -412,6 +412,20 @@ class NrfMeshManager(
         }
     }
 
+    fun identifyNode(device: ExtendedBluetoothDevice, networkKey: NetworkKey) {
+        val beacon = device.beacon as UnprovisionedBeacon?
+        if (beacon != null) {
+            meshManagerApi.identifyNode(beacon.uuid, ATTENTION_TIMER,networkKey)
+        } else if (device.scanResult != null) {
+            val serviceData =
+                Utils.getServiceData(device.scanResult!!, BleMeshManager.MESH_PROVISIONING_UUID)
+            if (serviceData != null) {
+                val uuid = meshManagerApi.getDeviceUuid(serviceData)
+                meshManagerApi.identifyNode(uuid, ATTENTION_TIMER, networkKey)
+            }
+        }
+    }
+
     private fun clearExtendedMeshNode() {
         mExtendedMeshNode = null
     }
@@ -637,7 +651,6 @@ class NrfMeshManager(
 
     override fun sendProvisioningPdu(meshNode: UnprovisionedMeshNode, pdu: ByteArray) {
         bleMeshManager?.sendPdu(pdu)
-//        Utils.printLog(TAG, "sendProvisioningPdu:${ByteUtil.bytesToHexString(pdu)}")
     }
 
     override fun onMeshPduCreated(pdu: ByteArray) {
@@ -823,13 +836,13 @@ class NrfMeshManager(
                     isDefaultTtlReceived = true
                     mProvisionedMeshNodeLiveData.postValue(node)
                     provisioningState?.onMeshNodeStateUpdated(ProvisionerStates.DEFAULT_TTL_STATUS_RECEIVED)
-                    mHandler.postDelayed({
-                        val appKey = meshNetworkLiveData.getSelectedAppKey()
-                        val index = node.addedNetKeys[0].index
-                        val networkKey = mMeshNetwork!!.netKeys[index]
-                        val configAppKeyAdd = ConfigAppKeyAdd(networkKey, appKey!!)
-                        meshManagerApi.createMeshPdu(node.unicastAddress, configAppKeyAdd)
-                    }, 1500)
+//                    mHandler.postDelayed({
+//                        val appKey = meshNetworkLiveData.getSelectedAppKey()
+//                        val index = node.addedNetKeys[0].index
+//                        val networkKey = mMeshNetwork!!.netKeys[index]
+//                        val configAppKeyAdd = ConfigAppKeyAdd(networkKey, appKey!!)
+//                        meshManagerApi.createMeshPdu(node.unicastAddress, configAppKeyAdd)
+//                    }, 1500)
                 } else {
                     updateNode(node)
                     mMeshMessageLiveData.postValue(meshMessage)

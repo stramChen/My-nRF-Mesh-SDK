@@ -115,19 +115,21 @@ class ConnectMeshActivity : BaseMeshActivity() {
         ) {
             // 若是已配对过的节点,则可通过代理节点连接
             if (MeshHelper.getSelectedModel()?.boundAppKeyIndexes?.isNotEmpty() ?: false) {
-                MeshHelper.getProvisionNode()?.forEach forEach@{ node ->
-                    devices?.forEach deviceForeach@{ device ->
-                        if (Utils.isUUIDEqualsMac(
-                                Utils.getMacFromUUID(node.uuid),
-                                device.getAddress()
-                            )
-                        ) {
-                            startConnect(device)
-                            MeshHelper.stopScan()
-                            return@forEach
-                        }
-                    }
+//                MeshHelper.getProvisionNode()?.forEach forEach@{ node ->
+//                    devices?.forEach deviceForeach@{ device ->
+//                        if (Utils.isUUIDEqualsMac(
+//                                Utils.getMacFromUUID(node.uuid),
+//                                device.getAddress()
+//                            )
+//                        ) {
+                if (devices.isNotEmpty()) {
+                    startConnect(devices[0])
+                    MeshHelper.stopScan()
                 }
+//                            return@forEach
+//                        }
+//                    }
+//                }
             } else {
                 devices.forEach { device ->
                     var selectedNode = MeshHelper.getSelectedMeshNode()

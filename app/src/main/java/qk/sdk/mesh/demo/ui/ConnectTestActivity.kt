@@ -60,20 +60,19 @@ class ConnectTestActivity : BaseMeshActivity() {
             if (MeshHelper.isConnectedToProxy()) {
                 MeshSDK.getCurrentNetworkKey(object : StringCallback {
                     override fun onResultMsg(msg: String) {
-                        var appIndex =
-                            MeshSDK.getAllApplicationKey(msg, object : ArrayStringCallback {
-                                override fun onResult(result: ArrayList<String>) {
-                                    if (result.size > 0) {
-                                        MeshSDK.bindApplicationKeyForNode(
-                                            mMac,
-                                            result.get(0),
-                                            object : MapCallback {
-                                                override fun onResult(result: HashMap<Any, Any>) {
-                                                }
-                                            })
-                                    }
+                        MeshSDK.getAllApplicationKey(msg, object : ArrayStringCallback {
+                            override fun onResult(result: ArrayList<String>) {
+                                if (result.size > 0) {
+                                    MeshSDK.bindApplicationKeyForNode(
+                                        mMac,
+                                        result.get(0),
+                                        object : MapCallback {
+                                            override fun onResult(result: HashMap<Any, Any>) {
+                                            }
+                                        })
                                 }
-                            })
+                            }
+                        })
                     }
                 })
             } else {

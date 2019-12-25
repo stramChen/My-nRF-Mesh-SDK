@@ -86,42 +86,64 @@ object MeshHelper {
     // TODO: ExtendedBluetoothDevice 包含属性（暂定）
     // TODO: UUID, mac(address), name, rssi
     fun getConnectedDevice(): ExtendedBluetoothDevice? {
-//        rx.Observable.create<EXTE> {
-//        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
-            return MeshProxyService.mMeshProxyService?.getConnectingDevice()
-//        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe(Observer { o, arg ->
-//
-//        })
+        return MeshProxyService.mMeshProxyService?.getConnectingDevice()
     }
 
     // 断开当前蓝牙连接
     fun disConnect() {
-        MeshProxyService.mMeshProxyService?.disConnect()
+        rx.Observable.create<String> {
+        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+            MeshProxyService.mMeshProxyService?.disConnect()
+        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
     // 停止蓝牙连接 - 正在连接的时候
     fun stopConnect() {
-        MeshProxyService.mMeshProxyService?.stopConnect()
+        rx.Observable.create<String> {
+        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+            MeshProxyService.mMeshProxyService?.stopConnect()
+        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
     // 清除 mesh 回调，清除 mesh 业务逻辑中所有设定的 callback
     fun clearMeshCallback() {
-        MeshProxyService.mMeshProxyService?.clearMeshCallback()
+        rx.Observable.create<String> {
+        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+            MeshProxyService.mMeshProxyService?.clearMeshCallback()
+        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
     // 开启启动网络配置
     // TODO: ExtendedBluetoothDevice 转换为 HashMap
     // TODO: callback 同上
     fun startProvision(device: ExtendedBluetoothDevice, callback: BaseCallback) {
-        MeshProxyService.mMeshProxyService?.startProvisioning(device, callback)
+        rx.Observable.create<String> {
+        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+            MeshProxyService.mMeshProxyService?.startProvisioning(device, callback)
+        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
+    }
+
+    // 开启启动网络配置
+    fun startProvision(
+        device: ExtendedBluetoothDevice,
+        networkKey: NetworkKey,
+        callback: BaseCallback
+    ) {
+        rx.Observable.create<String> {
+        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+            MeshProxyService.mMeshProxyService?.startProvisioning(device, networkKey, callback)
+        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
     // ??? 获取已经配置的网络的节点列表？
     // TODO: callback 同上
     // TODO: getProvisionedDeviceListForCurrentMeshNetwork()
     fun getProvisionedNodeByCallback(callback: ProvisionCallback) {
-        mProvisionCallback = callback
-        MeshProxyService.mMeshProxyService?.getProvisionedNodes(callback)
+        rx.Observable.create<String> {
+        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+            mProvisionCallback = callback
+            MeshProxyService.mMeshProxyService?.getProvisionedNodes(callback)
+        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
     // ??? 获取已经配置的网络的节点列表？—— 和上面函数的区别？
@@ -135,14 +157,20 @@ object MeshHelper {
     // TODO: callback 同上
     // TODO: deleteProvisionNodeFormLocalMeshNetworkDataBase
     fun deleteProvisionNode(node: ProvisionedMeshNode, callback: ProvisionCallback) {
-        MeshProxyService.mMeshProxyService?.deleteNode(node, callback)
+        rx.Observable.create<String> {
+        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+            MeshProxyService.mMeshProxyService?.deleteNode(node, callback)
+        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
     // ？？？
     // 设置要操作的节点
     // TODO: node -> string MAC 地址
     fun setSelectedMeshNode(node: ProvisionedMeshNode) {
-        MeshProxyService.mMeshProxyService?.setSelectedNode(node)
+        rx.Observable.create<String> {
+        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+            MeshProxyService.mMeshProxyService?.setSelectedNode(node)
+        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
     // ？？？
@@ -180,68 +208,72 @@ object MeshHelper {
     // 在当前 mesh 网络中创建一个新的 application key，并存储
     // TODO: 传入 APP Key 序号
     fun addAppKeys(meshCallback: MeshCallback?) {
-        val applicationKey = getAppKeys()?.get(0)
-        if (applicationKey != null) {
-            val networkKey = getNetworkKey(applicationKey.boundNetKeyIndex)
-            if (networkKey == null) {
-                //todo 日志记录
-                Utils.printLog(TAG, "addAppKeys() networkKey is null!")
-            } else {
-                val node = getSelectedMeshNode()
-                var isNodeKeyAdd: Boolean
-                if (node != null) {
-                    isNodeKeyAdd = MeshParserUtils.isNodeKeyExists(
-                        node.addedAppKeys,
-                        applicationKey.keyIndex
-                    )
-                    val meshMessage: MeshMessage
-                    if (!isNodeKeyAdd) {
-                        meshMessage = ConfigAppKeyAdd(networkKey, applicationKey)
-                    } else {
-                        meshMessage = ConfigAppKeyDelete(networkKey, applicationKey)
+        rx.Observable.create<String> {
+        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+            val applicationKey = getAppKeys()?.get(0)
+            if (applicationKey != null) {
+                val networkKey = getNetworkKey(applicationKey.boundNetKeyIndex)
+                if (networkKey == null) {
+                    //todo 日志记录
+                    Utils.printLog(TAG, "addAppKeys() networkKey is null!")
+                } else {
+                    val node = getSelectedMeshNode()
+                    var isNodeKeyAdd: Boolean
+                    if (node != null) {
+                        isNodeKeyAdd = MeshParserUtils.isNodeKeyExists(
+                            node.addedAppKeys,
+                            applicationKey.keyIndex
+                        )
+                        val meshMessage: MeshMessage
+                        if (!isNodeKeyAdd) {
+                            meshMessage = ConfigAppKeyAdd(networkKey, applicationKey)
+                        } else {
+                            meshMessage = ConfigAppKeyDelete(networkKey, applicationKey)
+                        }
+                        sendMessage(node.unicastAddress, meshMessage, meshCallback)
                     }
-                    sendMessage(node.unicastAddress, meshMessage, meshCallback)
                 }
+            } else {
+                //todo 日志记录
+                Utils.printLog(TAG, "addAppKeys() applicationKey is null!")
             }
-        } else {
-            //todo 日志记录
-            Utils.printLog(TAG, "addAppKeys() applicationKey is null!")
-        }
+
+        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
     //给RN用
     fun addAppkeys(index: Int, meshCallback: MeshCallback?) {
-        val applicationKey = getAppKeys()?.get(index)
-        if (applicationKey != null) {
-            val networkKey = getNetworkKey(applicationKey.boundNetKeyIndex)
-            Utils.printLog(
-                TAG,
-                "networkKey.keyIndex:${networkKey?.keyIndex},applicationKey.boundNetKeyIndex:${applicationKey.boundNetKeyIndex}"
-            )
-            if (networkKey == null || networkKey.keyIndex != applicationKey.boundNetKeyIndex) {
-                //todo 日志记录
-                Utils.printLog(TAG, "addAppKeys() networkKey is null!")
-            } else {
-                val node = getSelectedMeshNode()
-                var isNodeKeyAdd: Boolean
-                if (node != null) {
-                    isNodeKeyAdd = MeshParserUtils.isNodeKeyExists(
-                        node.addedAppKeys,
-                        applicationKey.keyIndex
-                    )
-                    val meshMessage: MeshMessage
-                    if (!isNodeKeyAdd) {
-                        meshMessage = ConfigAppKeyAdd(networkKey, applicationKey)
-                    } else {
-                        meshMessage = ConfigAppKeyDelete(networkKey, applicationKey)
+            val applicationKey = getAppKeys()?.get(index)
+            if (applicationKey != null) {
+                val networkKey = getNetworkKey(applicationKey.boundNetKeyIndex)
+                Utils.printLog(
+                    TAG,
+                    "networkKey.keyIndex:${networkKey?.keyIndex},applicationKey.boundNetKeyIndex:${applicationKey.boundNetKeyIndex}"
+                )
+                if (networkKey == null || networkKey.keyIndex != applicationKey.boundNetKeyIndex) {
+                    //todo 日志记录
+                    Utils.printLog(TAG, "addAppKeys() networkKey is null!")
+                } else {
+                    val node = getSelectedMeshNode()
+                    var isNodeKeyAdd: Boolean
+                    if (node != null) {
+                        isNodeKeyAdd = MeshParserUtils.isNodeKeyExists(
+                            node.addedAppKeys,
+                            applicationKey.keyIndex
+                        )
+                        val meshMessage: MeshMessage
+                        if (!isNodeKeyAdd) {
+                            meshMessage = ConfigAppKeyAdd(networkKey, applicationKey)
+                        } else {
+                            meshMessage = ConfigAppKeyDelete(networkKey, applicationKey)
+                        }
+                        sendMessage(node.unicastAddress, meshMessage, meshCallback)
                     }
-                    sendMessage(node.unicastAddress, meshMessage, meshCallback)
                 }
+            } else {
+                //todo 日志记录
+                Utils.printLog(TAG, "addAppKeys() applicationKey is null!")
             }
-        } else {
-            //todo 日志记录
-            Utils.printLog(TAG, "addAppKeys() applicationKey is null!")
-        }
 //        getAppKeys()?.get(index)?.let { applicationKey ->
 //            getNetworkKey(applicationKey.boundNetKeyIndex)?.let { networkKey ->
 //                val node = getSelectedMeshNode()
@@ -267,46 +299,51 @@ object MeshHelper {
      * 在绑定好appkey之后，获取当前节点的元素列表
      */
     fun getCompositionData() {
-        val configCompositionDataGet = ConfigCompositionDataGet()
-        val node = MeshHelper.getSelectedMeshNode()
-        node?.let {
-            sendMessage(it.unicastAddress, configCompositionDataGet)
-        }
+        rx.Observable.create<String> {
+        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+            val configCompositionDataGet = ConfigCompositionDataGet()
+            val node = MeshHelper.getSelectedMeshNode()
+            node?.let {
+                sendMessage(it.unicastAddress, configCompositionDataGet)
+            }
+        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
     // 绑定 application key
     fun bindAppKey(meshCallback: MeshCallback?) {
+            getSelectedMeshNode()?.let {
+                val element = getSelectedElement()
+                if (element != null) {
+                    Utils.printLog(TAG, "getSelectedElement")
+                    val model = getSelectedModel()
+                    if (model != null) {
+                        Utils.printLog(TAG, "getSelectedModel")
+                        val configModelAppUnbind =
+                            ConfigModelAppBind(element.elementAddress, model.modelId, 0)
+                        sendMessage(it.unicastAddress, configModelAppUnbind, meshCallback)
+                    }
+                }
+            }
+    }
+
+    fun bindAppKey(appKeyIndex: Int, meshCallback: MeshCallback?) {
         getSelectedMeshNode()?.let {
             val element = getSelectedElement()
             if (element != null) {
-                Utils.printLog(TAG, "getSelectedElement")
                 val model = getSelectedModel()
                 if (model != null) {
                     Utils.printLog(TAG, "getSelectedModel")
                     val configModelAppUnbind =
-                        ConfigModelAppBind(element.elementAddress, model.modelId, 0)
+                        ConfigModelAppBind(element.elementAddress, model.modelId, appKeyIndex)
                     sendMessage(it.unicastAddress, configModelAppUnbind, meshCallback)
                 }
             }
         }
     }
 
-//    fun bindAppKey(modelIndex: Int, meshCallback: MeshCallback?) {
-//        getSelectedMeshNode()?.let {
-//            val element = getSelectedElement()
-//            if (element != null) {
-//                val model = getSelectedModel()
-//                if (model != null) {
-//                    Utils.printLog(TAG, "getSelectedModel")
-//                    val configModelAppUnbind =
-//                        ConfigModelAppBind(element.elementAddress, model.modelId, 0)
-//                    sendMessage(it.unicastAddress, configModelAppUnbind, meshCallback)
-//                }
-//            }
-//        }
-//    }
-
     fun createNetworkKey(key: String) {
+//        rx.Observable.create<String> {
+//        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
         var netKey =
             MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.createNetworkKey()
         netKey?.key = ByteUtil.hexStringToBytes(key)
@@ -315,6 +352,7 @@ object MeshHelper {
                 netKey
             )
         }
+//        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
     fun removeNetworkKey(key: String, callback: IntCallback) {
@@ -345,6 +383,10 @@ object MeshHelper {
 
     fun setCurrentNetworkKey(networkKey: String) {
         MeshProxyService.mMeshProxyService?.setCurrentNetworkKey(networkKey)
+    }
+
+    fun getPrimaryNetKey(){
+
     }
 
     fun getCurrentNetworkKey(): NetworkKey? {
@@ -392,7 +434,7 @@ object MeshHelper {
         callback.onResult(appKeys)
     }
 
-    fun removeApplicationKey(appKey: String, networkKey: String, callback: IntCallback) {
+    fun removeApplicationKey(appKey: String, callback: IntCallback) {
         var applicationKey: ApplicationKey? = null
         getAppKeys()?.forEach {
             if (ByteUtil.bytesToHexString(it.key) == appKey) {
@@ -435,7 +477,10 @@ object MeshHelper {
     // TODO: 修改为原始类型数据
     // TODO: sendMeshPDU
     fun sendMeshPdu(dst: Int, message: MeshMessage, callback: MeshCallback?) {
-        MeshProxyService.mMeshProxyService?.sendMeshPdu(dst, message, callback)
+//        rx.Observable.create<String> {
+//        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+            MeshProxyService.mMeshProxyService?.sendMeshPdu(dst, message, callback)
+//        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
     // 获取选中的 model
@@ -518,6 +563,8 @@ object MeshHelper {
 
     // 设定开关状态？
     fun sendGenericOnOff(state: Boolean, delay: Int?, meshCallback: MeshCallback?) {
+        if (meshCallback == null)
+            Utils.printLog(TAG, "")
         getSelectedMeshNode()?.let { node ->
             getSelectedElement()?.let { element ->
                 getSelectedModel()?.let { model ->
@@ -557,29 +604,34 @@ object MeshHelper {
         if (element != null) {
             val model = getSelectedModel()
             if (model != null && model is VendorModel) {
-                val appKeyIndex = model.boundAppKeyIndexes[0]
-                val appKey = getMeshNetwork()?.getAppKey(appKeyIndex)
-                val message: MeshMessage
-                if (appKey != null) {
-                    if (acknowledged) {
-                        message = VendorModelMessageAcked(
-                            appKey,
-                            model.modelId,
-                            model.companyIdentifier,
-                            opcode,
-                            parameters!!
-                        )
-                        sendMessage(element.elementAddress, message)
-                    } else {
-                        message = VendorModelMessageUnacked(
-                            appKey,
-                            model.modelId,
-                            model.companyIdentifier,
-                            opcode,
-                            parameters
-                        )
-                        sendMessage(element.elementAddress, message)
+                if (model.boundAppKeyIndexes.size>0){
+                    val appKeyIndex = model.boundAppKeyIndexes[0]
+                    val appKey = getMeshNetwork()?.getAppKey(appKeyIndex)
+                    val message: MeshMessage
+                    if (appKey != null) {
+                        if (acknowledged) {
+                            message = VendorModelMessageAcked(
+                                appKey,
+                                model.modelId,
+                                model.companyIdentifier,
+                                opcode,
+                                parameters!!
+                            )
+                            sendMessage(element.elementAddress, message)
+                        } else {
+                            message = VendorModelMessageUnacked(
+                                appKey,
+                                model.modelId,
+                                model.companyIdentifier,
+                                opcode,
+                                parameters
+                            )
+                            sendMessage(element.elementAddress, message)
+                        }
                     }
+                }else{
+                    //todo
+                    Utils.printLog(TAG,"model don't boundAppKey")
                 }
             }
         }

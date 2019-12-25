@@ -52,18 +52,18 @@ open class BaseMeshService : LifecycleService() {
 
     //开始扫描
     internal fun startScan(filterUuid: UUID, scanCallback: ScanCallback?) {
-            mScanCallback = scanCallback
-            //获取扫描结果
-            mNrfMeshManager?.getScannerResults()?.observe(this, Observer { it ->
-                Log.e("", "get scanner result:${it.devices.size}")
-                mScanCallback?.onScanResult(it.devices, it.updatedDeviceIndex)
-            })
-            // 获取扫描状态结果
-            mNrfMeshManager?.getScannerState()?.observe(this, Observer {
-                Log.e("", "scanner state changed")
-            })
+        mScanCallback = scanCallback
+        //获取扫描结果
+        mNrfMeshManager?.getScannerResults()?.observe(this, Observer { it ->
+            Log.e("", "get scanner result:${it.devices.size}")
+            mScanCallback?.onScanResult(it.devices, it.updatedDeviceIndex)
+        })
+        // 获取扫描状态结果
+        mNrfMeshManager?.getScannerState()?.observe(this, Observer {
+            Log.e("", "scanner state changed")
+        })
 
-            mNrfMeshManager?.startScan(filterUuid, scanCallback)
+        mNrfMeshManager?.startScan(filterUuid, scanCallback)
     }
 
     //停止扫描
@@ -186,6 +186,53 @@ open class BaseMeshService : LifecycleService() {
         mNrfMeshManager?.identifyNode(device)
     }
 
+    //开始provisioning
+    internal fun startProvisioning(
+        device: ExtendedBluetoothDevice,
+        networkKey: NetworkKey,
+        callback: BaseCallback
+    ) {
+//        isProvisioningStarted = false
+        mNrfMeshManager?.unprovisionedMeshNode?.observe(this, Observer {
+            if (it != null) {
+                var capibilities = it.provisioningCapabilities
+                if (capibilities != null) {
+                    var network = mNrfMeshManager?.meshNetworkLiveData?.meshNetwork
+                    if (network != null) {
+                        try {
+                            val elementCount = capibilities.numberOfElements.toInt()
+                            val provisioner = network.selectedProvisioner
+                            val unicast =
+                                network.nextAvailableUnicastAddress(elementCount, provisioner)
+                            network.assignUnicastAddress(unicast)
+                            if (!isProvisioningStarted) {
+                                var node = mNrfMeshManager?.unprovisionedMeshNode?.value
+                                if (node != null && node.provisioningCapabilities.availableOOBTypes.size == 1 && node.provisioningCapabilities.availableOOBTypes[0] == AuthenticationOOBMethods.NO_OOB_AUTHENTICATION) {
+                                    node.nodeName = mNrfMeshManager?.meshNetworkLiveData?.nodeName
+                                    mNrfMeshManager?.meshManagerApi?.startProvisioning(node)
+                                    Utils.printLog(TAG, "开始provisioning")
+                                    isProvisioningStarted = true
+                                }
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            //todo  记录日志
+                            if (e.message == ERROR_MSG_UNICAST_UNABLED) {
+                                callback.onError(
+                                    CallbackMsg(
+                                        CommonErrorMsg.PROVISION_UNICAST_UNABLED.code,
+                                        CommonErrorMsg.PROVISION_UNICAST_UNABLED.msg
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        })
+        mNrfMeshManager?.identifyNode(device, networkKey)
+    }
+
     //获取provisioned nodes
     internal fun getProvisionedNodes(callback: ProvisionCallback) {
         if ((mNrfMeshManager?.nodes?.value?.size ?: 0) > 0) {
@@ -277,7 +324,15 @@ open class BaseMeshService : LifecycleService() {
     internal fun getCurrentNetworkKeyStr(): String? {
         if (mCurrentNetworkKey != null)
             return ByteUtil.bytesToHexString(mCurrentNetworkKey!!.key)
-
-        return LocalPreferences.getCurrentNetKey()
+        else {
+            var key = LocalPreferences.getCurrentNetKey()
+            mNrfMeshManager?.meshNetworkLiveData?.networkKeys?.forEach {
+                if (key == ByteUtil.bytesToHexString(it.key)) {
+                    mCurrentNetworkKey = it
+                    setCurrentNetworkKey(key)
+                }
+            }
+            return key
+        }
     }
 }

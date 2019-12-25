@@ -1,14 +1,11 @@
 package qk.sdk.mesh.meshsdk
 
 import android.content.Context
-import android.view.View
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import me.weyye.hipermission.PermissionCallback
 import no.nordicsemi.android.meshprovisioner.UnprovisionedBeacon
-import no.nordicsemi.android.meshprovisioner.models.GenericOnOffServerModel
-import no.nordicsemi.android.meshprovisioner.models.VendorModel
 import no.nordicsemi.android.meshprovisioner.transport.*
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
@@ -20,6 +17,7 @@ import qk.sdk.mesh.meshsdk.util.PermissionUtil
 import qk.sdk.mesh.meshsdk.util.Utils
 import java.lang.StringBuilder
 import kotlin.collections.HashMap
+import qk.sdk.mesh.meshsdk.util.Constants.ConnectState
 
 object MeshSDK {
     private val TAG = "MeshSDK"
@@ -102,6 +100,11 @@ object MeshSDK {
     fun provision(uuid: String, callback: MapCallback) {
         var map = HashMap<Any, Any>()
         doBaseCheck(uuid, map, callback)
+        if (MeshHelper.getCurrentNetworkKey() == null) {
+            map.put(ConnectState.NOT_SET_CURRENT_NET_KEY.code, ConnectState.NOT_SET_CURRENT_NET_KEY)
+            callback.onResult(map)
+            return
+        }
 
         mContext?.let { context ->
             mExtendedBluetoothDeviceMap.get(uuid)?.let { extendedBluetoothDevice ->
@@ -112,6 +115,7 @@ object MeshSDK {
                     object : ConnectCallback {
                         override fun onConnect() {
                             MeshHelper.startProvision(mExtendedBluetoothDeviceMap.get(uuid)!!,
+                                MeshHelper.getCurrentNetworkKey()!!,
                                 object : BaseCallback {
                                     override fun onError(msg: CallbackMsg) {
                                         map.clear()
@@ -145,7 +149,7 @@ object MeshSDK {
                                                         ) {
                                                             devices.forEach { device ->
                                                                 MeshHelper.getSelectedMeshNode()
-                                                                    ?.let { selectedNode ->
+                                                                    ?.let {
                                                                         if (mExtendedBluetoothDeviceMap.get(
                                                                                 uuid
                                                                             )!!.getAddress() == device.getAddress()
@@ -259,8 +263,8 @@ object MeshSDK {
         MeshHelper.getAllApplicationKey(networkKey, callback)
     }
 
-    fun removeApplicationKey(appKey: String, networkKey: String, callback: IntCallback) {
-        MeshHelper.removeApplicationKey(appKey, networkKey, callback)
+    fun removeApplicationKey(appKey: String, callback: IntCallback) {
+        MeshHelper.removeApplicationKey(appKey, callback)
     }
 
     fun bindApplicationKeyForNode(uuid: String, appKey: String, callback: MapCallback) {
@@ -279,7 +283,9 @@ object MeshSDK {
                         if (msg is ConfigAppKeyStatus) {
                             if (msg.isSuccessful) {//添加appkey成功
                                 Utils.printLog(TAG, "add app key success!")
-                                MeshHelper.getCompositionData()
+                                if ((MeshHelper.getSelectedMeshNode()?.elements?.size ?: 0) <= 0) {
+                                    MeshHelper.getCompositionData()
+                                }
                             } else {
                                 Utils.printLog(
                                     TAG,
@@ -287,65 +293,68 @@ object MeshSDK {
                                 )
                                 map.clear()
                                 map.put(
-                                    Constants.ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.code,
-                                    msg.message
+                                    ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.code,
+                                    msg.statusCodeName
                                 )
                                 callback.onResult(map)
                             }
                         } else if (msg is ConfigModelAppStatus) {
                             if (msg.isSuccessful) {//bind appkey成功
-                                Utils.printLog(TAG, "$bindedIndex,bindAppKey success!")
+                                Utils.printLog(TAG, "bindAppKey success!")
                             } else {
                                 Utils.printLog(
                                     TAG,
-                                    "$bindedIndex,bindAppKey failed:${msg.statusCodeName}"
+                                    "bindAppKey failed:${msg.statusCodeName}"
                                 )
                                 map.clear()
                                 map.put(
-                                    Constants.ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.code,
-                                    Constants.ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.msg
+                                    ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.code,
+                                    ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.msg
                                 )
                             }
-                            bindedIndex++
-                            if (bindedIndex < (MeshHelper.getSelectedElement()?.meshModels?.size
-                                    ?: 0)
-                            ) {
-                                MeshHelper.getSelectedModel()?.let {
-                                    MeshHelper.setSelectedModel(
-                                        MeshHelper.getSelectedElement(),
-                                        MeshHelper.getSelectedElement()!!.meshModels!![bindedIndex]
-                                    )
-                                    MeshHelper.bindAppKey(this)
-                                }
-//                            Utils.printLog(TAG, "bindedIndex:$bindedIndex")
-                            } else {
-                                if (map.size > 0) {
-                                    callback.onResult(map)
-                                } else {
-                                    map.put(
-                                        Constants.ConnectState.PROVISION_SUCCESS.code,
-                                        ""
-                                    )
-                                    callback.onResult(map)
-                                }
-
-                            }
+//                            bindedIndex++
+//                            if (bindedIndex < (MeshHelper.getSelectedElement()?.meshModels?.size
+//                                    ?: 0)
+//                            ) {
+//                                MeshHelper.getSelectedModel()?.let {
+//                                    MeshHelper.setSelectedModel(
+//                                        MeshHelper.getSelectedElement(),
+//                                        MeshHelper.getSelectedElement()!!.meshModels!![bindedIndex]
+//                                    )
+//                                    MeshHelper.bindAppKey(this)
+//                                }
+////                            Utils.printLog(TAG, "bindedIndex:$bindedIndex")
+//                            } else {
+//                                if (map.size > 0) {
+//                                    callback.onResult(map)
+//                                } else {
+//                                    map.put(
+//                                        Constants.ConnectState.PROVISION_SUCCESS.code,
+//                                        ""
+//                                    )
+//                                    callback.onResult(map)
+//                                }
+//
+//                            }
                         } else if (msg is GenericOnOffStatus) {
                             Utils.printLog(TAG, "get on off status")
                         } else if (msg is ConfigCompositionDataStatus) {
                             Utils.printLog(TAG, "get getCompositionData success!")
-                            bindedIndex = 0
+//                            bindedIndex = 0
                             MeshHelper.getSelectedMeshNode()?.let { node ->
-                                node.elements?.forEach { eleKey, eleValue ->
+                                node.elements?.forEach { _, eleValue ->
                                     eleValue.meshModels?.forEach bindModel@{
-                                        if (it.key == CWRGB_MODELID) {
+                                        if (it.key == CWRGB_MODELID && bindedIndex == 0) {
                                             it.value.let { modelValue ->
                                                 if (modelValue.boundAppKeyIndexes?.size ?: 0 <= 0) {
                                                     MeshHelper.setSelectedModel(
                                                         eleValue,
                                                         modelValue
                                                     )
-                                                    MeshHelper.bindAppKey(this)
+                                                    MeshHelper.bindAppKey(
+                                                        applicationKey.keyIndex, this
+                                                    )
+                                                    bindedIndex++
 //                                                Utils.printLog(TAG, "bindedIndex:$bindedIndex")
                                                     return@bindModel
                                                 }
@@ -364,8 +373,8 @@ object MeshSDK {
             } else {
                 map.clear()
                 map.put(
-                    Constants.ConnectState.CONNECT_NOT_EXIST.code,
-                    Constants.ConnectState.CONNECT_NOT_EXIST.msg
+                    ConnectState.CONNECT_NOT_EXIST.code,
+                    ConnectState.CONNECT_NOT_EXIST.msg
                 )
             }
         }
@@ -384,8 +393,8 @@ object MeshSDK {
 
         if (mExtendedBluetoothDeviceMap.get(uuid) == null) {//判断是否存在此设备
             map.put(
-                Constants.ConnectState.CANNOT_FIND_DEVICE_BY_MAC.code,
-                Constants.ConnectState.CANNOT_FIND_DEVICE_BY_MAC.msg
+                ConnectState.CANNOT_FIND_DEVICE_BY_MAC.code,
+                ConnectState.CANNOT_FIND_DEVICE_BY_MAC.msg
             )
             callback.onResult(map)
             return
@@ -393,28 +402,29 @@ object MeshSDK {
     }
 
     fun setGenericOnOff(uuid: String, onOff: Boolean, callback: BooleanCallback) {
-// todo       MeshHelper.getProvisionNode()?.forEach { node ->
-//            if (node.meshUuid == uuid) {
-//                MeshHelper.setSelectedMeshNode(node)
-//            }
-//        }
+        MeshHelper.getProvisionNode()?.forEach { node ->
+            if (node.uuid == uuid) {
+                MeshHelper.setSelectedMeshNode(node)
+            }
+        }
 
         MeshHelper.setSelectedModel(
             MeshHelper.getSelectedMeshNode()?.elements?.get(2),
             MeshHelper.getSelectedElement()?.meshModels?.get(4096)
         )
         MeshHelper.sendGenericOnOff(onOff, 0)
+        callback.onResult(true)
     }
 
     fun setLightProperties(
         uuid: String, c: Int, w: Int, r: Int,
         g: Int, b: Int, callback: BooleanCallback
     ) {
-        // todo       MeshHelper.getProvisionNode()?.forEach { node ->
-//            if (node.meshUuid == uuid) {
-//                MeshHelper.setSelectedMeshNode(node)
-//            }
-//        }
+        MeshHelper.getProvisionNode()?.forEach { node ->
+            if (node.meshUuid == uuid) {
+                MeshHelper.setSelectedMeshNode(node)
+            }
+        }
 
         MeshHelper.setSelectedModel(
             MeshHelper.getSelectedMeshNode()?.elements?.get(2),
@@ -430,14 +440,15 @@ object MeshSDK {
             ByteUtil.hexStringToBytes(params.toString()),
             false
         )
+        callback.onResult(true)
     }
 
     fun resetNode(uuid: String) {
-        // todo       MeshHelper.getProvisionNode()?.forEach { node ->
-//            if (node.meshUuid == uuid) {
-//                MeshHelper.setSelectedMeshNode(node)
-//            }
-//        }
+        MeshHelper.getProvisionNode()?.forEach { node ->
+            if (node.meshUuid == uuid) {
+                MeshHelper.setSelectedMeshNode(node)
+            }
+        }
 
         val configNodeReset = ConfigNodeReset()
         MeshHelper.sendMessage(

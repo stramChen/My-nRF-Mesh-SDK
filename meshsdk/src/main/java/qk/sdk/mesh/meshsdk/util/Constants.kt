@@ -32,9 +32,11 @@ object Constants {
         CONNECT_NOT_EXIST("请先建立蓝牙连接", 103),//连接不存在：当要发送消息时，发现没有已建立的连接时，报错
         CONNECT_BLE_RESOURCE_FAILED("未释放蓝牙资源", 133),
         BLE_NOT_AVAILABLE("蓝牙未开启", 104),//未开启蓝牙
+        NOT_SET_CURRENT_NET_KEY("not set current networkKey", 105),//没有setCurrentNetworkKey
 
         PROVISION_SUCCESS("provisioned", 200),//provision 成功
         COMMON_SUCCESS("success", 200),// 全局通用，操作成功
+
         BIND_APP_KEY_FOR_NODE_FAILED("", 208),//绑定appkey失败
         BIND_APP_KEY_FOR_NODE_SUCCESS("", 200),//绑定appkey成功
 

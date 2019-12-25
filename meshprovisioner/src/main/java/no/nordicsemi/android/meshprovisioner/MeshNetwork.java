@@ -592,9 +592,18 @@ public final class MeshNetwork extends BaseMeshNetwork {
         return netKeys;
     }
 
-    public NetworkKey getPrimaryNetworkKey() {
+//    public NetworkKey getPrimaryNetworkKey() {
+//        for (NetworkKey networkKey : netKeys) {
+//            if (networkKey.getKeyIndex() == 0) {
+//                return networkKey;
+//            }
+//        }
+//        return null;
+//    }
+
+    public NetworkKey getCurrentNetworkKey(){
         for (NetworkKey networkKey : netKeys) {
-            if (networkKey.getKeyIndex() == 0) {
+            if (networkKey.getIsCurrent() == 1) {
                 return networkKey;
             }
         }
@@ -645,7 +654,7 @@ public final class MeshNetwork extends BaseMeshNetwork {
      */
     public final int getProvisioningFlags() {
         int flags = 0;
-        final NetworkKey key = getPrimaryNetworkKey();
+        final NetworkKey key = getCurrentNetworkKey();
         if (key != null) {
             if (key.getPhase() == NetworkKey.PHASE_2) {
                 flags |= 1 << 7;

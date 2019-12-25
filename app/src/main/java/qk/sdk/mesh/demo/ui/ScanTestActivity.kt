@@ -14,6 +14,7 @@ import qk.sdk.mesh.demo.base.BaseMeshActivity
 import qk.sdk.mesh.demo.widget.base.BaseAdapter
 import qk.sdk.mesh.demo.widget.base.BaseViewHolder
 import qk.sdk.mesh.demo.widget.base.OnItemClickListener
+import qk.sdk.mesh.meshsdk.MeshHelper
 import qk.sdk.mesh.meshsdk.MeshSDK
 import qk.sdk.mesh.meshsdk.callbak.ArrayMapCallback
 import qk.sdk.mesh.meshsdk.callbak.IntCallback
@@ -44,23 +45,16 @@ class ScanTestActivity : BaseMeshActivity(),
         mDeviceAdapter?.setOnItemClickListener(this)
 
         Thread(Runnable {
-                startScan(Constants.SCAN_UNPROVISIONED, object :
-                    ArrayMapCallback {
-                    override fun onResult(result: ArrayList<HashMap<String, Any>>) {
-                        mDevice = result
-                        mDeviceAdapter?.setData(result)
-                    }
-                })
-                }).start()
+            MeshHelper.getProvisionNode()
+        }).start()
 
-//        Utils.printLog(TAG, "runBlocking:${this.}")
-//        startScan(Constants.SCAN_UNPROVISIONED, object :
-//            ArrayMapCallback {
-//            override fun onResult(result: ArrayList<HashMap<String, Any>>) {
-//                mDevice = result
-//                mDeviceAdapter?.setData(result)
-//            }
-//        })
+        startScan(Constants.SCAN_UNPROVISIONED, object :
+            ArrayMapCallback {
+            override fun onResult(result: ArrayList<HashMap<String, Any>>) {
+                mDevice = result
+                mDeviceAdapter?.setData(result)
+            }
+        })
 
         btn_manage_keys.setOnClickListener {
             startActivity(Intent(this, NetKeyActivity::class.java))

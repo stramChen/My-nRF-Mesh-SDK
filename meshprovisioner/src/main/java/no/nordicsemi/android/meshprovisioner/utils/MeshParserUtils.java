@@ -366,7 +366,7 @@ public class MeshParserUtils {
     }
 
     /**
-     * Returns the vendor opcode packed with company identifier
+     * Returns the vendor opcode packed with companyyidentifier
      * If the MSB = 0 then the length is 1
      * If the MSB = 1 then the length is 2
      * If the MSB = 2 then the length is 3
