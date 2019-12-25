@@ -38,6 +38,7 @@ import java.util.UUID;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import no.nordicsemi.android.meshprovisioner.data.ApplicationKeyDao;
 import no.nordicsemi.android.meshprovisioner.data.ApplicationKeysDao;
 import no.nordicsemi.android.meshprovisioner.data.GroupDao;
@@ -264,7 +265,7 @@ public class MeshManagerApi implements MeshMngrApi {
                     break;
                 case PDU_TYPE_MESH_BEACON:
                     //Mesh beacon
-                    final NetworkKey networkKey = mMeshNetwork.getPrimaryNetworkKey();
+                    final NetworkKey networkKey = mMeshNetwork.getCurrentNetworkKey();
                     if (networkKey != null) {
                         final byte[] n = networkKey.getKey();
                         final byte[] flags = {(byte) mMeshNetwork.getProvisioningFlags()};
@@ -477,9 +478,18 @@ public class MeshManagerApi implements MeshMngrApi {
     @Override
     public void identifyNode(@NonNull final UUID deviceUuid,
                              final int attentionTimer) throws IllegalArgumentException {
-        final NetworkKey networkKey = mMeshNetwork.getPrimaryNetworkKey();
+        final NetworkKey networkKey = mMeshNetwork.getCurrentNetworkKey();
         if (networkKey != null) {
-            mMeshProvisioningHandler.identify(deviceUuid, networkKey, mMeshNetwork.getProvisioningFlags(),
+            identifyNode(deviceUuid,attentionTimer,networkKey);
+        }
+    }
+
+    @Override
+    public void identifyNode(@NonNull UUID deviceUUID, int attentionTimer, NetworkKey networkKey) throws IllegalArgumentException {
+        Log.e("MeshManagerApi", "identifyNode networkKey:" + networkKey.keyIndex);
+//        final NetworkKey netKey = mMeshNetwork.getPrimaryNetworkKey();
+        if (networkKey != null) {
+            mMeshProvisioningHandler.identify(deviceUUID, networkKey, mMeshNetwork.getProvisioningFlags(),
                     mMeshNetwork.getIvIndex(), mMeshNetwork.getGlobalTtl(), attentionTimer);
         }
     }
@@ -931,7 +941,7 @@ public class MeshManagerApi implements MeshMngrApi {
 
         @Override
         public NetworkKey getPrimaryNetworkKey() {
-            return mMeshNetwork.getPrimaryNetworkKey();
+            return mMeshNetwork.getCurrentNetworkKey();
         }
 
         @Override

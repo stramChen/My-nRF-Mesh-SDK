@@ -63,12 +63,13 @@ dependencies {
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: "http://10.0.0.40:8081/repository/meshsdk/") {
-                authentication(userName: "admin", password: "518215wybalw")
+            repository(url: "http://10.0.0.40:8081/repository/reactnative/") {
+//            repository(url: "http://10.0.0.40:8081/repository/meshsdk/") {
+                authentication(userName: "chunbo", password: "123456")
             }
             pom.project {
                 name 'meshsdk'
-                version '0.0.8'
+                version '0.0.1'
                 artifactId 'meshsdk'
                 groupId 'cn.mxchip.mesh.test'
                 packaging 'aar'

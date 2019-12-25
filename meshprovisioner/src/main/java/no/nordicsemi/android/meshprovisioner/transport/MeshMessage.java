@@ -8,7 +8,7 @@ import androidx.annotation.NonNull;
 public abstract class MeshMessage {
 
     private final int mAszmic = 0;
-    protected Message mMessage;
+    public Message mMessage;
     byte[] mParameters;
 
     /**

@@ -79,6 +79,8 @@ interface MeshMngrApi {
      */
     void identifyNode(@NonNull final UUID deviceUUID, final int attentionTimer) throws IllegalArgumentException;
 
+    void identifyNode(@NonNull final UUID deviceUUID, final int attentionTimer,final NetworkKey networkKey) throws IllegalArgumentException;
+
     /**
      * Starts provisioning an unprovisioned mesh node
      * <p>

@@ -6,7 +6,7 @@ setBinding(new Binding([gradle: this]))
 //))
 rootProject.name = 'QKMeshDemo'
 
-include ':MXCommonSDK'
-project(':MXCommonSDK').projectDir = new File("../MXCommonSDK")
-include ':MXCommonSDK:http'
-include ':MXCommonSDK:util'
+//include ':MXCommonSDK'
+//project(':MXCommonSDK').projectDir = new File("../MXCommonSDK")
+//include ':MXCommonSDK:http'
+//include ':MXCommonSDK:util'
