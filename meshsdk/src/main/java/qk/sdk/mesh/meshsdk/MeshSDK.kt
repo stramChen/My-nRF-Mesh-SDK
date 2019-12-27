@@ -69,7 +69,7 @@ object MeshSDK {
                 var resultArray = ArrayList<HashMap<String, Any>>()
                 devices.forEach {
                     if (it.beacon != null) {
-                        val unprovisionedBeacon = UnprovisionedBeacon(it.beacon!!.beaconData)
+                        val unprovisionedBeacon = UnprovisionedBeacon(it.beacon!!.getBeaconData())
                         var map = HashMap<String, Any>()
                         map.put("mac", it.getAddress())
                         map.put("uuid", unprovisionedBeacon.uuid.toString())
