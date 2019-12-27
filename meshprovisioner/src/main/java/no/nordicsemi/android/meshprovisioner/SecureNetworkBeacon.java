@@ -39,7 +39,7 @@ public class SecureNetworkBeacon extends MeshBeacon {
 
     @Override
     public int getBeaconType() {
-        return beaconType;
+        return getBeaconType();
     }
 
     /**
@@ -77,7 +77,7 @@ public class SecureNetworkBeacon extends MeshBeacon {
 
     @Override
     public void writeToParcel(final Parcel dest, final int flags) {
-        dest.writeByteArray(beaconData);
+        dest.writeByteArray(getBeaconData());
     }
 
     public static final Parcelable.Creator<SecureNetworkBeacon> CREATOR = new Parcelable.Creator<SecureNetworkBeacon>() {

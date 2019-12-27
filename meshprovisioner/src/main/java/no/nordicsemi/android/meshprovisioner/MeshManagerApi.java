@@ -554,7 +554,7 @@ public class MeshManagerApi implements MeshMngrApi {
             if (length == 0)
                 break;
             final int type = MeshParserUtils.unsignedByteToInt(advertisementData[i + 1]);
-            if (type == MeshBeacon.MESH_BEACON) {
+            if (type == MeshBeacon.Companion.getMESH_BEACON()) {
                 return true;
             }
             i = i + length;
@@ -573,7 +573,7 @@ public class MeshManagerApi implements MeshMngrApi {
             for (int i = 0; i < advertisementData.length; i++) {
                 final int length = MeshParserUtils.unsignedByteToInt(advertisementData[i]);
                 final int type = MeshParserUtils.unsignedByteToInt(advertisementData[i + 1]);
-                if (type == MeshBeacon.MESH_BEACON) {
+                if (type == MeshBeacon.Companion.getMESH_BEACON()) {
                     final byte[] beaconData = new byte[length];
                     final ByteBuffer buffer = ByteBuffer.wrap(advertisementData);
                     buffer.position(i + 2);

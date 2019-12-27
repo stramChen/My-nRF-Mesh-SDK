@@ -1206,7 +1206,8 @@ class NrfMeshManager(
                         meshManagerApi.getMeshBeacon(beaconData)
                     )
                 } else {
-                    mScannerLiveData.deviceDiscovered(result)
+//                    mScannerLiveData.deviceDiscovered(result)
+                    Utils.printLog(TAG,"meshBeacon is null")
                 }
                 mScannerStateLiveData.deviceFound()
             }

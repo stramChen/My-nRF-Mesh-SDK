@@ -44,7 +44,7 @@ public class UnprovisionedBeacon extends MeshBeacon {
 
     @Override
     public int getBeaconType() {
-        return beaconType;
+        return getBeaconType();
     }
 
     /**
@@ -75,7 +75,7 @@ public class UnprovisionedBeacon extends MeshBeacon {
 
     @Override
     public void writeToParcel(final Parcel dest, final int flags) {
-        dest.writeByteArray(beaconData);
+        dest.writeByteArray(getBeaconData());
     }
 
     public static final Parcelable.Creator<UnprovisionedBeacon> CREATOR = new Parcelable.Creator<UnprovisionedBeacon>() {
