@@ -12,17 +12,21 @@ abstract class MeshBeacon
  * @param beaconData beacon data advertised by the mesh beacon
  * @throws IllegalArgumentException if beacon data provided is empty or null
  */
- constructor(val beaconData: ByteArray) : Parcelable {
+constructor(data: ByteArray) : Parcelable {
     internal val beaconType: Int
+    internal var beaconData: ByteArray
 
     init {
-        beaconType = beaconData[0].toInt()
+        beaconType = data[0].toInt()
+        beaconData = data
     }
 
     /**
      * Returns the beacon type value
      */
     abstract fun getBeaconType(): Int
+
+    fun getBeaconData(): ByteArray = beaconData
 
     companion object {
         private val TAG = "MeshBeacon"
