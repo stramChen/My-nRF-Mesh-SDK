@@ -93,13 +93,12 @@ open class BaseMeshService : LifecycleService() {
 
     //开始连接
     internal fun connect(
-        context: Context,
         device: ExtendedBluetoothDevice,
         connectToNetwork: Boolean, callback: ConnectCallback?
     ) {
         mConnectCallback = callback
         setConnectObserver()
-        mNrfMeshManager?.connect(context, device, connectToNetwork)
+        mNrfMeshManager?.connect(device, connectToNetwork)
     }
 
     private fun setConnectObserver() {
@@ -243,8 +242,8 @@ open class BaseMeshService : LifecycleService() {
         })
     }
 
-    internal fun deleteNode(node: ProvisionedMeshNode, callback: ProvisionCallback) {
-        callback.onNodeDeleted(
+    internal fun deleteNode(node: ProvisionedMeshNode, callback: ProvisionCallback?) {
+        callback?.onNodeDeleted(
             mNrfMeshManager?.meshNetworkLiveData?.meshNetwork?.deleteNode(node) ?: false, node
         )
     }

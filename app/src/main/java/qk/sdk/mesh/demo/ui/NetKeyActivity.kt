@@ -40,20 +40,17 @@ class NetKeyActivity : BaseMeshActivity() {
     fun initView() {
         var adapter: KeysAdapter
         rv_net_key.layoutManager=LinearLayoutManager(this)
-        MeshSDK.getAllNetworkKey(object : ArrayStringCallback {
-            override fun onResult(result: ArrayList<String>) {
-                adapter = KeysAdapter(applicationContext, result)
-                rv_net_key.adapter = adapter
-                adapter.setOnItemLongClickListener(object : OnItemLongClickListener<String> {
-                    override fun onItemLongClick(data: String, position: Int): Boolean {
-                        MeshSDK.removeNetworkKey(data, object : IntCallback {
-                            override fun onResultMsg(code: Int) {
-                                Utils.printLog(TAG, "remove net key:$code")
-                            }
-                        })
-                        return true
+
+        adapter = KeysAdapter(applicationContext, MeshSDK.getAllNetworkKey())
+        rv_net_key.adapter = adapter
+        adapter.setOnItemLongClickListener(object : OnItemLongClickListener<String> {
+            override fun onItemLongClick(data: String, position: Int): Boolean {
+                MeshSDK.removeNetworkKey(data, object : IntCallback {
+                    override fun onResultMsg(code: Int) {
+                        Utils.printLog(TAG, "remove net key:$code")
                     }
                 })
+                return true
             }
         })
     }

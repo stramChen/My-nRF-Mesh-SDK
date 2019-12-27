@@ -213,7 +213,7 @@ class ConnectMeshActivity : BaseMeshActivity() {
     }
 
     fun startConnect(data: ExtendedBluetoothDevice) {
-        MeshHelper.connect(this, data, true, connectCallback)
+        MeshHelper.connect(data, true, connectCallback)
     }
 
     /**

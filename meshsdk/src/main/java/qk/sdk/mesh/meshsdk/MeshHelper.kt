@@ -58,14 +58,13 @@ object MeshHelper {
     // TODO: device 修改为传递唯一标识符 string | number
     // TODO: 能多函数多函数，参数最好是基础类型
     fun connect(
-        context: Context,
         device: ExtendedBluetoothDevice,
         connectToNetwork: Boolean,
         callback: ConnectCallback?
     ) {
         rx.Observable.create<String> {
         }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
-            MeshProxyService.mMeshProxyService?.connect(context, device, connectToNetwork, callback)
+            MeshProxyService.mMeshProxyService?.connect(device, connectToNetwork, callback)
         }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
@@ -156,11 +155,22 @@ object MeshHelper {
     // TODO: ProvisionedMeshNode 同上
     // TODO: callback 同上
     // TODO: deleteProvisionNodeFormLocalMeshNetworkDataBase
-    fun deleteProvisionNode(node: ProvisionedMeshNode, callback: ProvisionCallback) {
+    fun deleteProvisionNode(node: ProvisionedMeshNode?, callback: ProvisionCallback? = null) {
         rx.Observable.create<String> {
         }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
-            MeshProxyService.mMeshProxyService?.deleteNode(node, callback)
+            node?.let {
+                MeshProxyService.mMeshProxyService?.deleteNode(node, callback)
+            }
         }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
+    }
+
+    fun getProvisionedNodeByUUID(uuid: String): ProvisionedMeshNode? {
+        getProvisionNode()?.forEach {
+            if (it.uuid == uuid) {
+                return it
+            }
+        }
+        return null
     }
 
     // ？？？
@@ -243,37 +253,37 @@ object MeshHelper {
 
     //给RN用
     fun addAppkeys(index: Int, meshCallback: MeshCallback?) {
-            val applicationKey = getAppKeys()?.get(index)
-            if (applicationKey != null) {
-                val networkKey = getNetworkKey(applicationKey.boundNetKeyIndex)
-                Utils.printLog(
-                    TAG,
-                    "networkKey.keyIndex:${networkKey?.keyIndex},applicationKey.boundNetKeyIndex:${applicationKey.boundNetKeyIndex}"
-                )
-                if (networkKey == null || networkKey.keyIndex != applicationKey.boundNetKeyIndex) {
-                    //todo 日志记录
-                    Utils.printLog(TAG, "addAppKeys() networkKey is null!")
-                } else {
-                    val node = getSelectedMeshNode()
-                    var isNodeKeyAdd: Boolean
-                    if (node != null) {
-                        isNodeKeyAdd = MeshParserUtils.isNodeKeyExists(
-                            node.addedAppKeys,
-                            applicationKey.keyIndex
-                        )
-                        val meshMessage: MeshMessage
-                        if (!isNodeKeyAdd) {
-                            meshMessage = ConfigAppKeyAdd(networkKey, applicationKey)
-                        } else {
-                            meshMessage = ConfigAppKeyDelete(networkKey, applicationKey)
-                        }
-                        sendMessage(node.unicastAddress, meshMessage, meshCallback)
-                    }
-                }
-            } else {
+        val applicationKey = getAppKeys()?.get(index)
+        if (applicationKey != null) {
+            val networkKey = getNetworkKey(applicationKey.boundNetKeyIndex)
+            Utils.printLog(
+                TAG,
+                "networkKey.keyIndex:${networkKey?.keyIndex},applicationKey.boundNetKeyIndex:${applicationKey.boundNetKeyIndex}"
+            )
+            if (networkKey == null || networkKey.keyIndex != applicationKey.boundNetKeyIndex) {
                 //todo 日志记录
-                Utils.printLog(TAG, "addAppKeys() applicationKey is null!")
+                Utils.printLog(TAG, "addAppKeys() networkKey is null!")
+            } else {
+                val node = getSelectedMeshNode()
+                var isNodeKeyAdd: Boolean
+                if (node != null) {
+                    isNodeKeyAdd = MeshParserUtils.isNodeKeyExists(
+                        node.addedAppKeys,
+                        applicationKey.keyIndex
+                    )
+                    val meshMessage: MeshMessage
+                    if (!isNodeKeyAdd) {
+                        meshMessage = ConfigAppKeyAdd(networkKey, applicationKey)
+                    } else {
+                        meshMessage = ConfigAppKeyDelete(networkKey, applicationKey)
+                    }
+                    sendMessage(node.unicastAddress, meshMessage, meshCallback)
+                }
             }
+        } else {
+            //todo 日志记录
+            Utils.printLog(TAG, "addAppKeys() applicationKey is null!")
+        }
 //        getAppKeys()?.get(index)?.let { applicationKey ->
 //            getNetworkKey(applicationKey.boundNetKeyIndex)?.let { networkKey ->
 //                val node = getSelectedMeshNode()
@@ -311,19 +321,19 @@ object MeshHelper {
 
     // 绑定 application key
     fun bindAppKey(meshCallback: MeshCallback?) {
-            getSelectedMeshNode()?.let {
-                val element = getSelectedElement()
-                if (element != null) {
-                    Utils.printLog(TAG, "getSelectedElement")
-                    val model = getSelectedModel()
-                    if (model != null) {
-                        Utils.printLog(TAG, "getSelectedModel")
-                        val configModelAppUnbind =
-                            ConfigModelAppBind(element.elementAddress, model.modelId, 0)
-                        sendMessage(it.unicastAddress, configModelAppUnbind, meshCallback)
-                    }
+        getSelectedMeshNode()?.let {
+            val element = getSelectedElement()
+            if (element != null) {
+                Utils.printLog(TAG, "getSelectedElement")
+                val model = getSelectedModel()
+                if (model != null) {
+                    Utils.printLog(TAG, "getSelectedModel")
+                    val configModelAppUnbind =
+                        ConfigModelAppBind(element.elementAddress, model.modelId, 0)
+                    sendMessage(it.unicastAddress, configModelAppUnbind, meshCallback)
                 }
             }
+        }
     }
 
     fun bindAppKey(appKeyIndex: Int, meshCallback: MeshCallback?) {
@@ -385,7 +395,7 @@ object MeshHelper {
         MeshProxyService.mMeshProxyService?.setCurrentNetworkKey(networkKey)
     }
 
-    fun getPrimaryNetKey(){
+    fun getPrimaryNetKey() {
 
     }
 
@@ -479,7 +489,7 @@ object MeshHelper {
     fun sendMeshPdu(dst: Int, message: MeshMessage, callback: MeshCallback?) {
 //        rx.Observable.create<String> {
 //        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
-            MeshProxyService.mMeshProxyService?.sendMeshPdu(dst, message, callback)
+        MeshProxyService.mMeshProxyService?.sendMeshPdu(dst, message, callback)
 //        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
@@ -604,7 +614,7 @@ object MeshHelper {
         if (element != null) {
             val model = getSelectedModel()
             if (model != null && model is VendorModel) {
-                if (model.boundAppKeyIndexes.size>0){
+                if (model.boundAppKeyIndexes.size > 0) {
                     val appKeyIndex = model.boundAppKeyIndexes[0]
                     val appKey = getMeshNetwork()?.getAppKey(appKeyIndex)
                     val message: MeshMessage
@@ -629,9 +639,9 @@ object MeshHelper {
                             sendMessage(element.elementAddress, message)
                         }
                     }
-                }else{
+                } else {
                     //todo
-                    Utils.printLog(TAG,"model don't boundAppKey")
+                    Utils.printLog(TAG, "model don't boundAppKey")
                 }
             }
         }

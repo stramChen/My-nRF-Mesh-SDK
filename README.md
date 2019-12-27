@@ -3,26 +3,46 @@
 ## 依赖引用：参考app/build.gradle
 
 # RN调用步骤：
-## 1.初始化
+## 1.初始化：在第一次使用的时候调用，只需调用一次
 ```
 ToApplication.kt ——> MeshSDK.init(context)
 ```
-## 2.检查权限
-```
-ScanTestActivity.startScan() ——> MeshSDK.checkPermission(callback: StringCallback)
-回调返回值见RN接口文档
-
-```
-## 3.开始扫描未配对设备
+## 2.开始扫描未配对设备：type参数值见RN接口文档。需和stopScan()成对使用，scanResultCallback、errCallback都会被多次回调
 ```
 ScanTestActivity.startScan() ——> MeshSDK.startScan(type: String, scanResultCallback: ArrayMapCallback, errCallback: IntCallback)
 回调返回值见RN接口文档
 ```
-## 4.开始provision
+## 3.停止扫描
+```kotlin
+ScanTestActivity.stopScan() ——> MeshSDK.stopScan()
 ```
+## 4.创建NetworkKey :在开始provision之前必须保证已创建NetWorkKey，一个NetworkKey能绑定多个ApplicationKey
+```kotlin
+ScanTestActivity.createNetworkKey() ——> MeshSDK.createNetworkKey(networkKey: String)
+```
+## 5.设置当前正在使用的NetWorkKey
+```kotlin
+ScanTestActivity.createApplicationKey() ——> MeshSDK.createApplicationKey(netKey)
+```
+## 6.创建ApplicationKey：参数为NetworkKey，一个ApplicationKey只能对应绑定一个NetworkKey。在开始provision之前必须保证已创建ApplicationKey
+```kotlin
+ScanTestActivity.setCurrentNetworkKey() ——> MeshSDK.setCurrentNetworkKey(netKey)
+```
+## 7.开始provision：callback只会回调一次
+```kotlin
 ScanTestActivity.onItemClick ——> MeshSDK.provision(mac: String, callback: MapCallback)
 回调返回值见RN接口文档
 ```
+## 8.获取要绑定的appkey：获取指定networkKey下的所有appKey。callback只会回调一次。
+```kotlin
+ConnectTestActivity.getAllApplicationKey() ——> MeshSDK.getAllApplicationKey(networkKey: String, callback: ArrayStringCallback)
+回调返回值见RN接口文档
+```
+## 9.绑定appkey:此方法会自动为该节点下的所有model绑定appkey。callback只会回调一次。
+```kotlin
+ConnectTestActivity.bindApplicationKeyForNode() ——> bindApplicationKeyForNode(uuid: String, appKey: String, callback: MapCallback)
+``` 
+## 断开连接
 
 
 # Android 调用步骤
@@ -30,12 +50,12 @@ ScanTestActivity.onItemClick ——> MeshSDK.provision(mac: String, callback: Ma
 
 ## 1.1 检查是否开启权限（蓝牙、定位）：
 
-```java
+```kotlin
 	MeshHelper.checkPermission(activity:Activity,listener:ListenerWrapper.PermissionRequestListener)
 ```
 
 回调监听：
-```java	
+```kotlin	
 ListenerWrapper.PermissionRequestListener{
 	//开启权限成功，开始扫描
 	override fun permissionGranted(p0:Int){ }
@@ -47,7 +67,7 @@ ListenerWrapper.PermissionRequestListener{
 
 ## 1.2 开始扫描未配对节点：
 
-```java
+```kotlin
 MeshHelper.startScan(filterUuid:UUID,scanCallback:ScanCallback)
 ```
 
@@ -55,7 +75,7 @@ filterUuid：传 `BleMeshManager.MESH_PROVISIONING_UUID`
 
 ## 1.3.开始配对（建立provisioning连接）：
 
-```java
+```kotlin
 MeshHelper.connect(context:Context,device:ExtendedBluetoothDevice, connectToNetwork:Boolean,callback:ConnectCallback?)
 ```
 
@@ -65,7 +85,7 @@ MeshHelper.connect(context:Context,device:ExtendedBluetoothDevice, connectToNetw
 
 ## 2.1 开始扫描已配对节点：
 
-```java
+```kotlin
 MeshHelper.startScan(filterUuid:UUID,scanCallback:ScanCallback)
 ```
 	
@@ -74,7 +94,7 @@ filterUuid：传 `BleMeshManager.MESH_PROXY_UUID`
 
 ## 2.2 建立proxy连接：
 
-```java
+```kotlin
 MeshHelper.connect(context:Context,device:ExtendedBluetoothDevice, connectToNetwork:Boolean,callback:ConnectCallback?)
 ```
 
@@ -84,7 +104,7 @@ MeshHelper.connect(context:Context,device:ExtendedBluetoothDevice, connectToNetw
 
 ## 2.3 添加appkey：
 
-```java
+```kotlin
 MeshHelper.addAppKeys(meshCallback:MeshCallback)
 ```
 
@@ -92,7 +112,7 @@ MeshHelper.addAppKeys(meshCallback:MeshCallback)
 
 ## 2.4 绑定appkey：
 
-```java
+```kotlin
 MeshHelper.bindAppKey(meshCallback:MeshCallback)
 ```
 
@@ -106,13 +126,13 @@ MeshHelper.bindAppKey(meshCallback:MeshCallback)
 	
 ## 3.1 设置选中节点
 
-```java
+```kotlin
 MeshHelper.setSelectedMeshNode(node:ProvisionedMeshNode)
 ```
 
 ## 3.2 设置选中元素和model：参考
 
-```java
+```kotlin
 MainMeshActivity.bindModel()
 ```
 
@@ -129,7 +149,7 @@ MainMeshActivity.bindModel()
  PROVISION错误码：200起
 ```
 
-```java
+```kotlin
 enum class ConnectState(var msg: String, var code: Int = 1000) {
         SDK_NOT_INIT("SDK_NOT_INIT_MSG", 101),//未初始化sdk
         CANNOT_FIND_DEVICE_BY_MAC("找不到mac地址对应的设备", 102),//传参错误，找不到mac地址对应的设备

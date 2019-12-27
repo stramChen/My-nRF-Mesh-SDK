@@ -315,7 +315,6 @@ class NrfMeshManager(
      * @param connectToNetwork True if connecting to an unprovisioned node or proxy node
      */
     internal fun connect(
-        context: Context,
         device: ExtendedBluetoothDevice,
         connectToNetwork: Boolean
     ) {
@@ -415,7 +414,7 @@ class NrfMeshManager(
     fun identifyNode(device: ExtendedBluetoothDevice, networkKey: NetworkKey) {
         val beacon = device.beacon as UnprovisionedBeacon?
         if (beacon != null) {
-            meshManagerApi.identifyNode(beacon.uuid, ATTENTION_TIMER,networkKey)
+            meshManagerApi.identifyNode(beacon.uuid, ATTENTION_TIMER, networkKey)
         } else if (device.scanResult != null) {
             val serviceData =
                 Utils.getServiceData(device.scanResult!!, BleMeshManager.MESH_PROVISIONING_UUID)
@@ -1206,8 +1205,7 @@ class NrfMeshManager(
                         meshManagerApi.getMeshBeacon(beaconData)
                     )
                 } else {
-//                    mScannerLiveData.deviceDiscovered(result)
-                    Utils.printLog(TAG,"meshBeacon is null")
+                    Utils.printLog(TAG, "meshBeacon is null")
                 }
                 mScannerStateLiveData.deviceFound()
             }

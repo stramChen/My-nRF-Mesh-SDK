@@ -69,7 +69,7 @@ class ScanMeshActivity : BaseMeshActivity(),
     fun startConnect(data: ExtendedBluetoothDevice) {
 //        MeshHelper.disConnect()
         MeshHelper.stopScan()
-        MeshHelper.connect(this, data, false, object : ConnectCallback {
+        MeshHelper.connect( data, false, object : ConnectCallback {
             override fun onConnect() {
                 MeshHelper.startProvision(data, object : BaseCallback {
                     override fun onError(callbackMsg: CallbackMsg) {

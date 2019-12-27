@@ -75,7 +75,7 @@ object MeshSDK {
                         map.put("uuid", unprovisionedBeacon.uuid.toString())
                         map.put("rssi", it.rssi ?: 0)
                         map.put("name", it.name ?: "")
-                        map.put("name", it.name ?: "")
+                        map.put("productId", ByteUtil.getPIdFromUUID(it.beacon!!.getBeaconData()))
                         resultArray.add(map)
                         mExtendedBluetoothDeviceMap.put(unprovisionedBeacon.uuid.toString(), it)
                     }
@@ -99,18 +99,18 @@ object MeshSDK {
     }
 
     fun provision(uuid: String, callback: MapCallback) {
-        var map = HashMap<Any, Any>()
+        var map = HashMap<String, Any>()
         doBaseCheck(uuid, map, callback)
         if (MeshHelper.getCurrentNetworkKey() == null) {
-            map.put(ConnectState.NOT_SET_CURRENT_NET_KEY.code, ConnectState.NOT_SET_CURRENT_NET_KEY)
+            map.put(Constants.KEY_MESSAGE, ConnectState.NOT_SET_CURRENT_NET_KEY.msg)
+            map.put(Constants.KEY_CODE, ConnectState.NOT_SET_CURRENT_NET_KEY.code)
             callback.onResult(map)
             return
         }
 
-        mContext?.let { context ->
+        mContext?.let { _ ->
             mExtendedBluetoothDeviceMap.get(uuid)?.let { extendedBluetoothDevice ->
                 MeshHelper.connect(
-                    context,
                     extendedBluetoothDevice,
                     false,
                     object : ConnectCallback {
@@ -120,7 +120,8 @@ object MeshSDK {
                                 object : BaseCallback {
                                     override fun onError(msg: CallbackMsg) {
                                         map.clear()
-                                        map.put(msg.code, msg.msg)
+                                        map.put(Constants.KEY_MESSAGE, msg.msg)
+                                        map.put(Constants.KEY_CODE, msg.code)
                                         callback.onResult(map)
                                     }
                                 })
@@ -128,7 +129,8 @@ object MeshSDK {
 
                         override fun onConnectStateChange(msg: CallbackMsg) {
                             map.clear()
-                            map.put(msg.code, msg.msg)
+                            map.put(Constants.KEY_MESSAGE, msg.msg)
+                            map.put(Constants.KEY_CODE, msg.code)
                             callback.onResult(map)
                             Utils.printLog(TAG, "onConnectStateChange:${msg.msg}")
                             if (msg.code == Constants.ConnectState.DISCONNECTED.code) {
@@ -157,7 +159,6 @@ object MeshSDK {
                                                                         ) {
                                                                             stopScan()
                                                                             MeshHelper.connect(
-                                                                                context,
                                                                                 device,
                                                                                 true,
                                                                                 object :
@@ -165,8 +166,12 @@ object MeshSDK {
                                                                                     override fun onConnect() {
                                                                                         map.clear()
                                                                                         map.put(
-                                                                                            Constants.ConnectState.PROVISION_SUCCESS.code,
-                                                                                            Constants.ConnectState.PROVISION_SUCCESS.msg
+                                                                                            Constants.KEY_MESSAGE,
+                                                                                            ConnectState.PROVISION_SUCCESS.msg
+                                                                                        )
+                                                                                        map.put(
+                                                                                            Constants.KEY_CODE,
+                                                                                            ConnectState.PROVISION_SUCCESS.code
                                                                                         )
                                                                                         callback.onResult(
                                                                                             map
@@ -178,8 +183,12 @@ object MeshSDK {
                                                                                     ) {
                                                                                         map.clear()
                                                                                         map.put(
-                                                                                            msg.code,
+                                                                                            Constants.KEY_MESSAGE,
                                                                                             msg.msg
+                                                                                        )
+                                                                                        map.put(
+                                                                                            Constants.KEY_CODE,
+                                                                                            msg.code
                                                                                         )
                                                                                         callback.onResult(
                                                                                             map
@@ -200,8 +209,12 @@ object MeshSDK {
                                                         override fun onError(msg: CallbackMsg) {
                                                             map.clear()
                                                             map.put(
-                                                                msg.code,
+                                                                Constants.KEY_MESSAGE,
                                                                 msg.msg
+                                                            )
+                                                            map.put(
+                                                                Constants.KEY_CODE,
+                                                                msg.code
                                                             )
                                                             callback.onResult(map)
                                                         }
@@ -215,7 +228,8 @@ object MeshSDK {
 
                         override fun onError(msg: CallbackMsg) {
                             map.clear()
-                            map.put(msg.code, msg.msg)
+                            map.put(Constants.KEY_MESSAGE, msg.msg)
+                            map.put(Constants.KEY_CODE, msg.code)
                             callback.onResult(map)
                         }
                     })
@@ -231,12 +245,12 @@ object MeshSDK {
         callback.onResult(MeshHelper.isConnectedToProxy())
     }
 
-    fun getAllNetworkKey(callback: ArrayStringCallback) {
+    fun getAllNetworkKey(): ArrayList<String> {
         var keyList = ArrayList<String>()
         MeshHelper.getAllNetworkKey()?.forEach {
             keyList.add(ByteUtil.bytesToHexString(it.key))
         }
-        callback.onResult(keyList)
+        return keyList
     }
 
     fun setCurrentNetworkKey(networkKey: String) {
@@ -268,8 +282,23 @@ object MeshSDK {
         MeshHelper.removeApplicationKey(appKey, callback)
     }
 
+    fun getProvisionedNodes(callback: ArrayMapCallback) {
+        var data = ArrayList<HashMap<String, Any>>()
+        MeshHelper.getProvisionNode()?.forEach {
+            var map = HashMap<String, Any>()
+            map.put("uuid", it.uuid)
+            map.put("name", it.nodeName)
+//            map.put("productId", ByteUtil.getPIdFromUUID(it.beacon!!.getBeaconData()))
+        }
+        callback.onResult(data)
+    }
+
+    fun removeProvisionedNode(uuid: String) {
+       MeshHelper.deleteProvisionNode(MeshHelper.getProvisionedNodeByUUID(uuid))
+    }
+
     fun bindApplicationKeyForNode(uuid: String, appKey: String, callback: MapCallback) {
-        var map = HashMap<Any, Any>()
+        var map = HashMap<String, Any>()
         doBaseCheck(uuid, map, callback)
         MeshHelper.getAppkeyByKeyName(appKey)?.let { applicationKey ->
             MeshHelper.getProvisionNode()?.forEach { node ->
@@ -294,8 +323,12 @@ object MeshSDK {
                                 )
                                 map.clear()
                                 map.put(
-                                    ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.code,
+                                    Constants.KEY_MESSAGE,
                                     msg.statusCodeName
+                                )
+                                map.put(
+                                    Constants.KEY_CODE,
+                                    ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.code
                                 )
                                 callback.onResult(map)
                             }
@@ -309,8 +342,12 @@ object MeshSDK {
                                 )
                                 map.clear()
                                 map.put(
-                                    ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.code,
+                                    Constants.KEY_MESSAGE,
                                     ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.msg
+                                )
+                                map.put(
+                                    Constants.KEY_CODE,
+                                    ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.code
                                 )
                             }
 //                            bindedIndex++
@@ -374,8 +411,12 @@ object MeshSDK {
             } else {
                 map.clear()
                 map.put(
-                    ConnectState.CONNECT_NOT_EXIST.code,
+                    Constants.KEY_MESSAGE,
                     ConnectState.CONNECT_NOT_EXIST.msg
+                )
+                map.put(
+                    Constants.KEY_CODE,
+                    ConnectState.CONNECT_NOT_EXIST.code
                 )
             }
         }
@@ -385,17 +426,22 @@ object MeshSDK {
         MeshHelper.disConnect()
     }
 
-    private fun doBaseCheck(uuid: String, map: HashMap<Any, Any>, callback: MapCallback) {
+    private fun doBaseCheck(uuid: String, map: HashMap<String, Any>, callback: MapCallback) {
         if (mContext == null) {//判断sdk是否被初始化
-            map.put(Constants.SDK_NOT_INIT_CODE, Constants.SDK_NOT_INIT_MSG)
+            map.put(Constants.KEY_MESSAGE, Constants.SDK_NOT_INIT_MSG)
+            map.put(Constants.KEY_CODE, Constants.SDK_NOT_INIT_CODE)
             callback.onResult(map)
             return
         }
 
         if (mExtendedBluetoothDeviceMap.get(uuid) == null) {//判断是否存在此设备
             map.put(
-                ConnectState.CANNOT_FIND_DEVICE_BY_MAC.code,
+                Constants.KEY_MESSAGE,
                 ConnectState.CANNOT_FIND_DEVICE_BY_MAC.msg
+            )
+            map.put(
+                Constants.KEY_CODE,
+                ConnectState.CANNOT_FIND_DEVICE_BY_MAC.code
             )
             callback.onResult(map)
             return

@@ -67,7 +67,7 @@ class ConnectTestActivity : BaseMeshActivity() {
                                         mMac,
                                         result.get(0),
                                         object : MapCallback {
-                                            override fun onResult(result: HashMap<Any, Any>) {
+                                            override fun onResult(result: HashMap<String, Any>) {
                                             }
                                         })
                                 }

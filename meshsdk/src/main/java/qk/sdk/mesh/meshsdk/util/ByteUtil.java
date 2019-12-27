@@ -96,4 +96,23 @@ public class ByteUtil {
         }
         return builder.toString().toUpperCase();
     }
+
+    public static int getPIdFromUUID(byte[] uuid) {
+        if (uuid.length < 5) {
+            return 0;
+        }
+        byte[] pid = new byte[4];
+        System.arraycopy(uuid, 1, pid, 0, 4);
+        return byteArrayToInt(pid);
+    }
+
+    public static int byteArrayToInt(byte[] bytes) {
+        int value = 0;
+        // 由高位到低位
+        for (int i = 0; i < 4; i++) {
+            int shift = (4 - 1 - i) * 8;
+            value += (bytes[i] & 0x000000FF) << shift;// 往高位游
+        }
+        return value;
+    }
 }

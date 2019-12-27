@@ -9,26 +9,28 @@ object Constants {
      */
 
     //------未初始化SDK
-    val SDK_NOT_INIT_MSG = "SDK_NOT_INIT_MSG"
-    val SDK_NOT_INIT_CODE = 101
+    const val SDK_NOT_INIT_MSG = "SDK_NOT_INIT_MSG"
+    const val SDK_NOT_INIT_CODE = 101
 
     //------蓝牙相关权限
-    val PERMISSION_GRANTED = "GRANTED"
-    val PERMISSION_DENIED = "DENIED"
-    val PERMISSION_CLOSED = "CLOSED"
+    const val PERMISSION_GRANTED = "GRANTED"
+    const val PERMISSION_DENIED = "DENIED"
+    const val PERMISSION_CLOSED = "CLOSED"
 
     //------扫描设备
-    val SCAN_PROVISIONED = "provisioned"
-    val SCAN_UNPROVISIONED = "unProvisioned"
+    const val SCAN_PROVISIONED = "provisioned"
+    const val SCAN_UNPROVISIONED = "unProvisioned"
 
 
-//    val PROVISION_SUCCESS_CODE = 200//provision 成功
+    //    val PROVISION_SUCCESS_CODE = 200//provision 成功
 //    val PROVISION_WRONG_PARAM_CODE = 322 //provision传参错误，找不到mac地址对应的设备
 //    val PROVISION_WRONG_PARAM = "找不到mac地址对应的设备" //provision传参错误，找不到mac地址对应的设备
+    const val KEY_CODE = "code"
+    const val KEY_MESSAGE = "message"
 
     enum class ConnectState(var msg: String, var code: Int = 1000) {
         SDK_NOT_INIT("SDK_NOT_INIT_MSG", 101),
-        CANNOT_FIND_DEVICE_BY_MAC("找不到mac地址对应的设备", 102),//传参错误，找不到mac地址对应的设备
+        CANNOT_FIND_DEVICE_BY_MAC("找不到uuid对应的设备", 102),//传参错误，找不到mac地址对应的设备
         CONNECT_NOT_EXIST("请先建立蓝牙连接", 103),//连接不存在：当要发送消息时，发现没有已建立的连接时，报错
         CONNECT_BLE_RESOURCE_FAILED("未释放蓝牙资源", 133),
         BLE_NOT_AVAILABLE("蓝牙未开启", 104),//未开启蓝牙
@@ -49,8 +51,8 @@ object Constants {
         DISCONNECTED("连接已断开", 207),
 
 
-        NET_KEY_DELETE_FAILED("", 401),//netKey正在使用中，需先删除netKey对应的设备
-        APP_KEY_DELETE_FAILED("", 402),//appKey正在使用中，需先删除appKey对应的设备
+        NET_KEY_DELETE_FAILED("netKey正在使用中，需先删除netKey对应的设备", 401),//netKey正在使用中，需先删除netKey对应的设备
+        APP_KEY_DELETE_FAILED("appKey正在使用中，需先删除appKey对应的设备", 402),//appKey正在使用中，需先删除appKey对应的设备
 
     }
 }

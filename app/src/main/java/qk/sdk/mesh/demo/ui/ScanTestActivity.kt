@@ -96,7 +96,7 @@ class ScanTestActivity : BaseMeshActivity(),
         })
 
         MeshSDK.provision(data.get("uuid") as String, object : MapCallback {
-            override fun onResult(msg: HashMap<Any, Any>) {
+            override fun onResult(msg: HashMap<String, Any>) {
                 tv_status.visibility = View.VISIBLE
                 msg.forEach { key, value ->
                     Utils.printLog(TAG, "$value")
