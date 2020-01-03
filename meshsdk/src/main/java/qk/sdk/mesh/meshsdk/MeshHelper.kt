@@ -3,6 +3,7 @@ package qk.sdk.mesh.meshsdk
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import androidx.lifecycle.Observer
 import com.joker.api.wrapper.ListenerWrapper
 import no.nordicsemi.android.meshprovisioner.ApplicationKey
 import no.nordicsemi.android.meshprovisioner.MeshNetwork
@@ -407,22 +408,24 @@ object MeshHelper {
         return MeshProxyService.mMeshProxyService?.getCurrentNetworkKeyStr()
     }
 
-    fun createApplicationKey(networkKey: String) {
+    fun createApplicationKey(networkKey: String): String {
         getAllNetworkKey()?.forEach { netKey ->
             if (ByteUtil.bytesToHexString(netKey.key) == networkKey) {
-                MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.createAppKey()
-                    ?.let { applicationKey ->
-                        Utils.printLog(TAG, "")
-                        applicationKey.boundNetKeyIndex = netKey.keyIndex
-                        MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.let { network ->
-                            network.addAppKey(applicationKey)
-//                            network.updateAppKey(applicationKey)
-                        }
+                var appKey =
+                    MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.createAppKey()
+                if (appKey != null) {
+                    Utils.printLog(TAG, "")
+                    appKey.boundNetKeyIndex = netKey.keyIndex
+                    MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.let { network ->
+                        network.addAppKey(appKey)
+                        return ByteUtil.bytesToHexString(appKey.key)
                     }
+                }
             }
         }
-    }
 
+        return ""
+    }
 
     fun getNetKeyByKeyName(networkKey: String): NetworkKey? {
         getAllNetworkKey()?.forEach { netKey ->
