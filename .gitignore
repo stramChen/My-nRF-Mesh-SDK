@@ -10,3 +10,5 @@
 /app/build
 /meshsdk/build
 /meshprovisioner/build
+/mvvm/build
+/mx-nrfmesh/build
