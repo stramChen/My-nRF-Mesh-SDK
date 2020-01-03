@@ -100,7 +100,7 @@ class ScanTestActivity : BaseMeshActivity(),
                 tv_status.visibility = View.VISIBLE
                 msg.forEach { key, value ->
                     Utils.printLog(TAG, "$value")
-                    tv_status.text = value as String
+                    tv_status.text = "$value"
                     if (value == Constants.ConnectState.PROVISION_SUCCESS.msg) {//配对成功
                         Utils.printLog(TAG, "$value")
 

@@ -58,23 +58,25 @@ class ConnectTestActivity : BaseMeshActivity() {
 
         btn_add_app_key.setOnClickListener {
             if (MeshHelper.isConnectedToProxy()) {
-                MeshSDK.getCurrentNetworkKey(object : StringCallback {
-                    override fun onResultMsg(msg: String) {
-                        MeshSDK.getAllApplicationKey(msg, object : ArrayStringCallback {
-                            override fun onResult(result: ArrayList<String>) {
-                                if (result.size > 0) {
-                                    MeshSDK.bindApplicationKeyForNode(
-                                        mMac,
-                                        result.get(0),
-                                        object : MapCallback {
-                                            override fun onResult(result: HashMap<String, Any>) {
-                                            }
-                                        })
+                Thread(Runnable {
+                    MeshSDK.getCurrentNetworkKey(object : StringCallback {
+                        override fun onResultMsg(msg: String) {
+                            MeshSDK.getAllApplicationKey(msg, object : ArrayStringCallback {
+                                override fun onResult(result: ArrayList<String>) {
+                                    if (result.size > 0) {
+                                        MeshSDK.bindApplicationKeyForNode(
+                                            mMac,
+                                            result.get(0),
+                                            object : MapCallback {
+                                                override fun onResult(result: HashMap<String, Any>) {
+                                                }
+                                            })
+                                    }
                                 }
-                            }
-                        })
-                    }
-                })
+                            })
+                        }
+                    })
+                }).start()
             } else {
                 Utils.printLog(TAG, "isn't Connected To Proxy")
             }
