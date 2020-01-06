@@ -9,7 +9,7 @@
 * 0.1.1
 	* 「对设备进行网络配置 - Bind Application Key 阶段」API 变动，增加 applicationKey 参数
 * 0.1.2
-        * 添加参数、错误码描述、获取四元组接口
+        * 添加参数、错误码描述;修改connect接口传参
 
 ---- 
 
@@ -178,7 +178,7 @@ Map
 
 ### 连接某一个 mesh 网络中的设备(同上)：callback会回调多次。ios无此方法，只有android需要。
 ```js
-MeshSDK.connect(uuid: string, callback(error: Map))
+MeshSDK.connect(networkKey: string, callback(error: Map))
 ```
 
 ### 对设备发送控制指令

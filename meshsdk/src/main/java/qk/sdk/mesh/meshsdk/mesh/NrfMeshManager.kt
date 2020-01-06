@@ -322,9 +322,6 @@ class NrfMeshManager(
         isAppKeyAddCompleted = false
         isNetworkRetransmitSetCompleted = false
         mConnectDevice = device
-        //clearExtendedMeshNode();
-//        val logSession = Logger.newSession(context, null, device.getAddress(), device.name ?: "")
-//        bleMeshManager?.setLogger(logSession)
         val bluetoothDevice = device.device
         initIsConnectedLiveData(connectToNetwork)
         mConnectionState.postValue(
@@ -562,6 +559,7 @@ class NrfMeshManager(
 
     override fun onDeviceReady(device: BluetoothDevice) {
         mOnDeviceReady.postValue(null)
+        mConnectionState.postValue(CallbackMsg(COMMON_SUCCESS.code, COMMON_SUCCESS.msg))
 
         if (bleMeshManager!!.isProvisioningComplete) {
             if (mSetupProvisionedNode) {
@@ -582,7 +580,6 @@ class NrfMeshManager(
             }
             mIsConnectedToProxy.postValue(true)
         }
-        Utils.printLog(TAG, "onDeviceReady,mtu:${mtu}")
     }
 
     override fun onBondingRequired(device: BluetoothDevice) {
@@ -1247,7 +1244,7 @@ class NrfMeshManager(
     fun startScan(
         filterUuid: UUID,
         callback: qk.sdk.mesh.meshsdk.callbak.ScanCallback? = null,
-        networkKey: NetworkKey ?= null
+        networkKey: NetworkKey? = null
     ) {
         try {
             mFilterUuid = filterUuid

@@ -45,7 +45,6 @@ object Constants {
         CONNECTING("连接中", 201),
         DISCOVERING_SERVICE("检查服务中", 202),
         INITIALIZING("初始化蓝牙连接", 203),
-        DEVICE_READY("连接初始化完成", 204),
         RECONNETCING("正在重连", 205),
         DISCONNECTING("正在断开连接", 206),
         DISCONNECTED("连接已断开", 207),

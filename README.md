@@ -40,9 +40,12 @@ ConnectTestActivity.getAllApplicationKey() ——> MeshSDK.getAllApplicationKey(
 ```
 ## 9.绑定appkey:此方法会自动为该节点下的所有model绑定appkey。callback只会回调一次。
 ```kotlin
-ConnectTestActivity.bindApplicationKeyForNode() ——> bindApplicationKeyForNode(uuid: String, appKey: String, callback: MapCallback)
+ConnectTestActivity.bindApplicationKeyForNode() ——> MeshSDK.bindApplicationKeyForNode(uuid: String, appKey: String, callback: MapCallback)
 ``` 
-## 断开连接
+## 10.连接已完成配对的设备:callback会多次回调
+```kotlin
+MainMeshActivity.connect() ——> MeshSDK.connect(networkKey: String, callback: MapCallback)
+```
 
 
 # Android 调用步骤

@@ -551,7 +551,7 @@ object MeshSDK {
                     devices: List<ExtendedBluetoothDevice>,
                     updatedIndex: Int?
                 ) {
-                    if (devices.isNotEmpty()) {//todo 7.0-做适配
+                    if (devices.isNotEmpty()) {
                         MeshHelper.stopScan()
                         MeshHelper.connect(devices[0], true, object : ConnectCallback {
                             override fun onConnect() {
@@ -582,6 +582,11 @@ object MeshSDK {
                     doMapCallback(map, callback, msg)
                 }
             }, networkKey)
+        } else {
+            doMapCallback(
+                map, callback,
+                CallbackMsg(ConnectState.COMMON_SUCCESS.code, ConnectState.COMMON_SUCCESS.msg)
+            )
         }
     }
 
