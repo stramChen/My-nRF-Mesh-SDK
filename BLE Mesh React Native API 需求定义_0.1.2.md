@@ -3,13 +3,11 @@
 我们先定义 SDK 的名字，比如 `MeshSDK`。
 
 ## 版本
-
-* 0.1.0
-	* 定义 API 需求
-* 0.1.1
-	* 「对设备进行网络配置 - Bind Application Key 阶段」API 变动，增加 applicationKey 参数
-* 0.1.2
-        * 添加参数、错误码描述;修改connect接口传参
+|错误码|错误信息|
+|:---|:---|
+|0.1.0|定义 API 需求|
+|0.1.1|「对设备进行网络配置 - Bind Application Key 阶段」API 变动，增加 applicationKey 参数|
+|0.1.2|添加错误码描述、修改connect接口传参、添加callback次数描述|
 
 ---- 
 
@@ -219,7 +217,7 @@ MeshSDK.importConfiguration(data: JSONString, callback(success))
 ```
 ## code定义
 |错误码|错误信息|
-|:---|---:|
+|:---|:---|
 |101|未初始化sdk|
 |102|传参错误，找不到uuid对应的设备|
 |103|未建立连接|
