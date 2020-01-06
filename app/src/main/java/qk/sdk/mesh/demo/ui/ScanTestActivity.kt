@@ -98,7 +98,7 @@ class ScanTestActivity : BaseMeshActivity(),
         MeshSDK.provision(data.get("uuid") as String, object : MapCallback {
             override fun onResult(msg: HashMap<String, Any>) {
                 tv_status.visibility = View.VISIBLE
-                msg.forEach { key, value ->
+                msg.get("message")?.let { value ->
                     Utils.printLog(TAG, "$value")
                     tv_status.text = "$value"
                     if (value == Constants.ConnectState.PROVISION_SUCCESS.msg) {//配对成功
@@ -108,7 +108,7 @@ class ScanTestActivity : BaseMeshActivity(),
                             Intent(
                                 this@ScanTestActivity,
                                 ConnectTestActivity::class.java
-                            ).putExtra("mac", data.get("mac") as String)
+                            ).putExtra("uuid", data.get("uuid") as String)
                         )
                         finish()
                     }

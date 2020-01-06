@@ -46,7 +46,7 @@ object MeshHelper {
         }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
-    // 停止蓝牙扫描
+   // 停止蓝牙扫描
     fun stopScan() {
         rx.Observable.create<String> {
         }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {

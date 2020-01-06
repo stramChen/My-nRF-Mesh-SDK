@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.location.LocationManager
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
 import android.os.Handler
 import android.os.ParcelUuid
@@ -1096,7 +1097,7 @@ class NrfMeshManager(
 
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             try {
-                if (mFilterUuid == BleMeshManager.MESH_PROVISIONING_UUID && result.device.address.startsWith("04:78:63")) {
+                if (mFilterUuid == BleMeshManager.MESH_PROVISIONING_UUID) {
                     // If the packet has been obtained while Location was disabled, mark Location as not required
                     if (Utils.isLocationRequired(mContext) && !Utils.isLocationEnabled(mContext))
                         Utils.markLocationNotRequired(mContext)
@@ -1104,8 +1105,8 @@ class NrfMeshManager(
                     updateScannerLiveData(result)
                 } else if (mFilterUuid == BleMeshManager.MESH_PROXY_UUID) {
                     val scanRecord = result.scanRecord
+                    val serviceData = Utils.getServiceData(result, MESH_PROXY_UUID)
                     if (scanRecord != null) {
-                        val serviceData = Utils.getServiceData(result, MESH_PROXY_UUID)
                         if (serviceData != null) {
                             if (meshManagerApi.isAdvertisedWithNodeIdentity(serviceData) && mProvisionedMeshNode != null) {
                                 val node = mProvisionedMeshNode
@@ -1124,7 +1125,6 @@ class NrfMeshManager(
                         }
                     }
 
-                    val serviceData = Utils.getServiceData(result, BleMeshManager.MESH_PROXY_UUID)
                     if (meshManagerApi.isAdvertisingWithNetworkIdentity(serviceData) && mNetworkId != null) {
                         if (meshManagerApi.networkIdMatches(mNetworkId!!, serviceData)) {
                             updateScannerLiveData(result)
@@ -1200,8 +1200,6 @@ class NrfMeshManager(
                         result,
                         meshManagerApi.getMeshBeacon(beaconData)
                     )
-                } else {
-                    Utils.printLog(TAG, "meshBeacon is null")
                 }
                 mScannerStateLiveData.deviceFound()
             }
@@ -1252,15 +1250,15 @@ class NrfMeshManager(
             }
             mScannerLiveData.startScanning()
 
-            if (mFilterUuid == BleMeshManager.MESH_PROXY_UUID) {
-                val network = meshManagerApi.meshNetwork
-                if (network != null) {
-                    if (network.netKeys.isNotEmpty()) {
-                        mNetworkId =
-                            meshManagerApi.generateNetworkId(network.netKeys[0].key)
-                    }
-                }
-            }
+//            if (mFilterUuid == BleMeshManager.MESH_PROXY_UUID) {
+//                val network = meshManagerApi.meshNetwork
+//                if (network != null) {
+//                    if (network.netKeys.isNotEmpty()) {
+//                        mNetworkId =
+//                            meshManagerApi.generateNetworkId(network.netKeys[0].key)
+//                    }
+//                }
+//            }
 
             mScannerStateLiveData.scanningStarted()
             //Scanning settings
@@ -1276,20 +1274,23 @@ class NrfMeshManager(
 
             //Let's use the filter to scan only for unprovisioned mesh nodes.
             val filters = ArrayList<ScanFilter>()
-//            filters.add(ScanFilter.Builder().setServiceUuid(ParcelUuid(filterUuid)).build())
 
-            //反射修改BluetoothLeScannerCompat.getScanner()
-            var clazz =
-                Class.forName("no.nordicsemi.android.support.v18.scanner.BluetoothLeScannerCompat")
-            Utils.printLog(TAG, "clazz.name:${clazz.simpleName}")
-            var instance = clazz.getDeclaredField("instance")
-            instance.isAccessible = true
-            //反射获取BluetoothLeScannerImplJB实例
-            var JBClazz =
-                Class.forName("no.nordicsemi.android.support.v18.scanner.BluetoothLeScannerImplJB")
-            var JBConstructor = JBClazz.getDeclaredConstructor()
-            JBConstructor.isAccessible = true
-            instance.set(BluetoothLeScannerCompat.getScanner(),JBConstructor.newInstance())
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {//若版本号小于26，统一都用BluetoothLeScannerImplJB，否则解析不到beacon包
+                //反射修改BluetoothLeScannerCompat.getScanner()
+                var clazz =
+                    Class.forName("no.nordicsemi.android.support.v18.scanner.BluetoothLeScannerCompat")
+                Utils.printLog(TAG, "clazz.name:${clazz.simpleName}")
+                var instance = clazz.getDeclaredField("instance")
+                instance.isAccessible = true
+                //反射获取BluetoothLeScannerImplJB实例
+                var JBClazz =
+                    Class.forName("no.nordicsemi.android.support.v18.scanner.BluetoothLeScannerImplJB")
+                var JBConstructor = JBClazz.getDeclaredConstructor()
+                JBConstructor.isAccessible = true
+                instance.set(BluetoothLeScannerCompat.getScanner(), JBConstructor.newInstance())
+            } else {
+                filters.add(ScanFilter.Builder().setServiceUuid(ParcelUuid(filterUuid)).build())
+            }
             val scanner = BluetoothLeScannerCompat.getScanner()
             scanner.startScan(filters, settings, mScanCallbacks)
 

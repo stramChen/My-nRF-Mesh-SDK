@@ -15,7 +15,9 @@ import qk.sdk.mesh.demo.ui.adapter.NodeAdapter
 import qk.sdk.mesh.demo.widget.base.OnItemClickListener
 import qk.sdk.mesh.demo.widget.base.OnItemLongClickListener
 import qk.sdk.mesh.meshsdk.MeshHelper
+import qk.sdk.mesh.meshsdk.MeshSDK
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
+import qk.sdk.mesh.meshsdk.callbak.MapCallback
 import qk.sdk.mesh.meshsdk.callbak.ProvisionCallback
 
 class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
@@ -63,9 +65,15 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
 
         mNodeAdapter?.setOnItemClickListener(object : OnItemClickListener<ProvisionedMeshNode> {
             override fun onItemClick(data: ProvisionedMeshNode, position: Int) {
-                MeshHelper.setSelectedMeshNode(data)
-                bindModel(data)
-                startActivity(Intent(this@MainMeshActivity, ConnectMeshActivity::class.java))
+//                MeshHelper.setSelectedMeshNode(data)
+//                bindModel(data)
+//                startActivity(Intent(this@MainMeshActivity, ConnectMeshActivity::class.java))
+                MeshSDK.connect(object : MapCallback {
+                    override fun onResult(result: HashMap<String, Any>) {
+
+                    }
+                })
+                startActivity(Intent(this@MainMeshActivity, ConnectTestActivity::class.java))
             }
         })
 

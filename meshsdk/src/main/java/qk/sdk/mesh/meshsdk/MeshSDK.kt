@@ -310,7 +310,7 @@ object MeshSDK {
                     }
                 }
                 if (MeshHelper.isConnectedToProxy()) {
-                    var bindedIndex = 0
+                    var bindedIndex = -1
                     MeshHelper.addAppkeys(applicationKey.keyIndex, object : MeshCallback {
                         override fun onReceive(msg: MeshMessage) {
                             if (msg is ConfigAppKeyStatus) {
@@ -338,74 +338,91 @@ object MeshSDK {
                                     callback.onResult(map)
                                 }
                             } else if (msg is ConfigModelAppStatus) {
-                                if (msg.isSuccessful) {//bind appkey成功
-                                    Utils.printLog(TAG, "bindAppKey success!")
-                                } else {
-                                    Utils.printLog(
-                                        TAG,
-                                        "bindAppKey failed:${msg.statusCodeName}"
-                                    )
-                                    map.clear()
-                                    map.put(
-                                        Constants.KEY_MESSAGE,
-                                        ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.msg
-                                    )
-                                    map.put(
-                                        Constants.KEY_CODE,
-                                        ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.code
-                                    )
+                                synchronized(bindedIndex){
+                                    if (bindedIndex == 0) {
+                                        if (msg.isSuccessful) {//bind appkey成功
+                                            Utils.printLog(TAG, "bindAppKey success!")
+                                            doMapCallback(map,callback,CallbackMsg(ConnectState.COMMON_SUCCESS.code,ConnectState.COMMON_SUCCESS.msg))
+                                        } else {
+                                            Utils.printLog(
+                                                TAG,
+                                                "bindAppKey failed:${msg.statusCodeName}"
+                                            )
+                                            map.clear()
+                                            map.put(
+                                                Constants.KEY_MESSAGE,
+                                                ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.msg
+                                            )
+                                            map.put(
+                                                Constants.KEY_CODE,
+                                                ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.code
+                                            )
+                                        }
+                                    bindedIndex++
+//                                    if (bindedIndex < (MeshHelper.getSelectedElement()?.meshModels?.size
+//                                            ?: 0)
+//                                    ) {
+//                                        MeshHelper.getSelectedModel()?.let {
+//                                            MeshHelper.setSelectedModel(
+//                                                MeshHelper.getSelectedElement(),
+//                                                MeshHelper.getSelectedElement()!!.meshModels!!.values.elementAt(
+//                                                    bindedIndex
+//                                                )
+//                                            )
+//                                            MeshHelper.bindAppKey(this)
+//                                        }
+//                                        Utils.printLog(
+//                                            TAG,
+//                                            "bindedIndex:$bindedIndex,modelId:${MeshHelper.getSelectedElement()!!.meshModels!!.values.elementAt(
+//                                                bindedIndex
+//                                            ).modelId}"
+//                                        )
+//                                    } else {
+//                                        if (map.size > 0) {
+//                                            callback.onResult(map)
+//                                        } else {
+//                                            map.put(
+//                                                "code",
+//                                                ConnectState.PROVISION_SUCCESS.code
+//                                            )
+//                                            callback.onResult(map)
+//                                        }
+//                                        bindedIndex = -2
+//                                    }
+                                    }
                                 }
-//                            bindedIndex++
-//                            if (bindedIndex < (MeshHelper.getSelectedElement()?.meshModels?.size
-//                                    ?: 0)
-//                            ) {
-//                                MeshHelper.getSelectedModel()?.let {
-//                                    MeshHelper.setSelectedModel(
-//                                        MeshHelper.getSelectedElement(),
-//                                        MeshHelper.getSelectedElement()!!.meshModels!![bindedIndex]
-//                                    )
-//                                    MeshHelper.bindAppKey(this)
-//                                }
-////                            Utils.printLog(TAG, "bindedIndex:$bindedIndex")
-//                            } else {
-//                                if (map.size > 0) {
-//                                    callback.onResult(map)
-//                                } else {
-//                                    map.put(
-//                                        Constants.ConnectState.PROVISION_SUCCESS.code,
-//                                        ""
-//                                    )
-//                                    callback.onResult(map)
-//                                }
-//
-//                            }
                             } else if (msg is GenericOnOffStatus) {
                                 Utils.printLog(TAG, "get on off status")
                             } else if (msg is ConfigCompositionDataStatus) {
                                 Utils.printLog(TAG, "get getCompositionData success!")
-//                            bindedIndex = 0
-                                MeshHelper.getSelectedMeshNode()?.let { node ->
-                                    node.elements?.forEach { _, eleValue ->
-                                        eleValue.meshModels?.forEach bindModel@{
-                                            if (it.key == CWRGB_MODELID && bindedIndex == 0) {
-                                                it.value.let { modelValue ->
-                                                    if (modelValue.boundAppKeyIndexes?.size ?: 0 <= 0) {
-                                                        MeshHelper.setSelectedModel(
-                                                            eleValue,
-                                                            modelValue
-                                                        )
-                                                        MeshHelper.bindAppKey(
-                                                            applicationKey.keyIndex, this
-                                                        )
-                                                        bindedIndex++
-//                                                Utils.printLog(TAG, "bindedIndex:$bindedIndex")
-                                                        return@bindModel
-                                                    }
+                                synchronized(bindedIndex){
+                                    if (bindedIndex == -1) {
+                                        MeshHelper.getSelectedMeshNode()?.let { node ->
+                                            node?.elements?.values?.forEach { eleValue ->
+                                                if (eleValue.meshModels?.size ?: 0 > 1 && eleValue.meshModels?.values?.elementAt(
+                                                        1
+                                                    ) != null
+                                                ) {
+                                                    bindedIndex++
+                                                    Utils.printLog(
+                                                        TAG,
+                                                        "get getCompositionData bindAppKey!"
+                                                    )
+                                                    MeshHelper.setSelectedModel(
+                                                        eleValue,
+//                                                    eleValue.meshModels?.values?.elementAt(1)
+                                                        eleValue.meshModels[CWRGB_MODELID]
+                                                    )
+                                                    MeshHelper.bindAppKey(
+                                                        applicationKey.keyIndex, this
+                                                    )
+                                                    return@forEach
                                                 }
                                             }
                                         }
                                     }
                                 }
+
                             }
                         }
 
@@ -432,7 +449,7 @@ object MeshSDK {
         MeshHelper.disConnect()
     }
 
-    private fun doBaseCheck(uuid: String, map: HashMap<String, Any>, callback: MapCallback) {
+    private fun doBaseCheck(uuid: String?, map: HashMap<String, Any>, callback: MapCallback) {
         if (mContext == null) {//判断sdk是否被初始化
             map.put(Constants.KEY_MESSAGE, Constants.SDK_NOT_INIT_MSG)
             map.put(Constants.KEY_CODE, Constants.SDK_NOT_INIT_CODE)
@@ -440,7 +457,7 @@ object MeshSDK {
             return
         }
 
-        if (mExtendedBluetoothDeviceMap.get(uuid) == null) {//判断是否存在此设备
+        if (null != uuid && mExtendedBluetoothDeviceMap[uuid] == null) {//判断是否存在此设备
             map.put(
                 Constants.KEY_MESSAGE,
                 ConnectState.CANNOT_FIND_DEVICE_BY_MAC.msg
@@ -509,29 +526,48 @@ object MeshSDK {
             configNodeReset
         )
     }
-//    fun getWritableMap(map: HashMap<String, Object>): WritableNativeMap {
-//        var nativeMap = WritableNativeMap()
-//        map.forEach { key, value ->
-//            var valueClass = value.javaClass
-//            if (valueClass == Int.javaClass) {
-//                nativeMap.putInt(key, value as Int)
-//            } else if (valueClass == Boolean::class.java) {
-//                nativeMap.putBoolean(key, value as Boolean)
-//            } else if (valueClass is WritableArray) {
-//                nativeMap.putArray(key, value as WritableArray)
-//            } else if (valueClass == Double::class.java) {
-//                nativeMap.putDouble(key, value as Double)
-//            } else if (valueClass == String::class.java) {
-//                nativeMap.putString(key, value as String)
-//            } else if (valueClass is WritableMap) {
-//                nativeMap.putMap(key, value as WritableMap)
-//            }
-//        }
-//        return nativeMap
-//    }
 
-//    fun getWritableArray(map: HashMap<String, Object>): WritableNativeArray {
-//
-//    }
+    fun connect(callback: MapCallback) {
+        var map = HashMap<String, Any>()
+        doBaseCheck(null, map, callback)
+        MeshHelper.startScan(BleMeshManager.MESH_PROXY_UUID, object : ScanCallback {
+            override fun onScanResult(devices: List<ExtendedBluetoothDevice>, updatedIndex: Int?) {
+                if (devices.isNotEmpty()) {//todo 7.0-做适配
+                    MeshHelper.stopScan()
+                    MeshHelper.connect(devices[0], true, object : ConnectCallback {
+                        override fun onConnect() {
+                            doMapCallback(
+                                map, callback,
+                                CallbackMsg(
+                                    ConnectState.COMMON_SUCCESS.code,
+                                    ConnectState.COMMON_SUCCESS.msg
+                                )
+                            )
+                        }
 
+                        override fun onConnectStateChange(msg: CallbackMsg) {
+                            doMapCallback(map, callback, msg)
+                            if (msg.msg == ConnectState.DISCONNECTED.msg) {//连接断开，自动寻找代理节点重连
+                                connect(callback)
+                            }
+                        }
+
+                        override fun onError(msg: CallbackMsg) {
+                            doMapCallback(map, callback, msg)
+                        }
+                    })
+                }
+            }
+
+            override fun onError(msg: CallbackMsg) {
+                doMapCallback(map, callback, msg)
+            }
+        })
+    }
+
+    private fun doMapCallback(map: HashMap<String, Any>, callback: MapCallback, msg: CallbackMsg) {
+        map.put("code", msg.code)
+        map.put("message", msg.msg)
+        callback.onResult(map)
+    }
 }

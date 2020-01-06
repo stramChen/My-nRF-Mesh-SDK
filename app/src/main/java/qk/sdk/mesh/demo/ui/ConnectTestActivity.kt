@@ -3,21 +3,13 @@ package qk.sdk.mesh.demo.ui
 import android.os.Bundle
 import android.view.View
 import kotlinx.android.synthetic.main.activity_connect.*
-import no.nordicsemi.android.meshprovisioner.models.GenericOnOffServerModel
-import no.nordicsemi.android.meshprovisioner.models.VendorModel
-import no.nordicsemi.android.meshprovisioner.transport.*
+import org.spongycastle.pqc.math.ntru.util.Util
 import qk.sdk.mesh.demo.R
 import qk.sdk.mesh.demo.base.BaseMeshActivity
 import qk.sdk.mesh.meshsdk.MeshHelper
 import qk.sdk.mesh.meshsdk.MeshSDK
-import qk.sdk.mesh.meshsdk.bean.CallbackMsg
-import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
 import qk.sdk.mesh.meshsdk.callbak.*
-import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
-import qk.sdk.mesh.meshsdk.util.ByteUtil
-import qk.sdk.mesh.meshsdk.util.Constants
 import qk.sdk.mesh.meshsdk.util.Utils
-import java.lang.StringBuilder
 
 class ConnectTestActivity : BaseMeshActivity() {
     private val TAG = "ConnectMeshActivity"
@@ -25,17 +17,20 @@ class ConnectTestActivity : BaseMeshActivity() {
     private val MODEL_TYPE_GENERIC = 1
     private val MODEL_TYPE_VENDOR = 2
 
-    private var mMac = ""
+    private var mUUID = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     }
 
     override fun init() {
-        mMac = intent.getStringExtra("mac") ?: ""
-        if (mMac.isEmpty()) {
-            finish()
-            return
+        mUUID = intent.getStringExtra("uuid") ?: ""
+        if (mUUID.isEmpty()) {
+            MeshSDK.connect(object : MapCallback {
+                override fun onResult(result: HashMap<String, Any>) {
+
+                }
+            })
         }
         initView()
 //        if (!MeshSDK.isConnectedToProxy()) {
@@ -65,7 +60,7 @@ class ConnectTestActivity : BaseMeshActivity() {
                                 override fun onResult(result: ArrayList<String>) {
                                     if (result.size > 0) {
                                         MeshSDK.bindApplicationKeyForNode(
-                                            mMac,
+                                            mUUID,
                                             result.get(0),
                                             object : MapCallback {
                                                 override fun onResult(result: HashMap<String, Any>) {
@@ -83,13 +78,9 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
 
         switch_on_off.setOnCheckedChangeListener { buttonView, isChecked ->
-            MeshSDK.setGenericOnOff(mMac, isChecked, object : BooleanCallback {
+            MeshSDK.setGenericOnOff(mUUID, isChecked, object : BooleanCallback {
                 override fun onResult(boolean: Boolean) {
-                    MeshSDK.setGenericOnOff(mMac, isChecked, object : BooleanCallback {
-                        override fun onResult(boolean: Boolean) {
-                            Utils.printLog(TAG, "setGenericOnOff result:$boolean")
-                        }
-                    })
+                    Utils.printLog(TAG, "setGenericOnOff result:$boolean")
                 }
             })
         }
@@ -102,7 +93,7 @@ class ConnectTestActivity : BaseMeshActivity() {
             var r = sb_vendor_r.progress * 255 / 100
             var g = sb_vendor_g.progress * 255 / 100
             var b = sb_vendor_b.progress * 255 / 100
-            MeshSDK.setLightProperties(mMac, c, w, r, g, b, object : BooleanCallback {
+            MeshSDK.setLightProperties(mUUID, c, w, r, g, b, object : BooleanCallback {
                 override fun onResult(boolean: Boolean) {
 
                 }
@@ -113,11 +104,20 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
 
         btn_reset.setOnClickListener {
-            MeshSDK.resetNode(mMac)
+            MeshSDK.resetNode(mUUID)
         }
 
         tv_ping.setOnClickListener {
-            //            MeshHelper.sendGenericOnOffGet(meshCallback)
+            MeshHelper.getSelectedMeshNode()?.let { node ->
+                MeshHelper.getSelectedElement()?.let { element ->
+                    MeshHelper.getSelectedModel()?.let { model ->
+                        Utils.printLog(
+                            TAG,
+                            "uuid:${node.meshUuid},elementId:${element.elementAddress},modelId:${model.modelId}"
+                        )
+                    }
+                }
+            }
         }
     }
 //
