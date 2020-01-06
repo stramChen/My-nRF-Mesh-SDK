@@ -12,7 +12,7 @@ import qk.sdk.mesh.meshsdk.callbak.*
 import qk.sdk.mesh.meshsdk.util.Utils
 
 class ConnectTestActivity : BaseMeshActivity() {
-    private val TAG = "ConnectMeshActivity"
+    private val TAG = "ConnectTestActivity"
 
     private val MODEL_TYPE_GENERIC = 1
     private val MODEL_TYPE_VENDOR = 2
@@ -25,13 +25,6 @@ class ConnectTestActivity : BaseMeshActivity() {
 
     override fun init() {
         mUUID = intent.getStringExtra("uuid") ?: ""
-        if (mUUID.isEmpty()) {
-            MeshSDK.connect(object : MapCallback {
-                override fun onResult(result: HashMap<String, Any>) {
-
-                }
-            })
-        }
         initView()
 //        if (!MeshSDK.isConnectedToProxy()) {
 ////            startScan(Constants.SCAN_PROVISIONED, scanCallback)
@@ -86,8 +79,6 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
 
         btn_send_vendor.setOnClickListener {
-            //            if (MeshHelper.getSelectedModel() is VendorModel && MeshHelper.getSelectedModel()?.boundAppKeyIndexes?.isNotEmpty() ?: false) {
-            Utils.printLog(TAG, "${sb_vendor_c.progress}")
             var c = sb_vendor_c.progress * 255 / 100
             var w = sb_vendor_w.progress * 255 / 100
             var r = sb_vendor_r.progress * 255 / 100
@@ -95,12 +86,9 @@ class ConnectTestActivity : BaseMeshActivity() {
             var b = sb_vendor_b.progress * 255 / 100
             MeshSDK.setLightProperties(mUUID, c, w, r, g, b, object : BooleanCallback {
                 override fun onResult(boolean: Boolean) {
-
+                    Utils.printLog(TAG, "setLightProperties result:$boolean")
                 }
             })
-//            } else if (MeshHelper.getSelectedModel() is VendorModel) {
-////                MeshHelper.bindAppKey(meshCallback)
-//            }
         }
 
         btn_reset.setOnClickListener {

@@ -338,11 +338,17 @@ object MeshSDK {
                                     callback.onResult(map)
                                 }
                             } else if (msg is ConfigModelAppStatus) {
-                                synchronized(bindedIndex){
+                                synchronized(bindedIndex) {
                                     if (bindedIndex == 0) {
                                         if (msg.isSuccessful) {//bind appkey成功
                                             Utils.printLog(TAG, "bindAppKey success!")
-                                            doMapCallback(map,callback,CallbackMsg(ConnectState.COMMON_SUCCESS.code,ConnectState.COMMON_SUCCESS.msg))
+                                            doMapCallback(
+                                                map, callback,
+                                                CallbackMsg(
+                                                    ConnectState.COMMON_SUCCESS.code,
+                                                    ConnectState.COMMON_SUCCESS.msg
+                                                )
+                                            )
                                         } else {
                                             Utils.printLog(
                                                 TAG,
@@ -358,7 +364,7 @@ object MeshSDK {
                                                 ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.code
                                             )
                                         }
-                                    bindedIndex++
+                                        bindedIndex++
 //                                    if (bindedIndex < (MeshHelper.getSelectedElement()?.meshModels?.size
 //                                            ?: 0)
 //                                    ) {
@@ -395,7 +401,7 @@ object MeshSDK {
                                 Utils.printLog(TAG, "get on off status")
                             } else if (msg is ConfigCompositionDataStatus) {
                                 Utils.printLog(TAG, "get getCompositionData success!")
-                                synchronized(bindedIndex){
+                                synchronized(bindedIndex) {
                                     if (bindedIndex == -1) {
                                         MeshHelper.getSelectedMeshNode()?.let { node ->
                                             node?.elements?.values?.forEach { eleValue ->
@@ -490,16 +496,25 @@ object MeshSDK {
         uuid: String, c: Int, w: Int, r: Int,
         g: Int, b: Int, callback: BooleanCallback
     ) {
-        MeshHelper.getProvisionNode()?.forEach { node ->
-            if (node.meshUuid == uuid) {
-                MeshHelper.setSelectedMeshNode(node)
+        if (MeshHelper.getSelectedMeshNode()?.meshUuid != uuid) {
+            MeshHelper.getProvisionNode()?.forEach { node ->
+                if (node.meshUuid == uuid) {
+                    MeshHelper.setSelectedMeshNode(node)
+                    MeshHelper.setSelectedModel(
+                        MeshHelper.getSelectedMeshNode()?.elements?.get(2),
+                        MeshHelper.getSelectedMeshNode()?.elements?.get(2)?.meshModels?.get(
+                            CWRGB_MODELID
+                        )
+                    )
+                }
             }
+        } else {
+            MeshHelper.setSelectedModel(
+                MeshHelper.getSelectedMeshNode()?.elements?.get(2),
+                MeshHelper.getSelectedMeshNode()?.elements?.get(2)?.meshModels?.get(CWRGB_MODELID)
+            )
         }
 
-        MeshHelper.setSelectedModel(
-            MeshHelper.getSelectedMeshNode()?.elements?.get(2),
-            MeshHelper.getSelectedElement()?.meshModels?.get(CWRGB_MODELID)
-        )
         var params = StringBuilder(
             "${ByteUtil.rgbtoHex(c)}${ByteUtil.rgbtoHex(w)}${ByteUtil.rgbtoHex(r)}${ByteUtil.rgbtoHex(
                 g
@@ -527,42 +542,47 @@ object MeshSDK {
         )
     }
 
-    fun connect(callback: MapCallback) {
+    fun connect(networkKey: String, callback: MapCallback) {
         var map = HashMap<String, Any>()
         doBaseCheck(null, map, callback)
-        MeshHelper.startScan(BleMeshManager.MESH_PROXY_UUID, object : ScanCallback {
-            override fun onScanResult(devices: List<ExtendedBluetoothDevice>, updatedIndex: Int?) {
-                if (devices.isNotEmpty()) {//todo 7.0-做适配
-                    MeshHelper.stopScan()
-                    MeshHelper.connect(devices[0], true, object : ConnectCallback {
-                        override fun onConnect() {
-                            doMapCallback(
-                                map, callback,
-                                CallbackMsg(
-                                    ConnectState.COMMON_SUCCESS.code,
-                                    ConnectState.COMMON_SUCCESS.msg
+        if (!MeshHelper.isConnectedToProxy()) {
+            MeshHelper.startScan(BleMeshManager.MESH_PROXY_UUID, object : ScanCallback {
+                override fun onScanResult(
+                    devices: List<ExtendedBluetoothDevice>,
+                    updatedIndex: Int?
+                ) {
+                    if (devices.isNotEmpty()) {//todo 7.0-做适配
+                        MeshHelper.stopScan()
+                        MeshHelper.connect(devices[0], true, object : ConnectCallback {
+                            override fun onConnect() {
+                                doMapCallback(
+                                    map, callback,
+                                    CallbackMsg(
+                                        ConnectState.COMMON_SUCCESS.code,
+                                        ConnectState.COMMON_SUCCESS.msg
+                                    )
                                 )
-                            )
-                        }
-
-                        override fun onConnectStateChange(msg: CallbackMsg) {
-                            doMapCallback(map, callback, msg)
-                            if (msg.msg == ConnectState.DISCONNECTED.msg) {//连接断开，自动寻找代理节点重连
-                                connect(callback)
                             }
-                        }
 
-                        override fun onError(msg: CallbackMsg) {
-                            doMapCallback(map, callback, msg)
-                        }
-                    })
+                            override fun onConnectStateChange(msg: CallbackMsg) {
+                                doMapCallback(map, callback, msg)
+                                if (msg.msg == ConnectState.DISCONNECTED.msg) {//连接断开，自动寻找代理节点重连
+                                    connect(networkKey, callback)
+                                }
+                            }
+
+                            override fun onError(msg: CallbackMsg) {
+                                doMapCallback(map, callback, msg)
+                            }
+                        })
+                    }
                 }
-            }
 
-            override fun onError(msg: CallbackMsg) {
-                doMapCallback(map, callback, msg)
-            }
-        })
+                override fun onError(msg: CallbackMsg) {
+                    doMapCallback(map, callback, msg)
+                }
+            }, networkKey)
+        }
     }
 
     private fun doMapCallback(map: HashMap<String, Any>, callback: MapCallback, msg: CallbackMsg) {

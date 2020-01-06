@@ -19,6 +19,7 @@ import qk.sdk.mesh.meshsdk.MeshSDK
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.callbak.MapCallback
 import qk.sdk.mesh.meshsdk.callbak.ProvisionCallback
+import qk.sdk.mesh.meshsdk.util.ByteUtil
 
 class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
     private var mNodeAdapter: NodeAdapter? = null
@@ -68,12 +69,18 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
 //                MeshHelper.setSelectedMeshNode(data)
 //                bindModel(data)
 //                startActivity(Intent(this@MainMeshActivity, ConnectMeshActivity::class.java))
-                MeshSDK.connect(object : MapCallback {
-                    override fun onResult(result: HashMap<String, Any>) {
+                MeshSDK.connect(ByteUtil.bytesToHexString(MeshHelper.getAllNetworkKey()?.get(1)?.key),
+                    object : MapCallback {
+                        override fun onResult(result: HashMap<String, Any>) {
 
-                    }
-                })
-                startActivity(Intent(this@MainMeshActivity, ConnectTestActivity::class.java))
+                        }
+                    })
+                startActivity(
+                    Intent(
+                        this@MainMeshActivity,
+                        ConnectTestActivity::class.java
+                    ).putExtra("uuid", data.meshUuid)
+                )
             }
         })
 

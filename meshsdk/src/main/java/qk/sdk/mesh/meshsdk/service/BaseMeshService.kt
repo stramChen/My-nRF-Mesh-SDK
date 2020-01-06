@@ -51,10 +51,10 @@ open class BaseMeshService : LifecycleService() {
     val PERMISSION_ACCESS_FINE_LOCATION_REQUEST_CODE = 1002
 
     //开始扫描
-    internal fun startScan(filterUuid: UUID, scanCallback: ScanCallback?) {
+    internal fun startScan(filterUuid: UUID, scanCallback: ScanCallback?, networkKey: String = "") {
         mScanCallback = scanCallback
         //获取扫描结果
-        mNrfMeshManager?.getScannerResults()?.observe(this, Observer { it ->
+        mNrfMeshManager?.getScannerResults()?.observe(this, Observer {
             Log.e("", "get scanner result:${it.devices.size}")
             mScanCallback?.onScanResult(it.devices, it.updatedDeviceIndex)
         })
@@ -63,7 +63,14 @@ open class BaseMeshService : LifecycleService() {
             Log.e("", "scanner state changed")
         })
 
-        mNrfMeshManager?.startScan(filterUuid, scanCallback)
+        var netKey: NetworkKey? = null
+        if (networkKey.isNotEmpty()) {
+            mNrfMeshManager?.meshManagerApi?.meshNetwork?.netKeys?.forEach {
+                if (ByteUtil.bytesToHexString(it.key) == networkKey)
+                    netKey = it
+            }
+        }
+        mNrfMeshManager?.startScan(filterUuid, scanCallback, netKey)
     }
 
     //停止扫描

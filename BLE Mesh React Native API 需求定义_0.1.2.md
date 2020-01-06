@@ -38,6 +38,9 @@ MeshSDK.checkPermission(callback)
 ---- 
 
 ## Network Key 的相关操作
+```makefile
+一个家庭共用一个networkKey
+```
 
 ### 创建 Network Key（传入存储）
 

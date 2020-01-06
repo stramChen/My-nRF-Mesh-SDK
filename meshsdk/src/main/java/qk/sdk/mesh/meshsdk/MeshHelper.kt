@@ -39,14 +39,14 @@ object MeshHelper {
     // 扫描蓝牙节点
     // TODO: UUID 定义为一个通用的字符串，标明扫描到的设备类型（已加入 mesh 网络的，未加入的）
     // TODO: scanCallback -> 2 个方法，onStatusChange, onScanResult
-    fun startScan(filterUuid: UUID, scanCallback: ScanCallback?) {
+    fun startScan(filterUuid: UUID, scanCallback: ScanCallback?, networkKey: String = "") {
         rx.Observable.create<String> {
         }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
-            MeshProxyService.mMeshProxyService?.startScan(filterUuid, scanCallback)
+            MeshProxyService.mMeshProxyService?.startScan(filterUuid, scanCallback, networkKey)
         }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
-   // 停止蓝牙扫描
+    // 停止蓝牙扫描
     fun stopScan() {
         rx.Observable.create<String> {
         }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
@@ -178,10 +178,7 @@ object MeshHelper {
     // 设置要操作的节点
     // TODO: node -> string MAC 地址
     fun setSelectedMeshNode(node: ProvisionedMeshNode) {
-        rx.Observable.create<String> {
-        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
-            MeshProxyService.mMeshProxyService?.setSelectedNode(node)
-        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
+        MeshProxyService.mMeshProxyService?.setSelectedNode(node)
     }
 
     // ？？？

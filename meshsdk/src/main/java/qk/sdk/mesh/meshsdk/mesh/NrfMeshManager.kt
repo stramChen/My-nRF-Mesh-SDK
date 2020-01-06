@@ -1120,6 +1120,7 @@ class NrfMeshManager(
                                         )
                                     )
                                     onProvisionedDeviceFound(node, ExtendedBluetoothDevice(result))
+                                    return
                                 }
                             }
                         }
@@ -1200,6 +1201,8 @@ class NrfMeshManager(
                         result,
                         meshManagerApi.getMeshBeacon(beaconData)
                     )
+                } else if (mFilterUuid == BleMeshManager.MESH_PROXY_UUID) {
+                    mScannerLiveData.deviceDiscovered(result)
                 }
                 mScannerStateLiveData.deviceFound()
             }
@@ -1241,7 +1244,11 @@ class NrfMeshManager(
      *
      * @param filterUuid UUID to filter scan results with
      */
-    fun startScan(filterUuid: UUID, callback: qk.sdk.mesh.meshsdk.callbak.ScanCallback? = null) {
+    fun startScan(
+        filterUuid: UUID,
+        callback: qk.sdk.mesh.meshsdk.callbak.ScanCallback? = null,
+        networkKey: NetworkKey ?= null
+    ) {
         try {
             mFilterUuid = filterUuid
 
@@ -1250,15 +1257,11 @@ class NrfMeshManager(
             }
             mScannerLiveData.startScanning()
 
-//            if (mFilterUuid == BleMeshManager.MESH_PROXY_UUID) {
-//                val network = meshManagerApi.meshNetwork
-//                if (network != null) {
-//                    if (network.netKeys.isNotEmpty()) {
-//                        mNetworkId =
-//                            meshManagerApi.generateNetworkId(network.netKeys[0].key)
-//                    }
-//                }
-//            }
+            if (mFilterUuid == BleMeshManager.MESH_PROXY_UUID) {
+                if (networkKey != null) {
+                    mNetworkId = meshManagerApi.generateNetworkId(networkKey.key)
+                }
+            }
 
             mScannerStateLiveData.scanningStarted()
             //Scanning settings
