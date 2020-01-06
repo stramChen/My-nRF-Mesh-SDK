@@ -487,10 +487,10 @@ object MeshHelper {
     // TODO: 修改为原始类型数据
     // TODO: sendMeshPDU
     fun sendMeshPdu(dst: Int, message: MeshMessage, callback: MeshCallback?) {
-//        rx.Observable.create<String> {
-//        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
-        MeshProxyService.mMeshProxyService?.sendMeshPdu(dst, message, callback)
-//        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
+        rx.Observable.create<String> {
+        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+            MeshProxyService.mMeshProxyService?.sendMeshPdu(dst, message, callback)
+        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
     // 获取选中的 model
