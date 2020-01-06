@@ -12,7 +12,7 @@ import androidx.annotation.NonNull;
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class SecureNetworkBeacon extends MeshBeacon {
-    public static final int BEACON_DATA_LENGTH = 22;
+    public static final int BEACON_DATA_LENGTH = 23;
     private final int flags;
     private final byte[] networkId = new byte[8];
     private final int ivIndex;
@@ -26,7 +26,7 @@ public class SecureNetworkBeacon extends MeshBeacon {
      */
     public SecureNetworkBeacon(@NonNull final byte[] beaconData) {
         super(beaconData);
-        if (beaconData.length != SecureNetworkBeacon.BEACON_DATA_LENGTH)
+        if (beaconData.length >= SecureNetworkBeacon.BEACON_DATA_LENGTH)
             throw new IllegalArgumentException("Invalid secure network beacon data");
 
         final ByteBuffer byteBuffer = ByteBuffer.wrap(beaconData);

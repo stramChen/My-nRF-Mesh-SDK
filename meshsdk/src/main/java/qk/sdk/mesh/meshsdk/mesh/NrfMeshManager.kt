@@ -55,17 +55,13 @@ import no.nordicsemi.android.meshprovisioner.transport.ProvisionedMeshNode
 import no.nordicsemi.android.meshprovisioner.transport.ProxyConfigFilterStatus
 import no.nordicsemi.android.meshprovisioner.transport.VendorModelMessageStatus
 import no.nordicsemi.android.meshprovisioner.utils.MeshAddress
-import no.nordicsemi.android.support.v18.scanner.BluetoothLeScannerCompat
-import no.nordicsemi.android.support.v18.scanner.ScanCallback
-import no.nordicsemi.android.support.v18.scanner.ScanFilter
-import no.nordicsemi.android.support.v18.scanner.ScanResult
-import no.nordicsemi.android.support.v18.scanner.ScanSettings
 import qk.sdk.mesh.meshsdk.bean.provision.ProvisioningStatusLiveData
 import qk.sdk.mesh.meshsdk.bean.provision.TransactionStatus
 import qk.sdk.mesh.meshsdk.util.ProvisionerStates
 import qk.sdk.mesh.meshsdk.util.Utils
 
 import no.nordicsemi.android.meshprovisioner.MeshManagerApi.MESH_PROXY_UUID
+import no.nordicsemi.android.support.v18.scanner.*
 import qk.sdk.mesh.meshsdk.bean.*
 import qk.sdk.mesh.meshsdk.bean.scan.ScannerLiveData
 import qk.sdk.mesh.meshsdk.bean.scan.ScannerStateLiveData
@@ -1100,7 +1096,7 @@ class NrfMeshManager(
 
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             try {
-                if (mFilterUuid == BleMeshManager.MESH_PROVISIONING_UUID) {
+                if (mFilterUuid == BleMeshManager.MESH_PROVISIONING_UUID && result.device.address.startsWith("04:78:63")) {
                     // If the packet has been obtained while Location was disabled, mark Location as not required
                     if (Utils.isLocationRequired(mContext) && !Utils.isLocationEnabled(mContext))
                         Utils.markLocationNotRequired(mContext)
@@ -1280,10 +1276,23 @@ class NrfMeshManager(
 
             //Let's use the filter to scan only for unprovisioned mesh nodes.
             val filters = ArrayList<ScanFilter>()
-            filters.add(ScanFilter.Builder().setServiceUuid(ParcelUuid(filterUuid)).build())
+//            filters.add(ScanFilter.Builder().setServiceUuid(ParcelUuid(filterUuid)).build())
 
+            //反射修改BluetoothLeScannerCompat.getScanner()
+            var clazz =
+                Class.forName("no.nordicsemi.android.support.v18.scanner.BluetoothLeScannerCompat")
+            Utils.printLog(TAG, "clazz.name:${clazz.simpleName}")
+            var instance = clazz.getDeclaredField("instance")
+            instance.isAccessible = true
+            //反射获取BluetoothLeScannerImplJB实例
+            var JBClazz =
+                Class.forName("no.nordicsemi.android.support.v18.scanner.BluetoothLeScannerImplJB")
+            var JBConstructor = JBClazz.getDeclaredConstructor()
+            JBConstructor.isAccessible = true
+            instance.set(BluetoothLeScannerCompat.getScanner(),JBConstructor.newInstance())
             val scanner = BluetoothLeScannerCompat.getScanner()
             scanner.startScan(filters, settings, mScanCallbacks)
+
             registerBroadcastReceivers()
         } catch (e: java.lang.Exception) {
             e.printStackTrace()

@@ -593,9 +593,10 @@ public class MeshManagerApi implements MeshMngrApi {
             final int beaconType = beaconData[0];
             if (beaconType == 0x00) {
                 return new UnprovisionedBeacon(beaconData);
-            } else if (beaconType == 0x01) {
-                return new SecureNetworkBeacon(beaconData);
             }
+//            else if (beaconType == 0x01) {
+//                return new SecureNetworkBeacon(beaconData);
+//            }
         }
         return null;
     }
