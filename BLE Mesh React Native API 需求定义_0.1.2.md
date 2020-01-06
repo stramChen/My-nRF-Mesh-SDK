@@ -230,7 +230,6 @@ MeshSDK.importConfiguration(data: JSONString, callback(success))
 |201|建立连接中|
 |202|检查服务中|
 |203|初始化蓝牙连接|
-|204|连接初始化完成|
 |205|正在重连|
 |206|正在断开连接|
 |207|连接已断开|
