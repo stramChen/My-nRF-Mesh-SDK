@@ -402,15 +402,17 @@ class NrfMeshManager(
     }
 
     fun identifyNode(device: ExtendedBluetoothDevice, networkKey: NetworkKey) {
-        val beacon = device.beacon as UnprovisionedBeacon?
-        if (beacon != null) {
-            meshManagerApi.identifyNode(beacon.uuid, ATTENTION_TIMER, networkKey)
-        } else if (device.scanResult != null) {
-            val serviceData =
-                Utils.getServiceData(device.scanResult!!, BleMeshManager.MESH_PROVISIONING_UUID)
-            if (serviceData != null) {
-                val uuid = meshManagerApi.getDeviceUuid(serviceData)
-                meshManagerApi.identifyNode(uuid, ATTENTION_TIMER, networkKey)
+        if (device.beacon is UnprovisionedBeacon) {
+            val beacon = device.beacon as UnprovisionedBeacon
+            if (beacon != null) {
+                meshManagerApi.identifyNode(beacon.uuid, ATTENTION_TIMER, networkKey)
+            } else if (device.scanResult != null) {
+                val serviceData =
+                    Utils.getServiceData(device.scanResult!!, BleMeshManager.MESH_PROVISIONING_UUID)
+                if (serviceData != null) {
+                    val uuid = meshManagerApi.getDeviceUuid(serviceData)
+                    meshManagerApi.identifyNode(uuid, ATTENTION_TIMER, networkKey)
+                }
             }
         }
     }
