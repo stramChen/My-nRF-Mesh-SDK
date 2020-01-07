@@ -175,11 +175,11 @@ Map
 		- modelId: string
 		- subscriptionAddresses: Array\<int\>
 
-### 连接某一个 mesh 网络中的设备(同上)：callback会回调一次。ios无此方法，只有android需要。
+### 连接某一个 mesh 网络中的设备(同上)：callback回调一次。ios无此方法，只有android需要。
 ```js
 MeshSDK.connect(networkKey: string, callback(error: Map))
 ```
-### 获取四元组信息
+### 获取四元组信息：callback回调一次
 ```kotlin
 MeshSDK.getQuadruples(uuid: String, callback(result: Map))
 Map
