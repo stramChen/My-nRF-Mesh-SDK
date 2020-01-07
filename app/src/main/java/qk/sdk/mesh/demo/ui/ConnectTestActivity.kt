@@ -96,16 +96,11 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
 
         tv_ping.setOnClickListener {
-            MeshHelper.getSelectedMeshNode()?.let { node ->
-                MeshHelper.getSelectedElement()?.let { element ->
-                    MeshHelper.getSelectedModel()?.let { model ->
-                        Utils.printLog(
-                            TAG,
-                            "uuid:${node.meshUuid},elementId:${element.elementAddress},modelId:${model.modelId}"
-                        )
-                    }
+            MeshSDK.getQuadruples(mUUID,object :MapCallback{
+                override fun onResult(result: HashMap<String, Any>) {
+
                 }
-            }
+            })
         }
     }
 //

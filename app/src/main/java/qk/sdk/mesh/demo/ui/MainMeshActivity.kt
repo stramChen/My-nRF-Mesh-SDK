@@ -20,8 +20,10 @@ import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.callbak.MapCallback
 import qk.sdk.mesh.meshsdk.callbak.ProvisionCallback
 import qk.sdk.mesh.meshsdk.util.ByteUtil
+import qk.sdk.mesh.meshsdk.util.Utils
 
 class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
+    private val TAG = "MainMeshActivity"
     private var mNodeAdapter: NodeAdapter? = null
     private var mNodesCallback: ProvisionCallback = object : ProvisionCallback {
         override fun onProvisionedNodes(nodes: ArrayList<ProvisionedMeshNode>) {
@@ -72,14 +74,14 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
                 MeshSDK.connect(ByteUtil.bytesToHexString(MeshHelper.getAllNetworkKey()?.get(1)?.key),
                     object : MapCallback {
                         override fun onResult(result: HashMap<String, Any>) {
-
+                            Utils.printLog(TAG,"connect result:${result.get("code")}")
                         }
                     })
                 startActivity(
                     Intent(
                         this@MainMeshActivity,
                         ConnectTestActivity::class.java
-                    ).putExtra("uuid", data.meshUuid)
+                    ).putExtra("uuid", data.uuid)
                 )
             }
         })

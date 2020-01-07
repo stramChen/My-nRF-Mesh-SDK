@@ -609,7 +609,7 @@ object MeshHelper {
      * @param parameters parameters of the message
      */
     // 私有协议 opcode, value
-    fun sendVendorModelMessage(opcode: Int, parameters: ByteArray?, acknowledged: Boolean) {
+    fun sendVendorModelMessage(opcode: Int, parameters: ByteArray?, acknowledged: Boolean,callback: MeshCallback?=null) {
         val element = getSelectedElement()
         if (element != null) {
             val model = getSelectedModel()
@@ -627,7 +627,7 @@ object MeshHelper {
                                 opcode,
                                 parameters!!
                             )
-                            sendMessage(element.elementAddress, message)
+                            sendMessage(element.elementAddress, message,callback)
                         } else {
                             message = VendorModelMessageUnacked(
                                 appKey,
@@ -636,7 +636,7 @@ object MeshHelper {
                                 opcode,
                                 parameters
                             )
-                            sendMessage(element.elementAddress, message)
+                            sendMessage(element.elementAddress, message,callback)
                         }
                     }
                 } else {

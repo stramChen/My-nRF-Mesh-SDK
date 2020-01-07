@@ -8,6 +8,7 @@
 |0.1.0|定义 API 需求|
 |0.1.1|「对设备进行网络配置 - Bind Application Key 阶段」API 变动，增加 applicationKey 参数|
 |0.1.2|添加错误码描述、修改connect接口传参、添加callback次数描述|
+|0.1.3|添加获取四元组接口、修改connect只回调一次|
 
 ---- 
 
@@ -174,9 +175,18 @@ Map
 		- modelId: string
 		- subscriptionAddresses: Array\<int\>
 
-### 连接某一个 mesh 网络中的设备(同上)：callback会回调多次。ios无此方法，只有android需要。
+### 连接某一个 mesh 网络中的设备(同上)：callback会回调一次。ios无此方法，只有android需要。
 ```js
 MeshSDK.connect(networkKey: string, callback(error: Map))
+```
+### 获取四元组信息
+```kotlin
+MeshSDK.getQuadruples(uuid: String, callback(result: Map))
+Map
+- result
+	- `{code:int,pk: string, ps: string,dn: string,ds: string}`
+		- code == 200 成功
+		- code != 200 失败
 ```
 
 ### 对设备发送控制指令

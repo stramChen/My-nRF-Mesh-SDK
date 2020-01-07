@@ -9,6 +9,7 @@ import no.nordicsemi.android.meshprovisioner.UnprovisionedBeacon
 import no.nordicsemi.android.meshprovisioner.transport.*
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
+import qk.sdk.mesh.meshsdk.bean.MXQuadruples
 import qk.sdk.mesh.meshsdk.callbak.*
 import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
 import qk.sdk.mesh.meshsdk.util.ByteUtil
@@ -25,7 +26,12 @@ object MeshSDK {
     private val TAG = "MeshSDK"
     private var mContext: Context? = null
     private var mExtendedBluetoothDeviceMap = HashMap<String, ExtendedBluetoothDevice>()
+
     const val CWRGB_MODELID = 6094849
+    const val ON_OFF_MODELID = 4096
+//    const val ELEMENT_ADDRESS = 2
+
+    const val LEAST_MODEL_COUNT = 4
 
     // 初始化 mesh
     fun init(context: Context) {
@@ -36,7 +42,7 @@ object MeshSDK {
 
     fun checkPermission(callback: StringCallback) {
         if (mContext == null) {
-            callback.onResultMsg(Constants.ConnectState.SDK_NOT_INIT.msg)
+            callback.onResultMsg(ConnectState.SDK_NOT_INIT.msg)
             return
         }
 
@@ -311,6 +317,7 @@ object MeshSDK {
                 }
                 if (MeshHelper.isConnectedToProxy()) {
                     var bindedIndex = -1
+                    var currentModel: MeshModel? = null
                     MeshHelper.addAppkeys(applicationKey.keyIndex, object : MeshCallback {
                         override fun onReceive(msg: MeshMessage) {
                             if (msg is ConfigAppKeyStatus) {
@@ -339,16 +346,9 @@ object MeshSDK {
                                 }
                             } else if (msg is ConfigModelAppStatus) {
                                 synchronized(bindedIndex) {
-                                    if (bindedIndex == 0) {
+                                    if (bindedIndex > 0 && msg.modelIdentifier == currentModel?.modelId) {
                                         if (msg.isSuccessful) {//bind appkey成功
                                             Utils.printLog(TAG, "bindAppKey success!")
-                                            doMapCallback(
-                                                map, callback,
-                                                CallbackMsg(
-                                                    ConnectState.COMMON_SUCCESS.code,
-                                                    ConnectState.COMMON_SUCCESS.msg
-                                                )
-                                            )
                                         } else {
                                             Utils.printLog(
                                                 TAG,
@@ -364,39 +364,75 @@ object MeshSDK {
                                                 ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.code
                                             )
                                         }
-                                        bindedIndex++
-//                                    if (bindedIndex < (MeshHelper.getSelectedElement()?.meshModels?.size
-//                                            ?: 0)
-//                                    ) {
-//                                        MeshHelper.getSelectedModel()?.let {
-//                                            MeshHelper.setSelectedModel(
-//                                                MeshHelper.getSelectedElement(),
-//                                                MeshHelper.getSelectedElement()!!.meshModels!!.values.elementAt(
-//                                                    bindedIndex
-//                                                )
-//                                            )
-//                                            MeshHelper.bindAppKey(this)
-//                                        }
-//                                        Utils.printLog(
-//                                            TAG,
-//                                            "bindedIndex:$bindedIndex,modelId:${MeshHelper.getSelectedElement()!!.meshModels!!.values.elementAt(
-//                                                bindedIndex
-//                                            ).modelId}"
-//                                        )
-//                                    } else {
-//                                        if (map.size > 0) {
-//                                            callback.onResult(map)
-//                                        } else {
-//                                            map.put(
-//                                                "code",
-//                                                ConnectState.PROVISION_SUCCESS.code
-//                                            )
-//                                            callback.onResult(map)
-//                                        }
-//                                        bindedIndex = -2
-//                                    }
+                                        var models = MeshHelper.getSelectedElement()?.meshModels
+                                        if (models?.size ?: 0 >= LEAST_MODEL_COUNT) {
+                                            for (model in models!!.values) {
+                                                if (model.modelId == currentModel?.modelId) {
+                                                    if (model.boundAppKeyIndexes.size > 0) {//当前model绑定成功
+                                                        Utils.printLog(
+                                                            TAG,
+                                                            "当前model绑定成功:${model.modelId}"
+                                                        )
+                                                        bindedIndex++
+                                                        if (bindedIndex < models.size) {
+                                                            MeshHelper.setSelectedModel(
+                                                                MeshHelper.getSelectedElement(),
+                                                                MeshHelper.getSelectedElement()?.meshModels?.values?.elementAt(
+                                                                    bindedIndex
+                                                                )
+                                                            )
+                                                            currentModel =
+                                                                MeshHelper.getSelectedElement()
+                                                                    ?.meshModels?.values?.elementAt(
+                                                                    bindedIndex
+                                                                )
+                                                            MeshHelper.bindAppKey(
+                                                                applicationKey.keyIndex, this
+                                                            )
+                                                        } else {//绑定全部model成功
+                                                            doMapCallback(
+                                                                map, callback,
+                                                                CallbackMsg(
+                                                                    ConnectState.COMMON_SUCCESS.code,
+                                                                    ConnectState.COMMON_SUCCESS.msg
+                                                                )
+                                                            )
+                                                        }
+                                                        return
+                                                    } else {//当前model绑定失败
+                                                        Utils.printLog(
+                                                            TAG,
+                                                            "当前model绑定失败:${model.modelId}"
+                                                        )
+                                                        bindedIndex = -1
+                                                        doMapCallback(
+                                                            map, callback,
+                                                            CallbackMsg(
+                                                                ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.code,
+                                                                ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.msg
+                                                            )
+                                                        )
+                                                        return
+                                                    }
+                                                }
+                                            }
+
+                                            bindedIndex = -1
+                                            doMapCallback(
+                                                map, callback,
+                                                CallbackMsg(
+                                                    ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.code,
+                                                    ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.msg
+                                                )
+                                            )
+                                            Utils.printLog(
+                                                TAG,
+                                                "node绑定失败:${currentModel?.modelId}"
+                                            )
+                                        }
                                     }
                                 }
+
                             } else if (msg is GenericOnOffStatus) {
                                 Utils.printLog(TAG, "get on off status")
                             } else if (msg is ConfigCompositionDataStatus) {
@@ -404,25 +440,28 @@ object MeshSDK {
                                 synchronized(bindedIndex) {
                                     if (bindedIndex == -1) {
                                         MeshHelper.getSelectedMeshNode()?.let { node ->
-                                            node?.elements?.values?.forEach { eleValue ->
-                                                if (eleValue.meshModels?.size ?: 0 > 1 && eleValue.meshModels?.values?.elementAt(
+                                            node.elements?.values?.elementAt(0)?.let { eleValue ->
+                                                if (eleValue.meshModels?.size ?: 0 >= LEAST_MODEL_COUNT && eleValue.meshModels?.values?.elementAt(
                                                         1
                                                     ) != null
                                                 ) {
-                                                    bindedIndex++
+                                                    bindedIndex = 1
                                                     Utils.printLog(
                                                         TAG,
                                                         "get getCompositionData bindAppKey!"
                                                     )
                                                     MeshHelper.setSelectedModel(
                                                         eleValue,
-//                                                    eleValue.meshModels?.values?.elementAt(1)
-                                                        eleValue.meshModels[CWRGB_MODELID]
+                                                        eleValue.meshModels?.values?.elementAt(1)
+//                                                        eleValue.meshModels?.get(CWRGB_MODELID)
                                                     )
+                                                    currentModel =
+                                                        eleValue.meshModels?.values?.elementAt(1)
+//                                                    currentModel =
+//                                                        eleValue.meshModels?.get(CWRGB_MODELID)
                                                     MeshHelper.bindAppKey(
                                                         applicationKey.keyIndex, this
                                                     )
-                                                    return@forEach
                                                 }
                                             }
                                         }
@@ -478,15 +517,17 @@ object MeshSDK {
     }
 
     fun setGenericOnOff(uuid: String, onOff: Boolean, callback: BooleanCallback) {
-        MeshHelper.getProvisionNode()?.forEach { node ->
-            if (node.uuid == uuid) {
-                MeshHelper.setSelectedMeshNode(node)
+        if (MeshHelper.getSelectedMeshNode()?.uuid != uuid) {
+            MeshHelper.getProvisionNode()?.forEach { node ->
+                if (node.uuid == uuid) {
+                    MeshHelper.setSelectedMeshNode(node)
+                }
             }
         }
 
         MeshHelper.setSelectedModel(
-            MeshHelper.getSelectedMeshNode()?.elements?.get(2),
-            MeshHelper.getSelectedElement()?.meshModels?.get(4096)
+            MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(0),
+            MeshHelper.getSelectedElement()?.meshModels?.get(ON_OFF_MODELID)
         )
         MeshHelper.sendGenericOnOff(onOff, 0)
         callback.onResult(true)
@@ -496,24 +537,19 @@ object MeshSDK {
         uuid: String, c: Int, w: Int, r: Int,
         g: Int, b: Int, callback: BooleanCallback
     ) {
-        if (MeshHelper.getSelectedMeshNode()?.meshUuid != uuid) {
+        if (MeshHelper.getSelectedMeshNode()?.uuid != uuid) {
             MeshHelper.getProvisionNode()?.forEach { node ->
-                if (node.meshUuid == uuid) {
+                if (node.uuid == uuid) {
                     MeshHelper.setSelectedMeshNode(node)
-                    MeshHelper.setSelectedModel(
-                        MeshHelper.getSelectedMeshNode()?.elements?.get(2),
-                        MeshHelper.getSelectedMeshNode()?.elements?.get(2)?.meshModels?.get(
-                            CWRGB_MODELID
-                        )
-                    )
                 }
             }
-        } else {
-            MeshHelper.setSelectedModel(
-                MeshHelper.getSelectedMeshNode()?.elements?.get(2),
-                MeshHelper.getSelectedMeshNode()?.elements?.get(2)?.meshModels?.get(CWRGB_MODELID)
-            )
         }
+        MeshHelper.setSelectedModel(
+            MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(0),
+            MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(0)?.meshModels?.get(
+                CWRGB_MODELID
+            )
+        )
 
         var params = StringBuilder(
             "${ByteUtil.rgbtoHex(c)}${ByteUtil.rgbtoHex(w)}${ByteUtil.rgbtoHex(r)}${ByteUtil.rgbtoHex(
@@ -526,6 +562,64 @@ object MeshSDK {
             false
         )
         callback.onResult(true)
+    }
+
+    fun getQuadruples(uuid: String, callback: MapCallback) {
+        var map = HashMap<String, Any>()
+        if (MeshHelper.getSelectedMeshNode()?.uuid != uuid) {
+            MeshHelper.getProvisionNode()?.forEach { node ->
+                if (node.uuid == uuid) {
+                    MeshHelper.setSelectedMeshNode(node)
+                }
+            }
+        }
+        MeshHelper.setSelectedModel(
+            MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(0),
+            MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(0)?.meshModels?.get(
+                CWRGB_MODELID
+            )
+        )
+        var msgIndex = -1
+        MeshHelper.sendVendorModelMessage(
+            Integer.valueOf("00", 16),
+            null,
+            false, object : MeshCallback {
+                override fun onReceive(msg: MeshMessage) {
+                    Utils.printLog(TAG, "param:${String(msg.parameter)}")
+                    if (msg.parameter.size >= 83) {
+                        synchronized(msgIndex) {
+                            if (msgIndex < 0) {
+                                var pk = ByteArray(11)
+                                var ps = ByteArray(16)
+                                var dn = ByteArray(20)
+                                var ds = ByteArray(32)
+                                System.arraycopy(msg.parameter, 0, pk, 0, 11)
+                                System.arraycopy(msg.parameter, 12, ps, 0, 16)
+                                System.arraycopy(msg.parameter, 29, dn, 0, 20)
+                                System.arraycopy(msg.parameter, 50, ds, 0, 32)
+                                Utils.printLog(
+                                    TAG,
+                                    "pk:${String(pk)},ps:${String(ps)},dn:${String(dn)},ds:${String(
+                                        ds
+                                    )}"
+                                )
+                                map.put("pk", String(pk))
+                                map.put("ps", String(ps))
+                                map.put("dn", String(dn))
+                                map.put("ds", String(ds))
+                                map.put("code", ConnectState.COMMON_SUCCESS.code)
+                                callback.onResult(map)
+                                msgIndex = 0
+                            }
+                        }
+                    }
+                }
+
+                override fun onError(msg: CallbackMsg) {
+                    doMapCallback(map, callback, msg)
+                }
+            }
+        )
     }
 
     fun resetNode(uuid: String) {
@@ -565,7 +659,7 @@ object MeshSDK {
                             }
 
                             override fun onConnectStateChange(msg: CallbackMsg) {
-                                doMapCallback(map, callback, msg)
+//                                doMapCallback(map, callback, msg)
                                 if (msg.msg == ConnectState.DISCONNECTED.msg) {//连接断开，自动寻找代理节点重连
                                     connect(networkKey, callback)
                                 }

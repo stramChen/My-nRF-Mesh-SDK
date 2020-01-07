@@ -55,6 +55,10 @@ public abstract class MeshMessage {
         return mMessage;
     }
 
+    public byte[] getParameter() {
+        return (mMessage != null) ? mMessage.getParameters() : null;
+    }
+
     /**
      * Set the access message
      *
