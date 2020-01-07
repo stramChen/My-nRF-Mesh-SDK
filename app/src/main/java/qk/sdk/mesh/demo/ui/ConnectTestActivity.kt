@@ -96,7 +96,7 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
 
         tv_ping.setOnClickListener {
-            MeshSDK.getQuadruples(mUUID,object :MapCallback{
+            MeshSDK.getDeviceIdentityKeys(mUUID,object :MapCallback{
                 override fun onResult(result: HashMap<String, Any>) {
 
                 }

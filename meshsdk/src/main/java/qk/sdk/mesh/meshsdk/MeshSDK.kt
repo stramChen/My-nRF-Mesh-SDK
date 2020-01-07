@@ -141,7 +141,7 @@ object MeshSDK {
                             map.put(Constants.KEY_CODE, msg.code)
                             callback.onResult(map)
                             Utils.printLog(TAG, "onConnectStateChange:${msg.msg}")
-                            if (msg.code == Constants.ConnectState.DISCONNECTED.code) {
+                            if (msg.code == ConnectState.DISCONNECTED.code) {
                                 var node = MeshHelper.getProvisionNode()
                                 Utils.printLog(TAG, "getProvisionNode:${node?.size}")
                                 node?.forEach {
@@ -173,40 +173,31 @@ object MeshSDK {
                                                                                     ConnectCallback {
                                                                                     override fun onConnect() {
                                                                                         map.clear()
-                                                                                        map.put(
-                                                                                            Constants.KEY_MESSAGE,
-                                                                                            ConnectState.PROVISION_SUCCESS.msg
+                                                                                        doMapCallback(
+                                                                                            map,
+                                                                                            callback,
+                                                                                            CallbackMsg(
+                                                                                                ConnectState.PROVISION_SUCCESS.code,
+                                                                                                ConnectState.PROVISION_SUCCESS.msg
+                                                                                            )
                                                                                         )
-                                                                                        map.put(
-                                                                                            Constants.KEY_CODE,
-                                                                                            ConnectState.PROVISION_SUCCESS.code
-                                                                                        )
-                                                                                        callback.onResult(
-                                                                                            map
-                                                                                        )
+                                                                                        MeshHelper.unRegisterConnectListener()
                                                                                     }
 
                                                                                     override fun onConnectStateChange(
                                                                                         msg: CallbackMsg
                                                                                     ) {
-                                                                                        map.clear()
-                                                                                        map.put(
-                                                                                            Constants.KEY_MESSAGE,
-                                                                                            msg.msg
-                                                                                        )
-                                                                                        map.put(
-                                                                                            Constants.KEY_CODE,
-                                                                                            msg.code
-                                                                                        )
-                                                                                        callback.onResult(
-                                                                                            map
-                                                                                        )
+
                                                                                     }
 
                                                                                     override fun onError(
                                                                                         msg: CallbackMsg
                                                                                     ) {
-
+                                                                                        doMapCallback(
+                                                                                            map,
+                                                                                            callback,
+                                                                                            msg
+                                                                                        )
                                                                                     }
                                                                                 })
                                                                         }
@@ -216,15 +207,8 @@ object MeshSDK {
 
                                                         override fun onError(msg: CallbackMsg) {
                                                             map.clear()
-                                                            map.put(
-                                                                Constants.KEY_MESSAGE,
-                                                                msg.msg
-                                                            )
-                                                            map.put(
-                                                                Constants.KEY_CODE,
-                                                                msg.code
-                                                            )
                                                             callback.onResult(map)
+                                                            doMapCallback(map,callback,msg)
                                                         }
                                                     })
                                             }
@@ -433,8 +417,6 @@ object MeshSDK {
                                     }
                                 }
 
-                            } else if (msg is GenericOnOffStatus) {
-                                Utils.printLog(TAG, "get on off status")
                             } else if (msg is ConfigCompositionDataStatus) {
                                 Utils.printLog(TAG, "get getCompositionData success!")
                                 synchronized(bindedIndex) {
@@ -444,7 +426,7 @@ object MeshSDK {
                                                 if (eleValue.meshModels?.size ?: 0 >= LEAST_MODEL_COUNT && eleValue.meshModels?.values?.elementAt(
                                                         1
                                                     ) != null
-                                                ) {
+                                                ) {//默认跳过第一个model，从第二个开始bind过程
                                                     bindedIndex = 1
                                                     Utils.printLog(
                                                         TAG,
@@ -453,12 +435,9 @@ object MeshSDK {
                                                     MeshHelper.setSelectedModel(
                                                         eleValue,
                                                         eleValue.meshModels?.values?.elementAt(1)
-//                                                        eleValue.meshModels?.get(CWRGB_MODELID)
                                                     )
                                                     currentModel =
                                                         eleValue.meshModels?.values?.elementAt(1)
-//                                                    currentModel =
-//                                                        eleValue.meshModels?.get(CWRGB_MODELID)
                                                     MeshHelper.bindAppKey(
                                                         applicationKey.keyIndex, this
                                                     )
@@ -564,7 +543,7 @@ object MeshSDK {
         callback.onResult(true)
     }
 
-    fun getQuadruples(uuid: String, callback: MapCallback) {
+    fun getDeviceIdentityKeys(uuid: String, callback: MapCallback) {
         var map = HashMap<String, Any>()
         if (MeshHelper.getSelectedMeshNode()?.uuid != uuid) {
             MeshHelper.getProvisionNode()?.forEach { node ->
@@ -609,6 +588,7 @@ object MeshSDK {
                                 map.put("ds", String(ds))
                                 map.put("code", ConnectState.COMMON_SUCCESS.code)
                                 callback.onResult(map)
+                                MeshHelper.unRegisterMeshMsg()
                                 msgIndex = 0
                             }
                         }
@@ -659,8 +639,9 @@ object MeshSDK {
                             }
 
                             override fun onConnectStateChange(msg: CallbackMsg) {
-//                                doMapCallback(map, callback, msg)
-                                if (msg.msg == ConnectState.DISCONNECTED.msg) {//连接断开，自动寻找代理节点重连
+                                if (msg.code == ConnectState.DISCONNECTED.code) {//连接断开，自动寻找代理节点重连
+                                    disConnect()
+                                    MeshHelper.unRegisterConnectListener()
                                     connect(networkKey, callback)
                                 }
                             }

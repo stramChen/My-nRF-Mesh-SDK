@@ -647,6 +647,14 @@ object MeshHelper {
         }
     }
 
+    fun unRegisterMeshMsg(){
+        MeshProxyService.mMeshProxyService?.unRegisterMeshMsg()
+    }
+
+    fun unRegisterConnectListener(){
+        MeshProxyService.mMeshProxyService?.unRegisterConnectListener()
+    }
+
     internal class MeshProxyService : BaseMeshService() {
         companion object {
             var mMeshProxyService: MeshProxyService? = null

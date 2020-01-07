@@ -118,12 +118,8 @@ open class BaseMeshService : LifecycleService() {
         })
         mNrfMeshManager?.connectionState?.observe(this, Observer {
             if (it != null) {
-//                if (it.code == 0) {
                 mConnectCallback?.onConnectStateChange(it)
                 Utils.printLog(TAG, it.msg)
-//                } else {
-//                    mConnectCallback?.onError(it)
-//                }
             }
         })
         mNrfMeshManager?.provisionedNodes?.observe(this, Observer {
@@ -274,6 +270,14 @@ open class BaseMeshService : LifecycleService() {
         })
     }
 
+    internal fun unRegisterMeshMsg() {
+        mNrfMeshManager?.meshMessageLiveData?.removeObservers(this)
+    }
+
+    internal fun unRegisterConnectListener() {
+        mNrfMeshManager?.connectionState?.removeObservers(this)
+    }
+
     internal fun setSelectedModel(
         element: Element?,
         model: MeshModel?
@@ -291,7 +295,7 @@ open class BaseMeshService : LifecycleService() {
     }
 
     internal fun isConnectedToProxy(): Boolean? {
-        return mNrfMeshManager?.isConnectedToProxy?.value
+        return mNrfMeshManager?.isConnected
     }
 
     internal fun setCurrentNetworkKey(networkKey: String) {

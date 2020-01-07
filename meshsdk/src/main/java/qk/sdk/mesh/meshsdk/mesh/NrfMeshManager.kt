@@ -83,7 +83,7 @@ class NrfMeshManager(
     private val mIsConnectedToProxy = MutableLiveData<Boolean>()
 
     // Live data flag containing connected state.
-    private var mIsConnected: MutableLiveData<Boolean>? = MutableLiveData()
+    private var mIsConnected: Boolean = false
 
     // LiveData to notify when device is ready
     private val mOnDeviceReady = MutableLiveData<Void>()
@@ -200,7 +200,7 @@ class NrfMeshManager(
     /**
      * Returns [SingleLiveData] containing the device ready state.
      */
-    internal val isConnected: LiveData<Boolean>?
+    internal val isConnected: Boolean
         get() = mIsConnected
 
     /**
@@ -362,11 +362,7 @@ class NrfMeshManager(
     }
 
     private fun initIsConnectedLiveData(connectToNetwork: Boolean) {
-        if (connectToNetwork) {
-            mIsConnected = SingleLiveData()
-        } else {
-            mIsConnected = MutableLiveData()
-        }
+        mIsConnected = false
     }
 
     /**
@@ -484,7 +480,7 @@ class NrfMeshManager(
     }
 
     override fun onDeviceConnected(device: BluetoothDevice) {
-        mIsConnected!!.postValue(true)
+        mIsConnected = true
         mConnectionState.postValue(
             CallbackMsg(
                 DISCOVERING_SERVICE.code,
@@ -499,6 +495,8 @@ class NrfMeshManager(
             TAG,
             "Disconnecting...，connect devicd:${mConnectDevice?.getAddress()},disConnect device:${device.address}"
         )
+        mIsConnectedToProxy.postValue(false)
+        mIsConnected = false
         if (mIsReconnectingFlag) {
             mConnectionState.postValue(
                 CallbackMsg(
@@ -527,10 +525,10 @@ class NrfMeshManager(
         if (mIsReconnectingFlag) {
             mIsReconnectingFlag = false
             mIsReconnecting.postValue(false)
-            mIsConnected!!.postValue(false)
+            mIsConnected = false
             mIsConnectedToProxy.postValue(false)
         } else {
-            mIsConnected!!.postValue(false)
+            mIsConnected = false
             mIsConnectedToProxy.postValue(false)
             if (mConnectedProxyAddress.value != null) {
                 val network = meshManagerApi.meshNetwork
@@ -545,7 +543,7 @@ class NrfMeshManager(
 
     override fun onLinkLossOccurred(device: BluetoothDevice) {
         Utils.printLog(TAG, "Link loss occurred")
-        mIsConnected!!.postValue(false)
+        mIsConnected = false
     }
 
     override fun onServicesDiscovered(device: BluetoothDevice, optionalServicesFound: Boolean) {
