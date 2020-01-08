@@ -324,7 +324,8 @@ class NrfMeshManager(
         isNetworkRetransmitSetCompleted = false
         mConnectDevice = device
         val bluetoothDevice = device.device
-        initIsConnectedLiveData(connectToNetwork)
+        Utils.printLog(TAG,"$connectToNetwork")
+        initIsConnectedLiveData()
         mConnectionState.postValue(
             CallbackMsg(
                 CONNECTING.code,
@@ -347,7 +348,7 @@ class NrfMeshManager(
      * @param device bluetooth device
      */
     private fun connectToProxy(device: ExtendedBluetoothDevice) {
-        initIsConnectedLiveData(true)
+        initIsConnectedLiveData()
         mConnectionState.postValue(
             CallbackMsg(
                 CONNECTING.code,
@@ -362,7 +363,7 @@ class NrfMeshManager(
         }
     }
 
-    private fun initIsConnectedLiveData(connectToNetwork: Boolean) {
+    private fun initIsConnectedLiveData() {
         mIsConnected = false
     }
 

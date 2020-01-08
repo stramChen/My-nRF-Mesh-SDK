@@ -9,7 +9,7 @@ android {
     buildToolsVersion "29.0.2"
     defaultConfig {
         applicationId "qk.sdk.mesh.demo"
-        minSdkVersion 21
+        minSdkVersion 24
         targetSdkVersion 29
         versionCode 1
         versionName "1.0.0"
@@ -48,6 +48,7 @@ dependencies {
 //    implementation group: 'androidx.appcompat', name: 'appcompat', version: '1.1.0'
 
     api project(':meshsdk')
+    api 'com.google.code.gson:gson:2.2.4'
 
 //    api(name: 'meshsdk-0.0.8', ext: 'aar') {
 //        exclude group: 'android.suppor.v4'

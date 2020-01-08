@@ -63,19 +63,21 @@ class ScanTestActivity : BaseMeshActivity(),
 
 
     private fun startScan(type: String, callback: ArrayMapCallback) {
-        MeshSDK.checkPermission(object : StringCallback {
-            override fun onResultMsg(msg: String) {
-                if (msg == Constants.PERMISSION_GRANTED) {
-                    MeshSDK.startScan(type, callback, object : IntCallback {
-                        override fun onResultMsg(code: Int) {
-                            Utils.printLog(TAG, "scan error:$code")
-                        }
-                    })
-                } else {
-                    Utils.printLog(TAG, "PERMISSION:$msg")
+//        MeshSDK.checkPermission(object : StringCallback {
+//            override fun onResultMsg(msg: String) {
+//                if (msg == Constants.PERMISSION_GRANTED) {
+        Thread(Runnable {
+            MeshSDK.startScan(type, callback, object : IntCallback {
+                override fun onResultMsg(code: Int) {
+                    Utils.printLog(TAG, "scan error:$code")
                 }
-            }
-        })
+            })
+        }).start()
+//                } else {
+//                    Utils.printLog(TAG, "PERMISSION:$msg")
+//                }
+//            }
+//        })
 
     }
 
@@ -95,26 +97,33 @@ class ScanTestActivity : BaseMeshActivity(),
             }
         })
 
-        MeshSDK.provision(data.get("uuid") as String, object : MapCallback {
-            override fun onResult(msg: HashMap<String, Any>) {
-                tv_status.visibility = View.VISIBLE
-                msg.get("message")?.let { value ->
-                    Utils.printLog(TAG, "$value")
-                    tv_status.text = "$value"
-                    if (value == Constants.ConnectState.PROVISION_SUCCESS.msg) {//配对成功
-                        Utils.printLog(TAG, "$value")
+        MeshSDK.getCurrentNetworkKey(object : StringCallback {
+            override fun onResultMsg(msg: String) {
+                MeshSDK.provision(
+                    data.get("uuid") as String, msg,
+                    object : MapCallback {
+                        override fun onResult(msg: HashMap<String, Any>) {
+                            tv_status.visibility = View.VISIBLE
+                            msg.get("message")?.let { value ->
+                                Utils.printLog(TAG, "$value")
+                                tv_status.text = "$value"
+                                if (value == Constants.ConnectState.PROVISION_SUCCESS.msg) {//配对成功
+                                    Utils.printLog(TAG, "$value")
 
-                        startActivity(
-                            Intent(
-                                this@ScanTestActivity,
-                                ConnectTestActivity::class.java
-                            ).putExtra("uuid", data.get("uuid") as String)
-                        )
-                        finish()
-                    }
-                }
+                                    startActivity(
+                                        Intent(
+                                            this@ScanTestActivity,
+                                            ConnectTestActivity::class.java
+                                        ).putExtra("uuid", data.get("uuid") as String)
+                                    )
+                                    finish()
+                                }
+                            }
+                        }
+                    })
             }
         })
+
     }
 
     inner class DevicesAdapter(context: Context) :

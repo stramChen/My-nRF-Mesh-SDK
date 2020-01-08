@@ -9,7 +9,6 @@ import no.nordicsemi.android.meshprovisioner.UnprovisionedBeacon
 import no.nordicsemi.android.meshprovisioner.transport.*
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
-import qk.sdk.mesh.meshsdk.bean.MXQuadruples
 import qk.sdk.mesh.meshsdk.callbak.*
 import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
 import qk.sdk.mesh.meshsdk.mesh.NrfMeshManager
@@ -105,15 +104,19 @@ object MeshSDK {
         MeshHelper.stopScan()
     }
 
-    fun provision(uuid: String, callback: MapCallback) {
+    fun provision(uuid: String, networkKey: String, callback: MapCallback) {
         var map = HashMap<String, Any>()
         doBaseCheck(uuid, map, callback)
-        if (MeshHelper.getCurrentNetworkKey() == null) {
-            map.put(Constants.KEY_MESSAGE, ConnectState.NOT_SET_CURRENT_NET_KEY.msg)
-            map.put(Constants.KEY_CODE, ConnectState.NOT_SET_CURRENT_NET_KEY.code)
+        if (networkKey.isEmpty() || getAllNetworkKey()?.size <= 0 || !getAllNetworkKey().contains(
+                networkKey
+            )
+        ) {
+            map.put(Constants.KEY_MESSAGE, ConnectState.NET_KEY_IS_NULL.msg)
+            map.put(Constants.KEY_CODE, ConnectState.NET_KEY_IS_NULL.code)
             callback.onResult(map)
             return
         }
+        setCurrentNetworkKey(networkKey)
 
         mContext?.let { _ ->
             mExtendedBluetoothDeviceMap.get(uuid)?.let { extendedBluetoothDevice ->
@@ -680,7 +683,7 @@ object MeshSDK {
     fun importMeshNetwork() {
         MeshHelper.importMeshNetwork("${NrfMeshManager.EXPORT_PATH}mxchipMeshNetwork.json")
 //        MeshHelper.importMeshNetwork("${NrfMeshManager.EXPORT_PATH}nRF Mesh Network.json")
-//        Utils.printLog(TAG,"file path:${NrfMeshManager.EXPORT_PATH}mxchipMeshNetwork.json")
+        Utils.printLog(TAG, "file path:${NrfMeshManager.EXPORT_PATH}mxchipMeshNetwork.json")
     }
 
     private fun doMapCallback(map: HashMap<String, Any>, callback: MapCallback, msg: CallbackMsg) {
