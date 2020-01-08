@@ -345,6 +345,7 @@ abstract class NetworkLayer extends LowerTransportLayer {
                 return message;
             }
         } catch (InvalidCipherTextException ex) {
+            ex.printStackTrace();
             throw new ExtendedInvalidCipherTextException(ex.getMessage(), ex.getCause(), TAG);
         }
     }

@@ -12,15 +12,14 @@ import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
 import qk.sdk.mesh.meshsdk.bean.MXQuadruples
 import qk.sdk.mesh.meshsdk.callbak.*
 import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
-import qk.sdk.mesh.meshsdk.util.ByteUtil
-import qk.sdk.mesh.meshsdk.util.Constants
-import qk.sdk.mesh.meshsdk.util.PermissionUtil
-import qk.sdk.mesh.meshsdk.util.Utils
+import qk.sdk.mesh.meshsdk.mesh.NrfMeshManager
+import qk.sdk.mesh.meshsdk.util.*
 import java.lang.StringBuilder
 import kotlin.collections.HashMap
 import qk.sdk.mesh.meshsdk.util.Constants.ConnectState
 import rx.Observable
 import rx.android.schedulers.AndroidSchedulers
+import java.lang.Exception
 
 object MeshSDK {
     private val TAG = "MeshSDK"
@@ -136,10 +135,6 @@ object MeshSDK {
                         }
 
                         override fun onConnectStateChange(msg: CallbackMsg) {
-                            map.clear()
-                            map.put(Constants.KEY_MESSAGE, msg.msg)
-                            map.put(Constants.KEY_CODE, msg.code)
-                            callback.onResult(map)
                             Utils.printLog(TAG, "onConnectStateChange:${msg.msg}")
                             if (msg.code == ConnectState.DISCONNECTED.code) {
                                 var node = MeshHelper.getProvisionNode()
@@ -208,7 +203,7 @@ object MeshSDK {
                                                         override fun onError(msg: CallbackMsg) {
                                                             map.clear()
                                                             callback.onResult(map)
-                                                            doMapCallback(map,callback,msg)
+                                                            doMapCallback(map, callback, msg)
                                                         }
                                                     })
                                             }
@@ -496,20 +491,25 @@ object MeshSDK {
     }
 
     fun setGenericOnOff(uuid: String, onOff: Boolean, callback: BooleanCallback) {
-        if (MeshHelper.getSelectedMeshNode()?.uuid != uuid) {
-            MeshHelper.getProvisionNode()?.forEach { node ->
-                if (node.uuid == uuid) {
-                    MeshHelper.setSelectedMeshNode(node)
+        try {
+            if (MeshHelper.getSelectedMeshNode()?.uuid != uuid) {
+                MeshHelper.getProvisionNode()?.forEach { node ->
+                    if (node.uuid == uuid) {
+                        MeshHelper.setSelectedMeshNode(node)
+                    }
                 }
             }
-        }
 
-        MeshHelper.setSelectedModel(
-            MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(0),
-            MeshHelper.getSelectedElement()?.meshModels?.get(ON_OFF_MODELID)
-        )
-        MeshHelper.sendGenericOnOff(onOff, 0)
-        callback.onResult(true)
+            MeshHelper.setSelectedModel(
+                MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(0),
+                MeshHelper.getSelectedElement()?.meshModels?.get(ON_OFF_MODELID)
+            )
+            MeshHelper.sendGenericOnOff(onOff, 0)
+            callback.onResult(true)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            callback.onResult(false)
+        }
     }
 
     fun setLightProperties(
@@ -564,8 +564,8 @@ object MeshSDK {
             null,
             false, object : MeshCallback {
                 override fun onReceive(msg: MeshMessage) {
-                    Utils.printLog(TAG, "param:${String(msg.parameter)}")
-                    if (msg.parameter.size >= 83) {
+                    if (msg is VendorModelMessageStatus && msg.parameter.size >= 83) {
+                        Utils.printLog(TAG, "param:${String(msg.parameter)}")
                         synchronized(msgIndex) {
                             if (msgIndex < 0) {
                                 var pk = ByteArray(11)
@@ -663,6 +663,24 @@ object MeshSDK {
                 CallbackMsg(ConnectState.COMMON_SUCCESS.code, ConnectState.COMMON_SUCCESS.msg)
             )
         }
+    }
+
+    fun exportMeshNetwork() {
+        MeshHelper.exportMeshNetwork(object : NetworkExportUtils.NetworkExportCallbacks {
+            override fun onNetworkExported() {
+                Utils.printLog(TAG, "onNetworkExported")
+            }
+
+            override fun onNetworkExportFailed(error: String?) {
+
+            }
+        })
+    }
+
+    fun importMeshNetwork() {
+        MeshHelper.importMeshNetwork("${NrfMeshManager.EXPORT_PATH}mxchipMeshNetwork.json")
+//        MeshHelper.importMeshNetwork("${NrfMeshManager.EXPORT_PATH}nRF Mesh Network.json")
+//        Utils.printLog(TAG,"file path:${NrfMeshManager.EXPORT_PATH}mxchipMeshNetwork.json")
     }
 
     private fun doMapCallback(map: HashMap<String, Any>, callback: MapCallback, msg: CallbackMsg) {

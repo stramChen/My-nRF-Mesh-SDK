@@ -68,6 +68,7 @@ import qk.sdk.mesh.meshsdk.bean.scan.ScannerLiveData
 import qk.sdk.mesh.meshsdk.bean.scan.ScannerStateLiveData
 import qk.sdk.mesh.meshsdk.util.Constants
 import qk.sdk.mesh.meshsdk.util.Constants.ConnectState.*
+import qk.sdk.mesh.meshsdk.util.NetworkExportUtils
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -1081,10 +1082,10 @@ class NrfMeshManager(
 
         private val TAG = NrfMeshManager::class.java.simpleName
         private val ATTENTION_TIMER = 5
-        val EXPORT_PATH = Environment.getRootDirectory().toString() + File.separator +
-                "Nordic Semiconductor" + File.separator + "nRF Mesh" + File.separator
+        val EXPORT_PATH = Environment.getExternalStorageDirectory().absolutePath + File.separator +
+                "mxchip" + File.separator + "nRFMesh" + File.separator
         private val EXPORTED_PATH =
-            "sdcard" + File.separator + "Nordic Semiconductor" + File.separator + "nRF Mesh" + File.separator
+            "sdcard" + File.separator + "mxchip" + File.separator + "nRFMesh" + File.separator
     }
 
     /************************ scan ******************************/
@@ -1315,5 +1316,19 @@ class NrfMeshManager(
             }
         }
         return false
+    }
+
+    internal fun exportMeshNetwork(callback: NetworkExportUtils.NetworkExportCallbacks) {
+        val fileName = "mxchipMeshNetwork.json"
+        NetworkExportUtils.exportMeshNetwork(
+            meshManagerApi,
+            EXPORT_PATH,
+            fileName,
+            callback
+        )
+    }
+
+    internal fun importMeshNetwork(path: String) {
+        meshManagerApi.importMeshNetwork(Uri.fromFile(File(path)))
     }
 }

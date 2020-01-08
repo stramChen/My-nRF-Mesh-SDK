@@ -51,6 +51,8 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
 
     fun initView() {
         tv_add.setOnClickListener(this)
+        tv_export.setOnClickListener(this)
+        tv_import.setOnClickListener(this)
 
         rv_provisioned_nodes.layoutManager = LinearLayoutManager(this)
         mNodeAdapter = NodeAdapter(
@@ -71,10 +73,11 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
 //                MeshHelper.setSelectedMeshNode(data)
 //                bindModel(data)
 //                startActivity(Intent(this@MainMeshActivity, ConnectMeshActivity::class.java))
-                MeshSDK.connect(ByteUtil.bytesToHexString(MeshHelper.getAllNetworkKey()?.get(1)?.key),
+                MeshSDK.connect(ByteUtil.bytesToHexString(MeshHelper.getAllNetworkKey()?.get(3)?.key),
+//                MeshSDK.connect("758DB07ED6CE6FEE180DFE199EC65BCF",
                     object : MapCallback {
                         override fun onResult(result: HashMap<String, Any>) {
-                            Utils.printLog(TAG,"connect result:${result.get("code")}")
+                            Utils.printLog(TAG, "connect result:${result.get("code")}")
                         }
                     })
                 startActivity(
@@ -106,8 +109,16 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
     }
 
     override fun onClick(v: View) {
-        if (v.id == R.id.tv_add) {
-            startActivity(Intent(this, ScanTestActivity::class.java))
+        when (v.id) {
+            R.id.tv_add -> {
+                startActivity(Intent(this, ScanTestActivity::class.java))
+            }
+            R.id.tv_export -> {
+                MeshSDK.exportMeshNetwork()
+            }
+            R.id.tv_import->{
+                MeshSDK.importMeshNetwork()
+            }
         }
     }
 

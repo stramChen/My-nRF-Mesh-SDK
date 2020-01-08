@@ -60,6 +60,7 @@ class DefaultNoOperationMessageState extends MeshMessageState {
                 Log.v(TAG, "Message reassembly may not be completed yet!");
             }
         } catch (ExtendedInvalidCipherTextException e) {
+            e.printStackTrace();
             Log.e(TAG, "Decryption failed in " + e.getTag() + " : " + e.getMessage());
             mMeshStatusCallbacks.onMessageDecryptionFailed(e.getTag(), e.getMessage());
         }

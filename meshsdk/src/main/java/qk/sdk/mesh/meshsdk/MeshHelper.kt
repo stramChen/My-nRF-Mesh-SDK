@@ -609,7 +609,12 @@ object MeshHelper {
      * @param parameters parameters of the message
      */
     // 私有协议 opcode, value
-    fun sendVendorModelMessage(opcode: Int, parameters: ByteArray?, acknowledged: Boolean,callback: MeshCallback?=null) {
+    fun sendVendorModelMessage(
+        opcode: Int,
+        parameters: ByteArray?,
+        acknowledged: Boolean,
+        callback: MeshCallback? = null
+    ) {
         val element = getSelectedElement()
         if (element != null) {
             val model = getSelectedModel()
@@ -627,7 +632,7 @@ object MeshHelper {
                                 opcode,
                                 parameters!!
                             )
-                            sendMessage(element.elementAddress, message,callback)
+                            sendMessage(element.elementAddress, message, callback)
                         } else {
                             message = VendorModelMessageUnacked(
                                 appKey,
@@ -636,7 +641,7 @@ object MeshHelper {
                                 opcode,
                                 parameters
                             )
-                            sendMessage(element.elementAddress, message,callback)
+                            sendMessage(element.elementAddress, message, callback)
                         }
                     }
                 } else {
@@ -647,12 +652,21 @@ object MeshHelper {
         }
     }
 
-    fun unRegisterMeshMsg(){
+    fun unRegisterMeshMsg() {
         MeshProxyService.mMeshProxyService?.unRegisterMeshMsg()
     }
 
-    fun unRegisterConnectListener(){
+    fun unRegisterConnectListener() {
         MeshProxyService.mMeshProxyService?.unRegisterConnectListener()
+    }
+
+    fun exportMeshNetwork(callback: NetworkExportUtils.NetworkExportCallbacks) {
+        MeshProxyService.mMeshProxyService?.exportMeshNetwork(callback)
+    }
+
+    fun importMeshNetwork(path: String) {
+        disConnect()
+        MeshProxyService.mMeshProxyService?.importMeshNetwork(path)
     }
 
     internal class MeshProxyService : BaseMeshService() {

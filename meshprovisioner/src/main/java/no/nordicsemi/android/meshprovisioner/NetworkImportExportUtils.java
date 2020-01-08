@@ -112,6 +112,7 @@ class NetworkImportExportUtils {
             try {
                 importNetwork();
             } catch (Exception ex) {
+                ex.printStackTrace();
                 error = ex.getMessage() + "\n\nP.S. If the json file was exported using an older version 2.0.0 (Mesh Library), " +
                         "please retry exporting the json file and importing again.";
             }

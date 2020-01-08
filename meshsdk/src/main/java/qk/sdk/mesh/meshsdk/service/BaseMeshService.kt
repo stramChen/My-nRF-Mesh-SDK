@@ -22,6 +22,7 @@ import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
 import qk.sdk.mesh.meshsdk.mesh.NrfMeshManager
 import qk.sdk.mesh.meshsdk.util.ByteUtil
 import qk.sdk.mesh.meshsdk.util.LocalPreferences
+import qk.sdk.mesh.meshsdk.util.NetworkExportUtils
 import qk.sdk.mesh.meshsdk.util.Utils
 import rx.android.schedulers.AndroidSchedulers
 import java.lang.Exception
@@ -344,5 +345,13 @@ open class BaseMeshService : LifecycleService() {
             }
             return key
         }
+    }
+
+    internal fun exportMeshNetwork(callback: NetworkExportUtils.NetworkExportCallbacks){
+        mNrfMeshManager?.exportMeshNetwork(callback)
+    }
+
+    internal fun importMeshNetwork(path:String){
+        mNrfMeshManager?.importMeshNetwork(path)
     }
 }
