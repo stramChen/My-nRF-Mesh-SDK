@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_main.*
 import no.nordicsemi.android.meshprovisioner.models.GenericOnOffServerModel
 import no.nordicsemi.android.meshprovisioner.transport.Element
@@ -13,7 +12,6 @@ import no.nordicsemi.android.meshprovisioner.transport.ProvisionedMeshNode
 import qk.sdk.mesh.demo.R
 import qk.sdk.mesh.demo.base.BaseMeshActivity
 import qk.sdk.mesh.demo.ui.adapter.NodeAdapter
-import qk.sdk.mesh.demo.util.JsonUtil
 import qk.sdk.mesh.demo.widget.base.OnItemClickListener
 import qk.sdk.mesh.demo.widget.base.OnItemLongClickListener
 import qk.sdk.mesh.meshsdk.MeshHelper
