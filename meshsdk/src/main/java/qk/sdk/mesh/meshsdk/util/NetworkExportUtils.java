@@ -10,13 +10,14 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import androidx.annotation.NonNull;
+
 import no.nordicsemi.android.meshprovisioner.MeshManagerApi;
 
 public class NetworkExportUtils {
 
     public interface NetworkExportCallbacks {
 
-        void onNetworkExported();
+        void onNetworkExported(String json);
 
         void onNetworkExportFailed(final String error);
     }
@@ -39,14 +40,14 @@ public class NetworkExportUtils {
      * Creates an AsyncTask to import the a m
      *
      * @param meshManagerApi Mesh manager api
-     * @param path           OutputStream obtained from the content resolver
+//     * @param path           OutputStream obtained from the content resolver
      * @param callbacks      {@link NetworkExportCallbacks}
      */
     public static void exportMeshNetwork(@NonNull final MeshManagerApi meshManagerApi,
-                                         @NonNull final String path,
-                                         @NonNull final String fileName,
+//                                         @NonNull final String path,
+//                                         @NonNull final String fileName,
                                          @NonNull NetworkExportCallbacks callbacks) {
-        final NetworkExportAsyncTask2 task = new NetworkExportAsyncTask2(meshManagerApi, path, fileName, callbacks);
+        final NetworkExportAsyncTask2 task = new NetworkExportAsyncTask2(meshManagerApi,callbacks);
         task.execute();
     }
 
@@ -81,23 +82,23 @@ public class NetworkExportUtils {
             final String network = meshManagerApi.exportMeshNetwork();
             if (network == null)
                 return false;
-            try {
-                outputStream.write(network.getBytes());
-                outputStream.close();
-                return true;
-            } catch (IOException e) {
-                error = e.getMessage();
-                Log.e(TAG, "Exception ex: " + error);
-            }
-            return false;
+//            try {
+//                outputStream.write(network.getBytes());
+//                outputStream.close();
+
+            callbacks.onNetworkExported(network);
+            return true;
+//            } catch (IOException e) {
+//                error = e.getMessage();
+//                Log.e(TAG, "Exception ex: " + error);
+//            }
+//            return false;
         }
 
         @Override
         protected void onPostExecute(final Boolean aVoid) {
             super.onPostExecute(aVoid);
-            if (aVoid) {
-                callbacks.onNetworkExported();
-            } else {
+            if (!aVoid) {
                 callbacks.onNetworkExportFailed(error);
             }
         }
@@ -107,8 +108,8 @@ public class NetworkExportUtils {
 
         private static final String TAG = NetworkExportAsyncTask.class.getSimpleName();
         private final MeshManagerApi meshManagerApi;
-        private final String path;
-        private final String fileName;
+//        private final String path;
+//        private final String fileName;
         private final NetworkExportCallbacks callbacks;
         private String error;
 
@@ -118,12 +119,12 @@ public class NetworkExportUtils {
          * @param meshManagerApi Mesh manager api
          */
         NetworkExportAsyncTask2(@NonNull final MeshManagerApi meshManagerApi,
-                                @NonNull final String path,
-                                @NonNull final String fileName,
+//                                @NonNull final String path,
+//                                @NonNull final String fileName,
                                 @NonNull NetworkExportCallbacks callbacks) {
             this.meshManagerApi = meshManagerApi;
-            this.path = path;
-            this.fileName = fileName;
+//            this.path = path;
+//            this.fileName = fileName;
             this.callbacks = callbacks;
         }
 
@@ -137,35 +138,34 @@ public class NetworkExportUtils {
             final String network = meshManagerApi.exportMeshNetwork();
             if (network == null)
                 return false;
-            try {
-                final File directory = new File(path);
-                if (!directory.exists()) {
-                    if (!directory.mkdirs()) {
-                        error = "Unable to create file";
-                        return false;
-                    }
-                }
-                final File file = new File(path, fileName);
-                final BufferedWriter br = new BufferedWriter(new FileWriter(file.getAbsolutePath()));
-                br.write(network);
-                br.flush();
-                br.close();
-                return true;
-            } catch (IOException e) {
-                error = e.getMessage();
-                Log.e(TAG, "Exception ex: " + error);
-            }
-            return false;
+
+            callbacks.onNetworkExported(network);
+//            try {
+//                final File directory = new File(path);
+//                if (!directory.exists()) {
+//                    if (!directory.mkdirs()) {
+//                        error = "Unable to create file";
+//                        return false;
+//                    }
+//                }
+//                final File file = new File(path, fileName);
+//                final BufferedWriter br = new BufferedWriter(new FileWriter(file.getAbsolutePath()));
+//                br.write(network);
+//                br.flush();
+//                br.close();
+            return true;
+//            } catch (IOException e) {
+//                error = e.getMessage();
+//                Log.e(TAG, "Exception ex: " + error);
+//            }
+//            return false;
         }
 
         @Override
         protected void onPostExecute(final Boolean aVoid) {
             super.onPostExecute(aVoid);
-            if (aVoid) {
-                callbacks.onNetworkExported();
-            } else {
+            if (!aVoid)
                 callbacks.onNetworkExportFailed(error);
-            }
         }
     }
 }

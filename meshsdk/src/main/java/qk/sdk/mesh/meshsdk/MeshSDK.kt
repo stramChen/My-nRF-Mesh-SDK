@@ -107,7 +107,7 @@ object MeshSDK {
     fun provision(uuid: String, networkKey: String, callback: MapCallback) {
         var map = HashMap<String, Any>()
         doBaseCheck(uuid, map, callback)
-        if (networkKey.isEmpty() || getAllNetworkKey()?.size <= 0 || !getAllNetworkKey().contains(
+        if (networkKey.isEmpty() || getAllNetworkKey().size <= 0 || !getAllNetworkKey().contains(
                 networkKey
             )
         ) {
@@ -251,12 +251,16 @@ object MeshSDK {
         callback.onResultMsg(MeshHelper.getCurrentNetworkKeyStr() ?: "")
     }
 
-    fun createNetworkKey(networkKey: String) {
+    fun createNetworkKey(networkKey: String): Boolean {
+        if (networkKey.isNotEmpty() && getAllNetworkKey().contains(networkKey)) {
+            return false
+        }
         Utils.printLog(TAG, "createNetworkKey:${networkKey}")
         MeshHelper.createNetworkKey(networkKey)
+        return true
     }
 
-    fun removeNetworkKey(key: String, callback: IntCallback) {
+    fun removeNetworkKey(key: String, callback: MapCallback) {
         MeshHelper.removeNetworkKey(key, callback)
     }
 
@@ -668,10 +672,10 @@ object MeshSDK {
         }
     }
 
-    fun exportMeshNetwork() {
-        MeshHelper.exportMeshNetwork(object : NetworkExportUtils.NetworkExportCallbacks {
-            override fun onNetworkExported() {
-                Utils.printLog(TAG, "onNetworkExported")
+    fun exportMeshNetwork(callback: StringCallback) {
+        MeshHelper.exportMeshNetwork( object : NetworkExportUtils.NetworkExportCallbacks {
+            override fun onNetworkExported(json: String) {
+                callback.onResultMsg(json)
             }
 
             override fun onNetworkExportFailed(error: String?) {
@@ -680,10 +684,8 @@ object MeshSDK {
         })
     }
 
-    fun importMeshNetwork() {
-        MeshHelper.importMeshNetwork("${NrfMeshManager.EXPORT_PATH}mxchipMeshNetwork.json")
-//        MeshHelper.importMeshNetwork("${NrfMeshManager.EXPORT_PATH}nRF Mesh Network.json")
-        Utils.printLog(TAG, "file path:${NrfMeshManager.EXPORT_PATH}mxchipMeshNetwork.json")
+    fun importMeshNetwork(json: String, callback: MapCallback) {
+        MeshHelper.importMeshNetwork(json,callback)
     }
 
     private fun doMapCallback(map: HashMap<String, Any>, callback: MapCallback, msg: CallbackMsg) {

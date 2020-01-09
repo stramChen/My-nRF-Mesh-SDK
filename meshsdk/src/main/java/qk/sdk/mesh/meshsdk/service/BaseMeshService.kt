@@ -20,10 +20,7 @@ import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
 import qk.sdk.mesh.meshsdk.callbak.*
 import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
 import qk.sdk.mesh.meshsdk.mesh.NrfMeshManager
-import qk.sdk.mesh.meshsdk.util.ByteUtil
-import qk.sdk.mesh.meshsdk.util.LocalPreferences
-import qk.sdk.mesh.meshsdk.util.NetworkExportUtils
-import qk.sdk.mesh.meshsdk.util.Utils
+import qk.sdk.mesh.meshsdk.util.*
 import rx.android.schedulers.AndroidSchedulers
 import java.lang.Exception
 import java.util.*
@@ -347,11 +344,14 @@ open class BaseMeshService : LifecycleService() {
         }
     }
 
-    internal fun exportMeshNetwork(callback: NetworkExportUtils.NetworkExportCallbacks){
+    internal fun exportMeshNetwork(callback: NetworkExportUtils.NetworkExportCallbacks) {
         mNrfMeshManager?.exportMeshNetwork(callback)
     }
 
-    internal fun importMeshNetwork(path:String){
-        mNrfMeshManager?.importMeshNetwork(path)
+    internal fun importMeshNetworkJson(path: String, mapCallback: StringCallback) {
+        mNrfMeshManager?.importMeshNetworkJson(path)
+        mNrfMeshManager?.mNetworkImportState?.observe(this, Observer {
+            mapCallback.onResultMsg(it)
+        })
     }
 }

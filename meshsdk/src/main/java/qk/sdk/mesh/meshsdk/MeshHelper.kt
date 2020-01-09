@@ -19,6 +19,7 @@ import qk.sdk.mesh.meshsdk.util.*
 import rx.android.schedulers.AndroidSchedulers
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 object MeshHelper {
     private val TAG = "MeshHelper"
@@ -363,24 +364,38 @@ object MeshHelper {
 //        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
-    fun removeNetworkKey(key: String, callback: IntCallback) {
+    fun removeNetworkKey(key: String, callback: MapCallback) {
         var netKey: NetworkKey? = null
+        var map = HashMap<String, Any>()
         getAllNetworkKey()?.forEach {
             if (ByteUtil.bytesToHexString(it.key) == key) {
                 netKey = it
             }
+        }
+
+        if (netKey == null) {
+            map.put("code", Constants.ConnectState.NET_KEY_NOT_EXIST.code)
+            map.put("message", Constants.ConnectState.NET_KEY_NOT_EXIST.msg)
+            callback.onResult(map)
+            return
         }
         netKey?.let {
             if (!(MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.removeNetKey(
                     it
                 ) ?: false)
             ) {
-                callback.onResultMsg(Constants.ConnectState.NET_KEY_DELETE_FAILED.code)
+                map.put("code", Constants.ConnectState.NET_KEY_DELETE_FAILED.code)
+                map.put("message", Constants.ConnectState.NET_KEY_DELETE_FAILED.msg)
+                callback.onResult(map)
             } else {
-                callback.onResultMsg(Constants.ConnectState.COMMON_SUCCESS.code)
+                map.put("code", Constants.ConnectState.COMMON_SUCCESS.code)
+                map.put("message", Constants.ConnectState.COMMON_SUCCESS.msg)
+                callback.onResult(map)
                 if (LocalPreferences.getCurrentNetKey() == ByteUtil.bytesToHexString(it.key)) {
                     LocalPreferences.setCurrentNetKey("")
                 }
+                //删除对应的appkey
+                removeApplicationKey(key)
             }
         }
     }
@@ -444,7 +459,7 @@ object MeshHelper {
         callback.onResult(appKeys)
     }
 
-    fun removeApplicationKey(appKey: String, callback: IntCallback) {
+    fun removeApplicationKey(appKey: String, callback: IntCallback? = null) {
         var applicationKey: ApplicationKey? = null
         getAppKeys()?.forEach {
             if (ByteUtil.bytesToHexString(it.key) == appKey) {
@@ -457,12 +472,12 @@ object MeshHelper {
                     it
                 ) ?: false)
             ) {
-                callback.onResultMsg(Constants.ConnectState.APP_KEY_DELETE_FAILED.code)
+                callback?.onResultMsg(Constants.ConnectState.APP_KEY_DELETE_FAILED.code)
             } else {
-                callback.onResultMsg(Constants.ConnectState.COMMON_SUCCESS.code)
                 if (LocalPreferences.getCurrentNetKey() == ByteUtil.bytesToHexString(it.key)) {
                     LocalPreferences.setCurrentNetKey("")
                 }
+                callback?.onResultMsg(Constants.ConnectState.COMMON_SUCCESS.code)
             }
         }
     }
@@ -664,9 +679,9 @@ object MeshHelper {
         MeshProxyService.mMeshProxyService?.exportMeshNetwork(callback)
     }
 
-    fun importMeshNetwork(path: String) {
+    fun importMeshNetwork(json: String,callback: MapCallback) {
         disConnect()
-        MeshProxyService.mMeshProxyService?.importMeshNetwork(path)
+        MeshProxyService.mMeshProxyService?.importMeshNetworkJson(json,callback)
     }
 
     internal class MeshProxyService : BaseMeshService() {

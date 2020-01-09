@@ -9,6 +9,7 @@
 |0.1.1|「对设备进行网络配置 - Bind Application Key 阶段」API 变动，增加 applicationKey 参数|
 |0.1.2|添加错误码描述、修改connect接口传参、添加callback次数描述|
 |0.1.3|添加获取四元组接口、修改connect只回调一次|
+|0.1.4|修改provision参数、添加netKey增加返回值|
 
 ---- 
 
@@ -44,13 +45,17 @@ MeshSDK.checkPermission(callback)
 ### 创建 Network Key（传入存储）
 
 ```js
-MeshSDK.createNetworkKey(key: string)
+MeshSDK.createNetworkKey(key: string):Boolean
 ```
 
 ### 删除 Network Key
 
 ```js
-MeshSDK.removeNetworkKey(key: string)
+MeshSDK.removeNetworkKey(key: string,callback(result: Map))
+callback
+- `{code: int, message: string}`
+		- code == 200 成功
+		- code != 200 失败
 ```
 
 ### 列出所有的 Network Key
@@ -137,7 +142,7 @@ MeshSDK.stopScan()
 ### 对设备进行网络配置 - Provision 阶段：callback只会回调一次
 
 ```js
-MeshSDK.provision(uuid: string, callback(error: Map))
+MeshSDK.provision(uuid: string, networkKey: string, callback(error: Map))
 ```
 
 callback
@@ -223,7 +228,7 @@ MeshSDK.exportConfiguration(callback(data: JSONString))
 ### 导入 mesh 网络配置
 
 ```js
-MeshSDK.importConfiguration(data: JSONString, callback(success))
+MeshSDK.importConfiguration(data: JSONString, callback(success:string))
 ```
 ## code定义
 |错误码|错误信息|
@@ -244,3 +249,4 @@ MeshSDK.importConfiguration(data: JSONString, callback(success))
 |208|绑定appkey失败|
 |401|netKey正在使用中，需先删除netKey对应的设备|
 |402|appKey正在使用中，需先删除appKey对应的设备|
+|403|netKey不存在|

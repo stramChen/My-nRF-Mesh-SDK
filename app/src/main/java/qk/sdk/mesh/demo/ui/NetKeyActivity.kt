@@ -14,6 +14,7 @@ import qk.sdk.mesh.demo.widget.base.OnItemLongClickListener
 import qk.sdk.mesh.meshsdk.MeshSDK
 import qk.sdk.mesh.meshsdk.callbak.ArrayStringCallback
 import qk.sdk.mesh.meshsdk.callbak.IntCallback
+import qk.sdk.mesh.meshsdk.callbak.MapCallback
 import qk.sdk.mesh.meshsdk.util.Utils
 
 class NetKeyActivity : BaseMeshActivity() {
@@ -45,9 +46,9 @@ class NetKeyActivity : BaseMeshActivity() {
         rv_net_key.adapter = adapter
         adapter.setOnItemLongClickListener(object : OnItemLongClickListener<String> {
             override fun onItemLongClick(data: String, position: Int): Boolean {
-                MeshSDK.removeNetworkKey(data, object : IntCallback {
-                    override fun onResultMsg(code: Int) {
-                        Utils.printLog(TAG, "remove net key:$code")
+                MeshSDK.removeNetworkKey(data, object : MapCallback {
+                    override fun onResult(result: HashMap<String, Any>) {
+                        Utils.printLog(TAG, "remove net key:${result.get("code")}")
                     }
                 })
                 return true

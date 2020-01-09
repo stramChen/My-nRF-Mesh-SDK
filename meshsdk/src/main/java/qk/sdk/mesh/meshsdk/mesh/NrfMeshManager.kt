@@ -126,7 +126,7 @@ class NrfMeshManager(
 
     //Contains the MeshNetwork
     internal val meshNetworkLiveData = MeshNetworkLiveData()
-    private val mNetworkImportState = SingleLiveData<String>()
+    public val mNetworkImportState = MutableLiveData<String>()
     private val mMeshMessageLiveData = MutableLiveData<MeshMessage>()
 
     // Contains the provisioned nodes
@@ -630,12 +630,13 @@ class NrfMeshManager(
         }
         loadNetwork(meshNetwork)
         loadGroups()
-        mNetworkImportState.postValue(
-            meshNetwork.meshName + " has been successfully imported.\n" +
-                    "In order to start sending messages to this network, please change the provisioner address. " +
-                    "Using the same provisioner address will cause messages to be discarded due to the usage of incorrect sequence numbers " +
-                    "for this address. However if the network does not contain any nodes you do not need to change the address"
-        )
+//        mNetworkImportState.postValue(
+//            meshNetwork.meshName + " has been successfully imported.\n" +
+//                    "In order to start sending messages to this network, please change the provisioner address. " +
+//                    "Using the same provisioner address will cause messages to be discarded due to the usage of incorrect sequence numbers " +
+//                    "for this address. However if the network does not contain any nodes you do not need to change the address"
+//        )
+        mNetworkImportState.postValue(COMMON_SUCCESS.msg)
     }
 
     override fun onNetworkImportFailed(error: String) {
@@ -1320,16 +1321,15 @@ class NrfMeshManager(
     }
 
     internal fun exportMeshNetwork(callback: NetworkExportUtils.NetworkExportCallbacks) {
-        val fileName = "mxchipMeshNetwork.json"
         NetworkExportUtils.exportMeshNetwork(
             meshManagerApi,
-            EXPORT_PATH,
-            fileName,
+//            EXPORT_PATH,
+//            fileName,
             callback
         )
     }
 
-    internal fun importMeshNetwork(path: String) {
-        meshManagerApi.importMeshNetwork(Uri.fromFile(File(path)))
+    internal fun importMeshNetworkJson(json: String) {
+        meshManagerApi.importMeshNetworkJson(json)
     }
 }

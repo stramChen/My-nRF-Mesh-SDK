@@ -51,6 +51,7 @@ object Constants {
 
 
         NET_KEY_DELETE_FAILED("netKey正在使用中，需先删除netKey对应的设备", 401),//netKey正在使用中，需先删除netKey对应的设备
+        NET_KEY_NOT_EXIST("netKey不存在", 403),//netKey正在使用中，需先删除netKey对应的设备
         APP_KEY_DELETE_FAILED("appKey正在使用中，需先删除appKey对应的设备", 402),//appKey正在使用中，需先删除appKey对应的设备
 
     }

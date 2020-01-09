@@ -43,8 +43,8 @@ dependencies {
     api 'androidx.multidex:multidex:2.0.1'
 
     api 'no.nordicsemi.android:ble:2.1.1'
-//    api project(':QKMeshDemo:meshprovisioner')
-    api project(':meshprovisioner')
+    api project(':QKMeshDemo:meshprovisioner')
+//    api project(':meshprovisioner')
     api 'no.nordicsemi.android.support.v18:scanner:1.4.3'
     //运行时权限
     api 'com.github.jokermonn:permissions4m:2.1.2-lib'
