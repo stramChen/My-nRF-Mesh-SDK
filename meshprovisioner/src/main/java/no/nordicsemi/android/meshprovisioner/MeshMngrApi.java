@@ -240,7 +240,7 @@ interface MeshMngrApi {
      *
      * @param uri path to the mesh configuration database json file.
      */
-    void importMeshNetwork(@NonNull final Uri uri);
+//    void importMeshNetwork(@NonNull final Uri uri);
 
     /**
      * Starts an asynchronous task that imports a network from the mesh configuration db json

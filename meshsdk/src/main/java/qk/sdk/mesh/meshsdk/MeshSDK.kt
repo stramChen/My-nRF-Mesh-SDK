@@ -685,6 +685,10 @@ object MeshSDK {
     }
 
     fun importMeshNetwork(json: String, callback: StringCallback) {
+        if (json.isEmpty()){
+            callback.onResultMsg(ConnectState.IMPORT_MESH_JSON_EMPTY_ERR.msg)
+            return
+        }
         MeshHelper.importMeshNetwork(json,callback)
     }
 

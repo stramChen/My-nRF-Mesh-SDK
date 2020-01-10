@@ -26,13 +26,13 @@ import kotlin.collections.HashMap
 object MeshHelper {
     private val TAG = "MeshHelper"
     private var mProvisionCallback: ProvisionCallback? = null
-    private var mDfuHelper: DfuHelper? = null
+//    private var mDfuHelper: DfuHelper? = null
 
     // 初始化 mesh
     fun initMesh(context: Context) {
         context.startService(Intent(context, MeshProxyService::class.java))
         LocalPreferences.init(context)
-        mDfuHelper = DfuHelper.getInstance(context)//初始化dfu
+//        mDfuHelper = DfuHelper.getInstance(context)//初始化dfu
     }
 
     // 检查蓝牙权限
@@ -684,8 +684,11 @@ object MeshHelper {
     }
 
     fun importMeshNetwork(json: String, callback: StringCallback) {
-        disConnect()
-        MeshProxyService.mMeshProxyService?.importMeshNetworkJson(json, callback)
+        rx.Observable.create<String> {
+        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+            disConnect()
+            MeshProxyService.mMeshProxyService?.importMeshNetworkJson(json, callback)
+        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
     internal class MeshProxyService : BaseMeshService() {

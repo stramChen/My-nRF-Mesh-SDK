@@ -38,13 +38,13 @@ class NetworkImportExportUtils {
      * Creates an AsyncTask to import the a mesh network
      *
      * @param context   context
-     * @param uri       file path
+//     * @param uri       file path
      * @param callbacks internal callbacks to notify network import
      */
     static void importMeshNetwork(@NonNull final Context context,
-                                  @NonNull final Uri uri,
+                                  @NonNull final String json,
                                   @NonNull final LoadNetworkCallbacks callbacks) throws JsonSyntaxException {
-        new NetworkImportAsyncTask(context, uri, callbacks).execute();
+        new NetworkImportAsyncTask(context, json, callbacks).execute();
     }
 
     /**
@@ -66,7 +66,7 @@ class NetworkImportExportUtils {
     private static class NetworkImportAsyncTask extends AsyncTask<Void, Void, Void> {
 
         private WeakReference<Context> context;
-        private final Uri uri;
+//        private final Uri uri;
         private final LoadNetworkCallbacks callbacks;
         private MeshNetwork network;
         private String error;
@@ -76,15 +76,15 @@ class NetworkImportExportUtils {
          * Creates an AsyncTask to import the a m
          *
          * @param context   context
-         * @param uri       file path
+//         * @param uri       file path
          * @param callbacks internal callbacks to notify network import
          */
-        NetworkImportAsyncTask(@NonNull final Context context, @NonNull final Uri uri, @NonNull final LoadNetworkCallbacks callbacks) {
-            this.context = new WeakReference<>(context);
-            this.uri = uri;
-            this.networkJson = null;
-            this.callbacks = callbacks;
-        }
+//        NetworkImportAsyncTask(@NonNull final Context context, @NonNull final String json, @NonNull final LoadNetworkCallbacks callbacks) {
+//            this.context = new WeakReference<>(context);
+////            this.uri = uri;
+//            this.networkJson = json;
+//            this.callbacks = callbacks;
+//        }
 
         /**
          * Creates an AsyncTask to import the a m
@@ -98,7 +98,7 @@ class NetworkImportExportUtils {
                                @NonNull final LoadNetworkCallbacks callbacks) {
             this.context = new WeakReference<>(context);
             this.networkJson = networkJson;
-            this.uri = null;
+//            this.uri = null;
             this.callbacks = callbacks;
         }
 
@@ -164,16 +164,13 @@ class NetworkImportExportUtils {
                 gsonBuilder.registerTypeAdapter(meshModelList, new MeshModelListDeserializer());
                 final Gson gson = gsonBuilder.serializeNulls().create();
 
-                final String json = this.networkJson != null ? this.networkJson : readJsonStringFromUri();
+                final String json = networkJson;
                 final MeshNetwork network = gson.fromJson(json, MeshNetwork.class);
                 if (network != null) {
                     this.network = network;
                 }
             } catch (final com.google.gson.JsonSyntaxException ex) {
                 error = ex.getMessage();
-                Log.e(TAG, " " + error);
-            } catch (final IOException e) {
-                error = e.getMessage();
                 Log.e(TAG, " " + error);
             }
         }
@@ -184,21 +181,21 @@ class NetworkImportExportUtils {
          * @return json string
          * @throws IOException in case of failure
          */
-        private String readJsonStringFromUri() throws IOException {
-            final StringBuilder stringBuilder = new StringBuilder();
-            final InputStream inputStream = context.get().getContentResolver().openInputStream(uri);
-            if (inputStream != null) {
-                final BufferedReader reader = new BufferedReader(new InputStreamReader(
-                        inputStream));
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    stringBuilder.append(line);
-                }
-                reader.close();
-                inputStream.close();
-            }
-            return stringBuilder.toString();
-        }
+//        private String readJsonStringFromUri() throws IOException {
+//            final StringBuilder stringBuilder = new StringBuilder();
+//            final InputStream inputStream = context.get().getContentResolver().openInputStream(uri);
+//            if (inputStream != null) {
+//                final BufferedReader reader = new BufferedReader(new InputStreamReader(
+//                        inputStream));
+//                String line;
+//                while ((line = reader.readLine()) != null) {
+//                    stringBuilder.append(line);
+//                }
+//                reader.close();
+//                inputStream.close();
+//            }
+//            return stringBuilder.toString();
+//        }
     }
 
 

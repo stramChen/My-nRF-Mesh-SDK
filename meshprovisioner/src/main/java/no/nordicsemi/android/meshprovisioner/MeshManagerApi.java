@@ -793,14 +793,14 @@ public class MeshManagerApi implements MeshMngrApi {
         return null;
     }
 
-    @Override
-    public void importMeshNetwork(@NonNull final Uri uri) {
-        if (uri.getPath() != null) {
-            NetworkImportExportUtils.importMeshNetwork(mContext, uri, networkLoadCallbacks);
-        } else {
-            mMeshManagerCallbacks.onNetworkImportFailed("URI getPath() returned null!");
-        }
-    }
+//    @Override
+//    public void importMeshNetwork(@NonNull final String json) {
+//        if (!json.isEmpty()) {
+//            NetworkImportExportUtils.importMeshNetwork(mContext, json, networkLoadCallbacks);
+//        } else {
+//            mMeshManagerCallbacks.onNetworkImportFailed("URI getPath() returned null!");
+//        }
+//    }
 
     @Override
     public void importMeshNetworkJson(@NonNull String networkJson) {

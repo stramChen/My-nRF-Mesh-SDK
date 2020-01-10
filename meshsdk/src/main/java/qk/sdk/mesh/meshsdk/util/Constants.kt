@@ -5,7 +5,7 @@ object Constants {
      * 错误码说明：int 类型
      * SDK全局错误码：100起，如未初始化SDK的错误码为101,未释放蓝牙资源133
      * PROVISION错误码：200起
-     *
+     * 导入导出错误码：500起
      */
 
     //------未初始化SDK
@@ -54,5 +54,6 @@ object Constants {
         NET_KEY_NOT_EXIST("netKey不存在", 403),//netKey正在使用中，需先删除netKey对应的设备
         APP_KEY_DELETE_FAILED("appKey正在使用中，需先删除appKey对应的设备", 402),//appKey正在使用中，需先删除appKey对应的设备
 
+        IMPORT_MESH_JSON_EMPTY_ERR("mesh json is null", 501)
     }
 }

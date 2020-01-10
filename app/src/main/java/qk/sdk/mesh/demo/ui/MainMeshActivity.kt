@@ -19,6 +19,7 @@ import qk.sdk.mesh.meshsdk.MeshSDK
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.callbak.MapCallback
 import qk.sdk.mesh.meshsdk.callbak.ProvisionCallback
+import qk.sdk.mesh.meshsdk.callbak.StringCallback
 import qk.sdk.mesh.meshsdk.util.ByteUtil
 import qk.sdk.mesh.meshsdk.util.Utils
 
@@ -108,16 +109,30 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
             }
     }
 
+    var meshJson = ""
     override fun onClick(v: View) {
         when (v.id) {
             R.id.tv_add -> {
                 startActivity(Intent(this, ScanTestActivity::class.java))
             }
             R.id.tv_export -> {
-                MeshSDK.exportMeshNetwork()
+                Thread(Runnable {
+                    MeshSDK.exportMeshNetwork(object : StringCallback {
+                        override fun onResultMsg(msg: String) {
+                            meshJson = msg
+                            Utils.printLog(TAG, "mesh json:$meshJson")
+                        }
+                    })
+                }).start()
             }
             R.id.tv_import -> {
-                MeshSDK.importMeshNetwork()
+                Thread(Runnable {
+                    MeshSDK.importMeshNetwork(meshJson, object : StringCallback {
+                        override fun onResultMsg(msg: String) {
+                            Utils.printLog(TAG, "import result:$msg")
+                        }
+                    })
+                }).start()
             }
         }
     }

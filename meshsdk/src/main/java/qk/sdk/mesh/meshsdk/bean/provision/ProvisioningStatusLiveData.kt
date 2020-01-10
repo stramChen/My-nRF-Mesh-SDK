@@ -159,8 +159,6 @@ class ProvisioningStatusLiveData : LiveData<ProvisioningStatusLiveData>() {
                 provisioningProgress = ProvisionerProgress(state, "Provisioner unassigned...")
                 stateList.add(provisioningProgress)
             }
-            else -> {
-            }
         }
         postValue(this)
     }

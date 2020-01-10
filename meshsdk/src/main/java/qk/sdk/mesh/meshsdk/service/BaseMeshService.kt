@@ -348,8 +348,8 @@ open class BaseMeshService : LifecycleService() {
         mNrfMeshManager?.exportMeshNetwork(callback)
     }
 
-    internal fun importMeshNetworkJson(path: String, mapCallback: StringCallback) {
-        mNrfMeshManager?.importMeshNetworkJson(path)
+    internal fun importMeshNetworkJson(json: String, mapCallback: StringCallback) {
+        mNrfMeshManager?.importMeshNetworkJson(json)
         mNrfMeshManager?.mNetworkImportState?.observe(this, Observer {
             mapCallback.onResultMsg(it)
         })
