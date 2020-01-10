@@ -684,7 +684,7 @@ object MeshSDK {
         })
     }
 
-    fun importMeshNetwork(json: String, callback: MapCallback) {
+    fun importMeshNetwork(json: String, callback: StringCallback) {
         MeshHelper.importMeshNetwork(json,callback)
     }
 

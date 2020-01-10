@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.Intent
 import androidx.lifecycle.Observer
 import com.joker.api.wrapper.ListenerWrapper
+import com.realsil.sdk.dfu.utils.DfuAdapter
+import com.realsil.sdk.dfu.utils.DfuHelper
 import no.nordicsemi.android.meshprovisioner.ApplicationKey
 import no.nordicsemi.android.meshprovisioner.MeshNetwork
 import no.nordicsemi.android.meshprovisioner.NetworkKey
@@ -24,11 +26,13 @@ import kotlin.collections.HashMap
 object MeshHelper {
     private val TAG = "MeshHelper"
     private var mProvisionCallback: ProvisionCallback? = null
+    private var mDfuHelper: DfuHelper? = null
 
     // 初始化 mesh
     fun initMesh(context: Context) {
         context.startService(Intent(context, MeshProxyService::class.java))
         LocalPreferences.init(context)
+        mDfuHelper = DfuHelper.getInstance(context)//初始化dfu
     }
 
     // 检查蓝牙权限
@@ -679,9 +683,9 @@ object MeshHelper {
         MeshProxyService.mMeshProxyService?.exportMeshNetwork(callback)
     }
 
-    fun importMeshNetwork(json: String,callback: MapCallback) {
+    fun importMeshNetwork(json: String, callback: StringCallback) {
         disConnect()
-        MeshProxyService.mMeshProxyService?.importMeshNetworkJson(json,callback)
+        MeshProxyService.mMeshProxyService?.importMeshNetworkJson(json, callback)
     }
 
     internal class MeshProxyService : BaseMeshService() {
