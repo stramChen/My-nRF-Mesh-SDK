@@ -1,7 +1,6 @@
 package mxchip.sdk.testdependence
 
 import android.app.Application
-import androidx.multidex.MultiDex
 
 class MXApplication : Application() {
     override fun onCreate() {

@@ -33,6 +33,17 @@ android {
         checkReleaseBuilds false
         abortOnError false
     }
+
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['libs']
+        }
+    }
+
+    packagingOptions {
+        pickFirst 'META-INF/*'
+    }
+
 }
 
 repositories {
@@ -42,10 +53,10 @@ repositories {
 }
 dependencies {
     api "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.50"
-    api 'androidx.appcompat:appcompat:1.1.0'
-    api 'androidx.core:core-ktx:1.1.0'
-    api 'androidx.lifecycle:lifecycle-extensions:2.2.0-rc03'
-    api 'androidx.multidex:multidex:2.0.1'
+//    api 'androidx.appcompat:appcompat:1.1.0'
+//    api 'androidx.core:core-ktx:1.1.0'
+//    api 'androidx.lifecycle:lifecycle-extensions:2.2.0-rc03'
+//    api 'androidx.multidex:multidex:2.0.1'
 
     api 'no.nordicsemi.android:ble:2.1.1'
 //    api project(':QKMeshDemo:meshprovisioner')
@@ -56,6 +67,7 @@ dependencies {
     annotationProcessor 'com.github.jokermonn:permissions4m:2.1.2-processor'
     //运行时权限
     api 'me.weyye.hipermission:library:1.0.8'
+    api 'com.google.code.gson:gson:2.8.5'
 
     api "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0-gradle"
     api group: 'io.reactivex', name: 'rxandroid', version: '1.2.1'
@@ -64,21 +76,39 @@ dependencies {
 //    implementation files('libs/rtk-dfu-support-1.1.5-73.aar')
 //    api 'cn.mxchip.meshprovisioner.test:meshprovisioner:0.0.1'
     api(name: 'meshprovisioner-0.1.0', ext: 'aar'){
-        exclude group:'android.support.v4'
+//        exclude group:'android.support.v4'
+//        exclude group:'com.android.support',module:'support-compat'
+//        exclude group:'com.android.support',module:'versionedparcelable'
+        exclude group:'com.google.code.gson',module:'gson'
     }
-//    implementation fileTree(dir: 'libs', include: ['*.aar', '*.jar'], exclude: [])
+//    api('androidx.annotation:annotation:1.1.0') {
+//        transitive = true
+//    }
+//    api('no.nordicsemi.android:log:2.2.0') {
+//        transitive = true
+//    }
+//    // Spongycastle - Android implementation of Bouncy Castle
+//    api 'com.madgag.spongycastle:core:1.58.0.0'
+//    api 'com.madgag.spongycastle:prov:1.58.0.0'
+//    api 'com.google.code.gson:gson:2.8.5'
+//
+//    api 'androidx.room:room-runtime:2.2.2'
+//    annotationProcessor 'androidx.room:room-compiler:2.2.2'
+//    androidTestImplementation 'androidx.room:room-testing:2.2.2'
+    implementation fileTree(dir: 'libs', include: ['*.aar', '*.jar'], exclude: [])
 }
 
 uploadArchives {
     repositories {
         mavenDeployer {
 //            repository(url: "http://10.0.0.40:8081/repository/reactnative/") {
-            repository(url: "http://10.0.0.40:8081/repository/meshsdk/") {
-                authentication(userName: "chunbo", password: "123456")
-            }
+//            repository(url: "http://10.0.0.40:8081/repository/meshsdk/") {
+//                authentication(userName: "chunbo", password: "123456")
+//            }
+            repository(url:"file:///Users/wangyue/Documents/mxchip/aar/")
             pom.project {
                 name 'meshsdk'
-                version '0.1.1'
+                version '0.2.0'
                 artifactId 'meshsdk'
                 groupId 'cn.mxchip.mesh.test'
                 packaging 'aar'

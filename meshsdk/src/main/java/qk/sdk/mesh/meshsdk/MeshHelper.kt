@@ -11,18 +11,16 @@ import no.nordicsemi.android.meshprovisioner.models.VendorModel
 import no.nordicsemi.android.meshprovisioner.transport.*
 import no.nordicsemi.android.meshprovisioner.utils.MeshAddress
 import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils
-import qk.sdk.mesh.meshsdk.backgroundscan.BackgroundScanAutoConnected
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
 import qk.sdk.mesh.meshsdk.callback.*
 import qk.sdk.mesh.meshsdk.service.BaseMeshService
 import qk.sdk.mesh.meshsdk.util.*
 import rx.android.schedulers.AndroidSchedulers
-import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
-object MeshHelper : MXDfuUtil() {
+object MeshHelper {
     private val TAG = "MeshHelper"
     private var mProvisionCallback: ProvisionCallback? = null
 

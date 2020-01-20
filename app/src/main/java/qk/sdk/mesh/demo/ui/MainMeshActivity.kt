@@ -139,12 +139,12 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
             }
             R.id.tv_update -> {
 //                Thread(Runnable {
-                    MeshSDK.updateDeviceImg("01003510-8C04-7863-D0F1-410000000000","/storage/emulated/0/mxchip_light-b7a7b10b9b23db4d04d91291448af183.bin",object :
-                        MapCallback {
-                        override fun onResult(result: HashMap<String, Any>) {
-
-                        }
-                    })
+//                    MeshSDK.updateDeviceImg("01003510-8C04-7863-D0F1-410000000000","/storage/emulated/0/mxchip_light-b7a7b10b9b23db4d04d91291448af183.bin",object :
+//                        MapCallback {
+//                        override fun onResult(result: HashMap<String, Any>) {
+//
+//                        }
+//                    })
 //                }).start()
             }
         }

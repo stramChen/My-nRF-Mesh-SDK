@@ -45,16 +45,16 @@ dependencies {
 //    implementation support.appcompat_v7
     implementation support.constraint_layout
 
-    api project(':meshsdk'){
+//    api project(':meshsdk'){
 //        exclude group:'android.suppor.v4'
-    }
-    api(name: 'meshsdk-0.0.8', ext: 'aar') {
-        exclude group: 'android.suppor.v4'
-        exclude group: 'androidx.lifecycle'
-    }
-    api(name: 'meshprovisioner-0.1.0', ext: 'aar'){
-        exclude group:'android.support.v4'
-    }
+//    }
+//    api(name: 'meshsdk-0.0.8', ext: 'aar') {
+//        exclude group: 'android.suppor.v4'
+//        exclude group: 'androidx.lifecycle'
+//    }
+//    api(name: 'meshprovisioner-0.1.0', ext: 'aar'){
+//        exclude group:'android.support.v4'
+//    }
 
     //运行时权限
 //    api 'com.github.jokermonn:permissions4m:2.1.2-lib'
