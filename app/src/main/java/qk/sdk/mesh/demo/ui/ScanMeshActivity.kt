@@ -18,10 +18,10 @@ import qk.sdk.mesh.demo.widget.base.OnItemClickListener
 import qk.sdk.mesh.meshsdk.MeshHelper
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
-import qk.sdk.mesh.meshsdk.callbak.BaseCallback
-import qk.sdk.mesh.meshsdk.callbak.ConnectCallback
+import qk.sdk.mesh.meshsdk.callback.BaseCallback
+import qk.sdk.mesh.meshsdk.callback.ConnectCallback
 import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
-import qk.sdk.mesh.meshsdk.callbak.ScanCallback
+import qk.sdk.mesh.meshsdk.callback.ScanCallback
 import qk.sdk.mesh.meshsdk.util.Constants
 import qk.sdk.mesh.meshsdk.util.Utils
 import kotlin.collections.ArrayList

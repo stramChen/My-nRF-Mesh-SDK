@@ -83,7 +83,7 @@ dependencies {
     api 'androidx.room:room-runtime:2.2.2'
     annotationProcessor 'androidx.room:room-compiler:2.2.2'
     androidTestImplementation 'androidx.room:room-testing:2.2.2'
-    compile "androidx.core:core-ktx:+"
+    implementation "androidx.core:core-ktx:+"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 //    implementation 'com.novoda:bintray-release:0.2.7'
 }
@@ -96,7 +96,7 @@ uploadArchives {
             }
             pom.project {
                 name 'meshprovisioner'
-                version '0.0.3'
+                version '0.1.0'
                 artifactId 'meshprovisioner'
                 groupId 'cn.mxchip.meshprovisioner.test'
                 packaging 'aar'

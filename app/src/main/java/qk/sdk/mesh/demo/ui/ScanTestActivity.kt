@@ -16,10 +16,10 @@ import qk.sdk.mesh.demo.widget.base.BaseViewHolder
 import qk.sdk.mesh.demo.widget.base.OnItemClickListener
 import qk.sdk.mesh.meshsdk.MeshHelper
 import qk.sdk.mesh.meshsdk.MeshSDK
-import qk.sdk.mesh.meshsdk.callbak.ArrayMapCallback
-import qk.sdk.mesh.meshsdk.callbak.IntCallback
-import qk.sdk.mesh.meshsdk.callbak.MapCallback
-import qk.sdk.mesh.meshsdk.callbak.StringCallback
+import qk.sdk.mesh.meshsdk.callback.ArrayMapCallback
+import qk.sdk.mesh.meshsdk.callback.IntCallback
+import qk.sdk.mesh.meshsdk.callback.MapCallback
+import qk.sdk.mesh.meshsdk.callback.StringCallback
 import qk.sdk.mesh.meshsdk.util.Constants
 import qk.sdk.mesh.meshsdk.util.Utils
 

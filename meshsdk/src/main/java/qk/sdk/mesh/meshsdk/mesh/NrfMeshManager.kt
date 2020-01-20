@@ -1084,8 +1084,8 @@ class NrfMeshManager(
 
         private val TAG = NrfMeshManager::class.java.simpleName
         private val ATTENTION_TIMER = 5
-        val EXPORT_PATH = Environment.getExternalStorageDirectory().absolutePath + File.separator +
-                "mxchip" + File.separator + "nRFMesh" + File.separator
+//        val EXPORT_PATH = Environment.getExternalStorageDirectory().absolutePath + File.separator +
+//                "mxchip" + File.separator + "nRFMesh" + File.separator
         private val EXPORTED_PATH =
             "sdcard" + File.separator + "mxchip" + File.separator + "nRFMesh" + File.separator
     }
@@ -1244,7 +1244,7 @@ class NrfMeshManager(
      */
     fun startScan(
         filterUuid: UUID,
-        callback: qk.sdk.mesh.meshsdk.callbak.ScanCallback? = null,
+        callback: qk.sdk.mesh.meshsdk.callback.ScanCallback? = null,
         networkKey: NetworkKey? = null
     ) {
         try {

@@ -17,16 +17,17 @@ import qk.sdk.mesh.demo.widget.base.OnItemLongClickListener
 import qk.sdk.mesh.meshsdk.MeshHelper
 import qk.sdk.mesh.meshsdk.MeshSDK
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
-import qk.sdk.mesh.meshsdk.callbak.MapCallback
-import qk.sdk.mesh.meshsdk.callbak.ProvisionCallback
-import qk.sdk.mesh.meshsdk.callbak.StringCallback
+import qk.sdk.mesh.meshsdk.callback.MapCallback
+import qk.sdk.mesh.meshsdk.callback.ProvisionCallback
+import qk.sdk.mesh.meshsdk.callback.StringCallback
 import qk.sdk.mesh.meshsdk.util.ByteUtil
 import qk.sdk.mesh.meshsdk.util.Utils
 
 class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
     private val TAG = "MainMeshActivity"
     private var mNodeAdapter: NodeAdapter? = null
-    private var mNodesCallback: ProvisionCallback = object : ProvisionCallback {
+    private var mNodesCallback: ProvisionCallback = object :
+        ProvisionCallback {
         override fun onProvisionedNodes(nodes: ArrayList<ProvisionedMeshNode>) {
             mNodeAdapter?.setData(nodes)
         }
@@ -54,6 +55,7 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
         tv_add.setOnClickListener(this)
         tv_export.setOnClickListener(this)
         tv_import.setOnClickListener(this)
+        tv_update.setOnClickListener(this)
 
         rv_provisioned_nodes.layoutManager = LinearLayoutManager(this)
         mNodeAdapter = NodeAdapter(
@@ -127,12 +129,23 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
             }
             R.id.tv_import -> {
                 Thread(Runnable {
-                    MeshSDK.importMeshNetwork(meshJson, object : StringCallback {
+                    MeshSDK.importMeshNetwork(meshJson, object :
+                        StringCallback {
                         override fun onResultMsg(msg: String) {
                             Utils.printLog(TAG, "import result:$msg")
                         }
                     })
                 }).start()
+            }
+            R.id.tv_update -> {
+//                Thread(Runnable {
+                    MeshSDK.updateDeviceImg("01003510-8C04-7863-D0F1-410000000000","/storage/emulated/0/mxchip_light-b7a7b10b9b23db4d04d91291448af183.bin",object :
+                        MapCallback {
+                        override fun onResult(result: HashMap<String, Any>) {
+
+                        }
+                    })
+//                }).start()
             }
         }
     }

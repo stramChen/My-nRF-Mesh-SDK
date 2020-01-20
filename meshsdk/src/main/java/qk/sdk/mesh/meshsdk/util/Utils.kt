@@ -287,21 +287,14 @@ object Utils {
     }
 
     fun getMacFromUUID(uuid: String): String {
-        var uuids = uuid.split("-")
-        if (uuids.size > 1) {
-            if (uuids[1].length == 4 && uuids[0].length == 8) {
-                var macSB = StringBuffer()
-                macSB.append(uuids[0])
-                macSB.append(uuids[1])
-                macSB.reverse()
-                for (i in macSB.indices step 2) {
-                    var charI = macSB.get(i)
-                    var charI1 = macSB.get(i + 1)
-                    macSB.setCharAt(i, charI1)
-                    macSB.setCharAt(i + 1, charI)
-                }
-                return macSB.toString().toUpperCase()
+        var newUUID = uuid.replace("-", "")
+        if (newUUID.length >= 32) {
+            var macSB = StringBuffer(newUUID.substring(10, 22))
+            var macStr = macSB.toString()
+            for (i in 0 until (macStr.length / 2 - 1)) {
+                macSB.insert(2 + i * 3, ":")
             }
+            return macSB.toString()
         }
         return ""
     }

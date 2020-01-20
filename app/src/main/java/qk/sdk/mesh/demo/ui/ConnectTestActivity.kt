@@ -3,12 +3,14 @@ package qk.sdk.mesh.demo.ui
 import android.os.Bundle
 import android.view.View
 import kotlinx.android.synthetic.main.activity_connect.*
-import org.spongycastle.pqc.math.ntru.util.Util
 import qk.sdk.mesh.demo.R
 import qk.sdk.mesh.demo.base.BaseMeshActivity
 import qk.sdk.mesh.meshsdk.MeshHelper
 import qk.sdk.mesh.meshsdk.MeshSDK
-import qk.sdk.mesh.meshsdk.callbak.*
+import qk.sdk.mesh.meshsdk.callback.ArrayStringCallback
+import qk.sdk.mesh.meshsdk.callback.BooleanCallback
+import qk.sdk.mesh.meshsdk.callback.MapCallback
+import qk.sdk.mesh.meshsdk.callback.StringCallback
 import qk.sdk.mesh.meshsdk.util.Utils
 
 class ConnectTestActivity : BaseMeshActivity() {
@@ -47,9 +49,11 @@ class ConnectTestActivity : BaseMeshActivity() {
         btn_add_app_key.setOnClickListener {
             if (MeshHelper.isConnectedToProxy()) {
                 Thread(Runnable {
-                    MeshSDK.getCurrentNetworkKey(object : StringCallback {
+                    MeshSDK.getCurrentNetworkKey(object :
+                        StringCallback {
                         override fun onResultMsg(msg: String) {
-                            MeshSDK.getAllApplicationKey(msg, object : ArrayStringCallback {
+                            MeshSDK.getAllApplicationKey(msg, object :
+                                ArrayStringCallback {
                                 override fun onResult(result: ArrayList<String>) {
                                     if (result.size > 0) {
                                         MeshSDK.bindApplicationKeyForNode(
@@ -71,7 +75,8 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
 
         switch_on_off.setOnCheckedChangeListener { buttonView, isChecked ->
-            MeshSDK.setGenericOnOff(mUUID, isChecked, object : BooleanCallback {
+            MeshSDK.setGenericOnOff(mUUID, isChecked, object :
+                BooleanCallback {
                 override fun onResult(boolean: Boolean) {
                     Utils.printLog(TAG, "setGenericOnOff result:$boolean")
                 }
@@ -84,7 +89,8 @@ class ConnectTestActivity : BaseMeshActivity() {
             var r = sb_vendor_r.progress * 255 / 100
             var g = sb_vendor_g.progress * 255 / 100
             var b = sb_vendor_b.progress * 255 / 100
-            MeshSDK.setLightProperties(mUUID, c, w, r, g, b, object : BooleanCallback {
+            MeshSDK.setLightProperties(mUUID, c, w, r, g, b, object :
+                BooleanCallback {
                 override fun onResult(boolean: Boolean) {
                     Utils.printLog(TAG, "setLightProperties result:$boolean")
                 }
@@ -96,7 +102,7 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
 
         tv_ping.setOnClickListener {
-            MeshSDK.getDeviceIdentityKeys(mUUID,object :MapCallback{
+            MeshSDK.getDeviceIdentityKeys(mUUID,object : MapCallback {
                 override fun onResult(result: HashMap<String, Any>) {
 
                 }

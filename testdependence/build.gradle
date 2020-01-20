@@ -45,14 +45,14 @@ dependencies {
 //    implementation support.appcompat_v7
     implementation support.constraint_layout
 
-//    api project(':meshsdk'){
+    api project(':meshsdk'){
 //        exclude group:'android.suppor.v4'
-//    }
+    }
     api(name: 'meshsdk-0.0.8', ext: 'aar') {
         exclude group: 'android.suppor.v4'
         exclude group: 'androidx.lifecycle'
     }
-    api(name: 'meshprovisioner-0.0.3', ext: 'aar'){
+    api(name: 'meshprovisioner-0.1.0', ext: 'aar'){
         exclude group:'android.support.v4'
     }
 

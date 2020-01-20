@@ -12,9 +12,9 @@ import qk.sdk.mesh.demo.widget.base.BaseAdapter
 import qk.sdk.mesh.demo.widget.base.BaseViewHolder
 import qk.sdk.mesh.demo.widget.base.OnItemLongClickListener
 import qk.sdk.mesh.meshsdk.MeshSDK
-import qk.sdk.mesh.meshsdk.callbak.ArrayStringCallback
-import qk.sdk.mesh.meshsdk.callbak.IntCallback
-import qk.sdk.mesh.meshsdk.callbak.MapCallback
+import qk.sdk.mesh.meshsdk.callback.ArrayStringCallback
+import qk.sdk.mesh.meshsdk.callback.IntCallback
+import qk.sdk.mesh.meshsdk.callback.MapCallback
 import qk.sdk.mesh.meshsdk.util.Utils
 
 class NetKeyActivity : BaseMeshActivity() {

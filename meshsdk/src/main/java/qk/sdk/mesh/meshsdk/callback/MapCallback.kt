@@ -1,4 +1,4 @@
-package qk.sdk.mesh.meshsdk.callbak
+package qk.sdk.mesh.meshsdk.callback
 
 interface MapCallback {
     fun onResult(result: HashMap<String, Any>)

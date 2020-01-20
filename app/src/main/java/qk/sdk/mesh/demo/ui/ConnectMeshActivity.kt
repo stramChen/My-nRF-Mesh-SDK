@@ -11,9 +11,9 @@ import qk.sdk.mesh.demo.base.BaseMeshActivity
 import qk.sdk.mesh.meshsdk.MeshHelper
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
-import qk.sdk.mesh.meshsdk.callbak.ConnectCallback
-import qk.sdk.mesh.meshsdk.callbak.MeshCallback
-import qk.sdk.mesh.meshsdk.callbak.ScanCallback
+import qk.sdk.mesh.meshsdk.callback.ConnectCallback
+import qk.sdk.mesh.meshsdk.callback.MeshCallback
+import qk.sdk.mesh.meshsdk.callback.ScanCallback
 import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
 import qk.sdk.mesh.meshsdk.util.ByteUtil
 import qk.sdk.mesh.meshsdk.util.Constants
@@ -108,7 +108,8 @@ class ConnectMeshActivity : BaseMeshActivity() {
         }
     }
 
-    var scanCallback: ScanCallback? = object : ScanCallback {
+    var scanCallback: ScanCallback? = object :
+        ScanCallback {
         override fun onScanResult(
             devices: List<ExtendedBluetoothDevice>,
             updatedIndex: Int?
@@ -152,7 +153,8 @@ class ConnectMeshActivity : BaseMeshActivity() {
         }
     }
 
-    var connectCallback: ConnectCallback? = object : ConnectCallback {
+    var connectCallback: ConnectCallback? = object :
+        ConnectCallback {
         override fun onConnect() {
             tv_proxy_address.text = MeshHelper.getConnectedDevice()?.getAddress()
             if (MeshHelper.getSelectedModel() == null && MeshHelper.getSelectedElement() == null) {
@@ -176,7 +178,8 @@ class ConnectMeshActivity : BaseMeshActivity() {
         }
     }
 
-    var meshCallback: MeshCallback? = object : MeshCallback {
+    var meshCallback: MeshCallback? = object :
+        MeshCallback {
         override fun onReceive(msg: MeshMessage) {
             if (msg is ConfigAppKeyStatus) {
                 if (msg.isSuccessful) {//添加appkey成功

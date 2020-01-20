@@ -4,6 +4,7 @@
     <string name="add">add</string>
     <string name="export">export</string>
     <string name="emport">import</string>
+    <string name="update">update</string>
     <string name="get_state">Get State</string>
     <string name="ttl">TTL</string>
     <string name="on_off">ON / OFF</string>

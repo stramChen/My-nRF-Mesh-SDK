@@ -6,9 +6,8 @@ import com.joker.api.wrapper.ListenerWrapper
 import no.nordicsemi.android.meshprovisioner.transport.MeshMessage
 import qk.sdk.mesh.demo.R
 import qk.sdk.mesh.meshsdk.MeshHelper
-import qk.sdk.mesh.meshsdk.MeshSDK
-import qk.sdk.mesh.meshsdk.callbak.*
-import qk.sdk.mesh.meshsdk.util.Constants
+import qk.sdk.mesh.meshsdk.callback.MeshCallback
+import qk.sdk.mesh.meshsdk.callback.ScanCallback
 import qk.sdk.mesh.meshsdk.util.Utils
 import java.util.*
 

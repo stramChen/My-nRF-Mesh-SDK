@@ -9,9 +9,8 @@ import no.nordicsemi.android.meshprovisioner.UnprovisionedBeacon
 import no.nordicsemi.android.meshprovisioner.transport.*
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
-import qk.sdk.mesh.meshsdk.callbak.*
+import qk.sdk.mesh.meshsdk.callback.*
 import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
-import qk.sdk.mesh.meshsdk.mesh.NrfMeshManager
 import qk.sdk.mesh.meshsdk.util.*
 import java.lang.StringBuilder
 import kotlin.collections.HashMap
@@ -34,8 +33,10 @@ object MeshSDK {
     // 初始化 mesh
     fun init(context: Context) {
         mContext = context
-        if (mContext != null)
+        if (mContext != null){
             MeshHelper.initMesh(mContext!!)
+//            DfuHelper.getInstance(context)
+        }
     }
 
     fun checkPermission(callback: StringCallback) {
@@ -70,7 +71,8 @@ object MeshSDK {
     fun startScan(type: String, scanResultCallback: ArrayMapCallback, errCallback: IntCallback) {
         if (MeshHelper.isConnectedToProxy())
             disConnect()
-        var scanCallback: ScanCallback = object : ScanCallback {
+        var scanCallback: ScanCallback = object :
+            ScanCallback {
             override fun onScanResult(devices: List<ExtendedBluetoothDevice>, updatedIndex: Int?) {
                 var resultArray = ArrayList<HashMap<String, Any>>()
                 devices.forEach {
@@ -151,7 +153,8 @@ object MeshSDK {
                                                 MeshHelper.setSelectedMeshNode(it)
                                                 MeshHelper.setSelectedModel(null, null)
                                                 MeshHelper.startScan(BleMeshManager.MESH_PROXY_UUID,
-                                                    object : ScanCallback {
+                                                    object :
+                                                        ScanCallback {
                                                         override fun onScanResult(
                                                             devices: List<ExtendedBluetoothDevice>,
                                                             updatedIndex: Int?
@@ -304,7 +307,8 @@ object MeshSDK {
                 if (MeshHelper.isConnectedToProxy()) {
                     var bindedIndex = -1
                     var currentModel: MeshModel? = null
-                    MeshHelper.addAppkeys(applicationKey.keyIndex, object : MeshCallback {
+                    MeshHelper.addAppkeys(applicationKey.keyIndex, object :
+                        MeshCallback {
                         override fun onReceive(msg: MeshMessage) {
                             if (msg is ConfigAppKeyStatus) {
                                 if (msg.isSuccessful) {//添加appkey成功
@@ -627,14 +631,16 @@ object MeshSDK {
         var map = HashMap<String, Any>()
         doBaseCheck(null, map, callback)
         if (!MeshHelper.isConnectedToProxy()) {
-            MeshHelper.startScan(BleMeshManager.MESH_PROXY_UUID, object : ScanCallback {
+            MeshHelper.startScan(BleMeshManager.MESH_PROXY_UUID, object :
+                ScanCallback {
                 override fun onScanResult(
                     devices: List<ExtendedBluetoothDevice>,
                     updatedIndex: Int?
                 ) {
                     if (devices.isNotEmpty()) {
                         MeshHelper.stopScan()
-                        MeshHelper.connect(devices[0], true, object : ConnectCallback {
+                        MeshHelper.connect(devices[0], true, object :
+                            ConnectCallback {
                             override fun onConnect() {
                                 doMapCallback(
                                     map, callback,
@@ -673,7 +679,7 @@ object MeshSDK {
     }
 
     fun exportMeshNetwork(callback: StringCallback) {
-        MeshHelper.exportMeshNetwork( object : NetworkExportUtils.NetworkExportCallbacks {
+        MeshHelper.exportMeshNetwork(object : NetworkExportUtils.NetworkExportCallbacks {
             override fun onNetworkExported(json: String) {
                 callback.onResultMsg(json)
             }
@@ -685,12 +691,34 @@ object MeshSDK {
     }
 
     fun importMeshNetwork(json: String, callback: StringCallback) {
-        if (json.isEmpty()){
+        if (json.isEmpty()) {
             callback.onResultMsg(ConnectState.IMPORT_MESH_JSON_EMPTY_ERR.msg)
             return
         }
-        MeshHelper.importMeshNetwork(json,callback)
+        MeshHelper.importMeshNetwork(json, callback)
     }
+
+//    fun updateDeviceImg(uuid: String, path: String, callback: MapCallback) {
+//        var map = HashMap<String, Any>()
+//        doBaseCheck(uuid, map, callback)
+//        MeshHelper.updateDeviceImg(mContext!!,uuid,path,object :DfuAdapter.DfuHelperCallback(){
+//            override fun onStateChanged(p0: Int) {
+//                super.onStateChanged(p0)
+//            }
+//
+//            override fun onProcessStateChanged(p0: Int, p1: Throughput?) {
+//                super.onProcessStateChanged(p0, p1)
+//            }
+//
+//            override fun onProgressChanged(p0: DfuProgressInfo?) {
+//                super.onProgressChanged(p0)
+//            }
+//
+//            override fun onError(p0: Int, p1: Int) {
+//                super.onError(p0, p1)
+//            }
+//        })
+//    }
 
     private fun doMapCallback(map: HashMap<String, Any>, callback: MapCallback, msg: CallbackMsg) {
         map.put("code", msg.code)

@@ -17,11 +17,10 @@ import qk.sdk.mesh.meshsdk.bean.CommonErrorMsg
 import qk.sdk.mesh.meshsdk.bean.ERROR_MSG_UNICAST_UNABLED
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
-import qk.sdk.mesh.meshsdk.callbak.*
+import qk.sdk.mesh.meshsdk.callback.*
 import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
 import qk.sdk.mesh.meshsdk.mesh.NrfMeshManager
 import qk.sdk.mesh.meshsdk.util.*
-import rx.android.schedulers.AndroidSchedulers
 import java.lang.Exception
 import java.util.*
 

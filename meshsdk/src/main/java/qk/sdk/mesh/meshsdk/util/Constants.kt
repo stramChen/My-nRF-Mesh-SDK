@@ -6,6 +6,7 @@ object Constants {
      * SDK全局错误码：100起，如未初始化SDK的错误码为101,未释放蓝牙资源133
      * PROVISION错误码：200起
      * 导入导出错误码：500起
+     * dfu错误码：600起
      */
 
     //------未初始化SDK
@@ -20,6 +21,11 @@ object Constants {
     //------扫描设备
     const val SCAN_PROVISIONED = "provisioned"
     const val SCAN_UNPROVISIONED = "unProvisioned"
+
+    //------dfu
+    const val ERROR_TYPE_PARAM_ERROR = 2
+    const val ERROR_TYPE_FILE_ERROR = 3
+    const val DFU_WORK_MODE_SILENCE = 16
 
 
     //    val PROVISION_SUCCESS_CODE = 200//provision 成功
@@ -40,8 +46,6 @@ object Constants {
         COMMON_SUCCESS("success", 200),// 全局通用，操作成功
 
         BIND_APP_KEY_FOR_NODE_FAILED("", 208),//绑定appkey失败
-        BIND_APP_KEY_FOR_NODE_SUCCESS("", 200),//绑定appkey成功
-
         CONNECTING("连接中", 201),
         DISCOVERING_SERVICE("检查服务中", 202),
         INITIALIZING("初始化蓝牙连接", 203),
@@ -54,6 +58,9 @@ object Constants {
         NET_KEY_NOT_EXIST("netKey不存在", 403),//netKey正在使用中，需先删除netKey对应的设备
         APP_KEY_DELETE_FAILED("appKey正在使用中，需先删除appKey对应的设备", 402),//appKey正在使用中，需先删除appKey对应的设备
 
-        IMPORT_MESH_JSON_EMPTY_ERR("mesh json is null", 501)
+        IMPORT_MESH_JSON_EMPTY_ERR("mesh json is null", 501),
+
+        DFU_FILE_NOT_EXIST("更新包不存在", 601),
+        DFU_PARAM_ERROR("传参错误", 601)
     }
 }

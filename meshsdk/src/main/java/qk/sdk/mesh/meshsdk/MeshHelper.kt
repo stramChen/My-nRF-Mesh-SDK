@@ -3,10 +3,7 @@ package qk.sdk.mesh.meshsdk
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import androidx.lifecycle.Observer
 import com.joker.api.wrapper.ListenerWrapper
-import com.realsil.sdk.dfu.utils.DfuAdapter
-import com.realsil.sdk.dfu.utils.DfuHelper
 import no.nordicsemi.android.meshprovisioner.ApplicationKey
 import no.nordicsemi.android.meshprovisioner.MeshNetwork
 import no.nordicsemi.android.meshprovisioner.NetworkKey
@@ -14,25 +11,25 @@ import no.nordicsemi.android.meshprovisioner.models.VendorModel
 import no.nordicsemi.android.meshprovisioner.transport.*
 import no.nordicsemi.android.meshprovisioner.utils.MeshAddress
 import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils
+import qk.sdk.mesh.meshsdk.backgroundscan.BackgroundScanAutoConnected
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
-import qk.sdk.mesh.meshsdk.callbak.*
+import qk.sdk.mesh.meshsdk.callback.*
 import qk.sdk.mesh.meshsdk.service.BaseMeshService
 import qk.sdk.mesh.meshsdk.util.*
 import rx.android.schedulers.AndroidSchedulers
+import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
-object MeshHelper {
+object MeshHelper : MXDfuUtil() {
     private val TAG = "MeshHelper"
     private var mProvisionCallback: ProvisionCallback? = null
-//    private var mDfuHelper: DfuHelper? = null
 
     // 初始化 mesh
     fun initMesh(context: Context) {
         context.startService(Intent(context, MeshProxyService::class.java))
         LocalPreferences.init(context)
-//        mDfuHelper = DfuHelper.getInstance(context)//初始化dfu
     }
 
     // 检查蓝牙权限
@@ -42,8 +39,6 @@ object MeshHelper {
     }
 
     // 扫描蓝牙节点
-    // TODO: UUID 定义为一个通用的字符串，标明扫描到的设备类型（已加入 mesh 网络的，未加入的）
-    // TODO: scanCallback -> 2 个方法，onStatusChange, onScanResult
     fun startScan(filterUuid: UUID, scanCallback: ScanCallback?, networkKey: String = "") {
         rx.Observable.create<String> {
         }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
@@ -59,10 +54,7 @@ object MeshHelper {
         }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
-    // ⚠️ Q: 此处是否仅建立蓝牙连接？
     // 建立连接
-    // TODO: device 修改为传递唯一标识符 string | number
-    // TODO: 能多函数多函数，参数最好是基础类型
     fun connect(
         device: ExtendedBluetoothDevice,
         connectToNetwork: Boolean,
@@ -76,8 +68,6 @@ object MeshHelper {
 
     // 添加蓝牙连接回调
     // 当前连接的 mesh 代理节点状态变化时，回调通知应用层
-    // TODO: 合并 callback 为一个方法，定义并给出 callback 参数定义 - 连接、断开、连接中，等等
-    // TODO: addConnectStatusChangedCallback
     fun addConnectCallback(callback: ConnectCallback) {
         rx.Observable.create<String> {
         }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
@@ -86,10 +76,6 @@ object MeshHelper {
     }
 
     // 获取当前已连接的蓝牙设备
-    // TODO: getCurrentConnectedDevice()
-    // TODO: ExtendedBluetoothDevice 转换为 HashMap
-    // TODO: ExtendedBluetoothDevice 包含属性（暂定）
-    // TODO: UUID, mac(address), name, rssi
     fun getConnectedDevice(): ExtendedBluetoothDevice? {
         return MeshProxyService.mMeshProxyService?.getConnectingDevice()
     }
@@ -119,8 +105,6 @@ object MeshHelper {
     }
 
     // 开启启动网络配置
-    // TODO: ExtendedBluetoothDevice 转换为 HashMap
-    // TODO: callback 同上
     fun startProvision(device: ExtendedBluetoothDevice, callback: BaseCallback) {
         rx.Observable.create<String> {
         }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
@@ -141,8 +125,6 @@ object MeshHelper {
     }
 
     // ??? 获取已经配置的网络的节点列表？
-    // TODO: callback 同上
-    // TODO: getProvisionedDeviceListForCurrentMeshNetwork()
     fun getProvisionedNodeByCallback(callback: ProvisionCallback) {
         rx.Observable.create<String> {
         }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
@@ -158,9 +140,6 @@ object MeshHelper {
     }
 
     // 移除已经配置的 mesh 网络节点
-    // TODO: ProvisionedMeshNode 同上
-    // TODO: callback 同上
-    // TODO: deleteProvisionNodeFormLocalMeshNetworkDataBase
     fun deleteProvisionNode(node: ProvisionedMeshNode?, callback: ProvisionCallback? = null) {
         rx.Observable.create<String> {
         }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
@@ -181,7 +160,6 @@ object MeshHelper {
 
     // ？？？
     // 设置要操作的节点
-    // TODO: node -> string MAC 地址
     fun setSelectedMeshNode(node: ProvisionedMeshNode) {
         MeshProxyService.mMeshProxyService?.setSelectedNode(node)
     }
@@ -219,7 +197,6 @@ object MeshHelper {
     }
 
     // 在当前 mesh 网络中创建一个新的 application key，并存储
-    // TODO: 传入 APP Key 序号
     fun addAppKeys(meshCallback: MeshCallback?) {
         rx.Observable.create<String> {
         }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
@@ -287,25 +264,6 @@ object MeshHelper {
             //todo 日志记录
             Utils.printLog(TAG, "addAppKeys() applicationKey is null!")
         }
-//        getAppKeys()?.get(index)?.let { applicationKey ->
-//            getNetworkKey(applicationKey.boundNetKeyIndex)?.let { networkKey ->
-//                val node = getSelectedMeshNode()
-//                var isNodeKeyAdd: Boolean
-//                if (node != null) {
-//                    isNodeKeyAdd = MeshParserUtils.isNodeKeyExists(
-//                        node.addedAppKeys,
-//                        applicationKey.keyIndex
-//                    )
-//                    val meshMessage: MeshMessage
-//                    if (!isNodeKeyAdd) {
-//                        meshMessage = ConfigAppKeyAdd(getCurrentNetworkKey()!!, applicationKey)
-//                    } else {
-//                        meshMessage = ConfigAppKeyDelete(getCurrentNetworkKey()!!, applicationKey)
-//                    }
-//                    sendMessage(node.unicastAddress, meshMessage, meshCallback)
-//                }
-//            }
-//        }
     }
 
     /**
@@ -503,8 +461,6 @@ object MeshHelper {
 
     // 传送 mesh 数据包
     // 传递控制参数给 mesh 设备
-    // TODO: 修改为原始类型数据
-    // TODO: sendMeshPDU
     fun sendMeshPdu(dst: Int, message: MeshMessage, callback: MeshCallback?) {
         rx.Observable.create<String> {
         }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
@@ -513,12 +469,10 @@ object MeshHelper {
     }
 
     // 获取选中的 model
-    // TODO: 修改为原始类型数据
     fun getSelectedModel(): MeshModel? {
         return MeshProxyService.mMeshProxyService?.getSelectedModel()
     }
 
-    // TODO: 修改为原始类型数据
     fun getSelectedElement(): Element? {
         return MeshProxyService.mMeshProxyService?.getSelectedElement()
     }
@@ -528,8 +482,6 @@ object MeshHelper {
         return MeshProxyService.mMeshProxyService?.isConnectedToProxy() ?: false
     }
 
-    // 设定通用开关状态 ？？？GET？？？
-    // Android 封装好的方法
     fun sendGenericOnOffGet(meshCallback: MeshCallback?) {
         val element = MeshHelper.getSelectedElement()
         if (element != null) {
@@ -561,7 +513,6 @@ object MeshHelper {
         }
     }
 
-    // 设定开关状态？
     fun sendGenericOnOff(state: Boolean, delay: Int?) {
         getSelectedMeshNode()?.let { node ->
             getSelectedElement()?.let { element ->
@@ -590,7 +541,6 @@ object MeshHelper {
         }
     }
 
-    // 设定开关状态？
     fun sendGenericOnOff(state: Boolean, delay: Int?, meshCallback: MeshCallback?) {
         if (meshCallback == null)
             Utils.printLog(TAG, "")
@@ -690,6 +640,80 @@ object MeshHelper {
             MeshProxyService.mMeshProxyService?.importMeshNetworkJson(json, callback)
         }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
+
+//    fun updateDeviceImg(
+//        context: Context,
+//        uuid: String,
+//        path: String,
+//        callback: DfuAdapter.DfuHelperCallback
+//    ) {
+//        if (uuid.isEmpty() || path.isEmpty()) {
+//            callback.onError(
+//                Constants.ERROR_TYPE_FILE_ERROR,
+//                Constants.ConnectState.DFU_PARAM_ERROR.code
+//            )
+//        }
+//
+//        if (!File(path).exists()) {
+//            callback.onError(
+//                Constants.ERROR_TYPE_PARAM_ERROR,
+//                Constants.ConnectState.DFU_FILE_NOT_EXIST.code
+//            )
+//        }
+//
+//        mDfuHelper = DfuHelper.getInstance(context)
+//        if (mDfuHelper != null && getDfuConfig() != null) {
+//            mDfuHelper.addDfuHelperCallback(callback)
+//            initialize(context, Utils.getMacFromUUID(uuid))
+//            BackgroundScanAutoConnected.getInstance()
+//                .scanLeDevice(false, BackgroundScanAutoConnected.SCAN_PROXY)
+//            BackgroundScanAutoConnected.getInstance().gattLayerInstance
+//                .setIs_OTA_SERVICE_On(true)
+//            if (BackgroundScanAutoConnected.getInstance().isConnect()) {
+//                connectRemoteDevice(
+//                    BackgroundScanAutoConnected.getInstance().getGattLayerInstance().getBluetoothDevice(
+//                        Utils.getMacFromUUID(uuid)
+//                    ), false
+//                )
+//            }
+//
+//            getDfuConfig()?.otaWorkMode = Constants.DFU_WORK_MODE_SILENCE//设置更新模式为静默更新
+//            getDfuConfig()?.filePath = path//设置bin文件路径
+//            getDfuConfig()?.address = Utils.getMacFromUUID(uuid)//设置更新设备
+//            try {
+//                var binInfo = BinFactory.loadImageBinInfo(
+//                    path,
+//                    mDfuHelper.otaDeviceInfo, false
+//                )
+//                if (checkFileContent(mDfuHelper, getDfuConfig(), binInfo)) {
+////                getDfuConfig()?.setAutomaticActiveEnabled(SettingsHelper.getInstance().isAutomaticActiveEnabled())
+//                    getDfuConfig()?.isBatteryCheckEnabled = false
+//                    getDfuConfig()?.isVersionCheckEnabled = false
+//
+////                        getDfuConfig().setSpeedControlEnabled(true)
+////                        getDfuConfig().setControlSpeed(speed)
+//                    getDfuConfig()?.isSpeedControlEnabled = (false)
+//                    getDfuConfig()?.controlSpeed = (0)
+//                    getDfuConfig()?.address = getDfuConfig()?.address
+//
+//                    val ret = mDfuHelper.startOtaProcess(getDfuConfig())
+//                    if (!ret) {
+//                        //todo
+//                        Utils.printLog(TAG, "开始ota失败")
+//                    }
+//                } else {
+//                    //todo
+//                    Utils.printLog(TAG, "校验bin文件失败")
+//                }
+//            }catch (e:DfuException){
+//                e.printStackTrace()
+//                //todo
+//            }
+//        } else {
+//            //todo
+//            Utils.printLog(TAG, "dfu 未初始化！")
+//        }
+//    }
 
     internal class MeshProxyService : BaseMeshService() {
         companion object {

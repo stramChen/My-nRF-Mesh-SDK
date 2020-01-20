@@ -1,4 +1,4 @@
-package qk.sdk.mesh.meshsdk.callbak
+package qk.sdk.mesh.meshsdk.callback
 
 import no.nordicsemi.android.meshprovisioner.transport.ProvisionedMeshNode
 
