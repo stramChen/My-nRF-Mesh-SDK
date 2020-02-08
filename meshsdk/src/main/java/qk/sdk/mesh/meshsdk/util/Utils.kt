@@ -281,9 +281,9 @@ object Utils {
     }
 
     fun printLog(tag: String, msg: String) {
-        if (BuildConfig.DEBUG) {
+//        if (BuildConfig.DEBUG) {
             Log.e(tag, msg)
-        }
+//        }
     }
 
     fun getMacFromUUID(uuid: String): String {

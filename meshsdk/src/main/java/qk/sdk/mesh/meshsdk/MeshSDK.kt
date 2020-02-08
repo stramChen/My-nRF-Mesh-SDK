@@ -1,6 +1,7 @@
 package qk.sdk.mesh.meshsdk
 
 import android.content.Context
+import android.util.Log
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -33,7 +34,7 @@ object MeshSDK {
     // 初始化 mesh
     fun init(context: Context) {
         mContext = context
-        if (mContext != null){
+        if (mContext != null) {
             MeshHelper.initMesh(mContext!!)
 //            DfuHelper.getInstance(context)
         }
@@ -77,6 +78,7 @@ object MeshSDK {
                 var resultArray = ArrayList<HashMap<String, Any>>()
                 devices.forEach {
                     if (it.beacon != null) {
+                        Utils.printLog(TAG, "scan result:${it.getAddress()}")
                         val unprovisionedBeacon = UnprovisionedBeacon(it.beacon!!.getBeaconData())
                         var map = HashMap<String, Any>()
                         map.put("mac", it.getAddress())
@@ -140,7 +142,8 @@ object MeshSDK {
                         }
 
                         override fun onConnectStateChange(msg: CallbackMsg) {
-                            Utils.printLog(TAG, "onConnectStateChange:${msg.msg}")
+                            //todo 日志管理
+                            Log.e(TAG, "onConnectStateChange:${msg.msg}")
                             if (msg.code == ConnectState.DISCONNECTED.code) {
                                 var node = MeshHelper.getProvisionNode()
                                 Utils.printLog(TAG, "getProvisionNode:${node?.size}")
@@ -552,6 +555,18 @@ object MeshSDK {
             false
         )
         callback.onResult(true)
+    }
+
+
+    fun sendMeshMessage(
+        uuid: String,
+        element: Int,
+        model: Int,
+        opcode: String,
+        value: String,
+        callback: BooleanCallback
+    ) {
+
     }
 
     fun getDeviceIdentityKeys(uuid: String, callback: MapCallback) {

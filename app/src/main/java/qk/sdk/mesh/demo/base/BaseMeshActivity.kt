@@ -2,7 +2,7 @@ package qk.sdk.mesh.demo.base
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.joker.api.wrapper.ListenerWrapper
+//import com.joker.api.wrapper.ListenerWrapper
 import no.nordicsemi.android.meshprovisioner.transport.MeshMessage
 import qk.sdk.mesh.demo.R
 import qk.sdk.mesh.meshsdk.MeshHelper
@@ -37,19 +37,19 @@ abstract class BaseMeshActivity : AppCompatActivity() {
     }
 
     internal fun startScan(uuid: UUID, callback: ScanCallback?) {
-        MeshHelper.checkPermission(this, object : ListenerWrapper.PermissionRequestListener {
-            override fun permissionGranted(p0: Int) {//开启权限成功，开始扫描
+//        MeshHelper.checkPermission(this, object : ListenerWrapper.PermissionRequestListener {
+//            override fun permissionGranted(p0: Int) {//开启权限成功，开始扫描
                 MeshHelper.startScan(uuid, callback)
-            }
-
-            override fun permissionDenied(p0: Int) {// 权限开启失败
-                Utils.showToast(this@BaseMeshActivity, getString(R.string.grant_permission))
-                finish()
-            }
-
-            override fun permissionRationale(p0: Int) {
-            }
-        })
+//            }
+//
+//            override fun permissionDenied(p0: Int) {// 权限开启失败
+//                Utils.showToast(this@BaseMeshActivity, getString(R.string.grant_permission))
+//                finish()
+//            }
+//
+//            override fun permissionRationale(p0: Int) {
+//            }
+//        })
 
     }
 

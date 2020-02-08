@@ -58,10 +58,13 @@ dependencies {
 //    api 'androidx.lifecycle:lifecycle-extensions:2.2.0-rc03'
 //    api 'androidx.multidex:multidex:2.0.1'
 
-//    api 'no.nordicsemi.android:ble:2.1.1'
+    api 'no.nordicsemi.android:ble:2.1.1'
 //    api project(':QKMeshDemo:meshprovisioner')
 //    api project(':meshprovisioner')
-//    api 'no.nordicsemi.android.support.v18:scanner:1.4.3'
+    api 'no.nordicsemi.android.support.v18:scanner:1.4.3'
+    api('no.nordicsemi.android:log:2.2.0') {
+        transitive = true
+    }
     //运行时权限
     api 'com.github.jokermonn:permissions4m:2.1.2-lib'
     annotationProcessor 'com.github.jokermonn:permissions4m:2.1.2-processor'
@@ -108,7 +111,7 @@ uploadArchives {
             repository(url:"file:///Users/wangyue/Documents/mxchip/aar/")
             pom.project {
                 name 'meshsdk'
-                version '0.2.2'
+                version '0.3.3'
                 artifactId 'meshsdk'
                 groupId 'cn.mxchip.mesh.test'
                 packaging 'aar'
