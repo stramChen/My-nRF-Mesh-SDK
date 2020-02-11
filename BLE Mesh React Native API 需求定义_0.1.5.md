@@ -198,13 +198,15 @@ Map
 ### 对设备发送控制指令
 
 ```js
-// MeshSDK.setCurrentNode(uuid: string) // 选择当前要控制的 mesh 节点设备
 MeshSDK.setGenericOnOff(uuid: string, bool, callback(success: bool)) // true: 开, false: 关
 MeshSDK.setLightProperties(uuid: string, C: int, W: int, R: int, G: int, B: int, callback(success: bool))
+```
+
+```kotlin
 MeshSDK.sendMeshMessage(uuid: string, element: int, model: int, opcode: string, value: string, callback(success: bool))
-- sendMeshMessage接口用于vendor model消息的发送（GenericOnOff不属于vendor model）。参数示例如下
-- 如：自定义cwrgb，参数为(uuid,0,0,"05","0016000000",callback），其中value为cwrgb的十六进制字符串
-- 如：获取四元组，参数为(uuid,0,0,"00","",callback）
+    - sendMeshMessage接口用于vendor model消息的发送（GenericOnOff不属于vendor model)。参数示例如下:
+        - 如：自定义cwrgb，参数为(uuid,0,0,"05","0016000000",callback），其中value为cwrgb的十六进制字符串
+        - 如：获取四元组，参数为(uuid,0,0,"00","",callback）
 ```
 
 注意，调用 `setGenericOnOff ` 或 `setLightProperties ` 方法之前务必之行 `setCurrentNode `方法。
