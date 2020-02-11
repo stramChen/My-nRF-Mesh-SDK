@@ -1,6 +1,7 @@
 package qk.sdk.mesh.demo.ui
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import kotlinx.android.synthetic.main.activity_connect.*
 import qk.sdk.mesh.demo.R
@@ -102,21 +103,23 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
 
         tv_ping.setOnClickListener {
-//            MeshSDK.getDeviceIdentityKeys(mUUID,object : MapCallback {
-//                override fun onResult(result: HashMap<String, Any>) {
-//
-//                }
-//            })
+            MeshSDK.getDeviceIdentityKeys(mUUID, object : MapCallback {
+                override fun onResult(result: HashMap<String, Any>) {
+                    result.forEach { t, u ->
+                        Log.e(TAG, "key:$t,value:$u")
+                    }
+                }
+            })
 //            MeshSDK.sendMeshMessage(mUUID,0,0,"05","0016000000",object :BooleanCallback{
 //                override fun onResult(boolean: Boolean) {
 //
 //                }
 //            })
-            MeshSDK.sendMeshMessage(mUUID,0,0,"00","",object :BooleanCallback{
-                override fun onResult(boolean: Boolean) {
-
-                }
-            })
+//            MeshSDK.sendMeshMessage(mUUID,0,0,"00","",object :BooleanCallback{
+//                override fun onResult(boolean: Boolean) {
+//
+//                }
+//            })
         }
     }
 //

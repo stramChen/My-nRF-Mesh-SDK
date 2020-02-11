@@ -25,9 +25,12 @@ enum class CommonErrorMsg(var code: Int, var msg: String) {
 
     /*******连接**********/
     CONNECT_PROVISIONED_NODE_UPDATE(2010400, "匹配节点更新"),
+    DISCONNECTED(-200, "连接断开"),
+
 
     /*******provision**********/
     PROVISION_UNICAST_UNABLED(2010500, "节点已被provision，请先删除本地存储")
+
 }
 
 val ERROR_MSG_UNICAST_UNABLED = "Unicast address is already in use."

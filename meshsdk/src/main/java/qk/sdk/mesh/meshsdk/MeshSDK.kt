@@ -10,6 +10,7 @@ import no.nordicsemi.android.meshprovisioner.UnprovisionedBeacon
 import no.nordicsemi.android.meshprovisioner.models.VendorModel
 import no.nordicsemi.android.meshprovisioner.transport.*
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
+import qk.sdk.mesh.meshsdk.bean.CommonErrorMsg
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
 import qk.sdk.mesh.meshsdk.callback.*
 import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
@@ -506,6 +507,11 @@ object MeshSDK {
     }
 
     fun setGenericOnOff(uuid: String, onOff: Boolean, callback: BooleanCallback) {
+        if (!MeshHelper.isConnectedToProxy()) {
+            callback.onResult(false)
+            return
+        }
+
         try {
             if (MeshHelper.getSelectedMeshNode()?.uuid != uuid) {
                 MeshHelper.getProvisionNode()?.forEach { node ->
@@ -531,32 +537,12 @@ object MeshSDK {
         uuid: String, c: Int, w: Int, r: Int,
         g: Int, b: Int, callback: BooleanCallback
     ) {
-        if (MeshHelper.getSelectedMeshNode()?.uuid != uuid) {
-            MeshHelper.getProvisionNode()?.forEach { node ->
-                if (node.uuid == uuid) {
-                    MeshHelper.setSelectedMeshNode(node)
-                }
-            }
-        }
-        MeshHelper.setSelectedModel(
-            MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(0),
-            MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(0)?.meshModels?.get(
-                VENDOR_MODELID
-            )
-        )
-
         var params = StringBuilder(
             "${ByteUtil.rgbtoHex(c)}${ByteUtil.rgbtoHex(w)}${ByteUtil.rgbtoHex(r)}${ByteUtil.rgbtoHex(
                 g
             )}${ByteUtil.rgbtoHex(b)}"
         )
-        Log.e(TAG, "cwrgb param:${params.toString()}")
-        MeshHelper.sendVendorModelMessage(
-            Integer.valueOf("05", 16),
-            ByteUtil.hexStringToBytes(params.toString()),
-            false
-        )
-        callback.onResult(true)
+        sendMeshMessage(uuid, 0, VENDOR_MODELID, "05", params.toString(), callback)
     }
 
 
@@ -566,8 +552,16 @@ object MeshSDK {
         model: Int,
         opcode: String,
         value: String,
-        callback: BooleanCallback
+        callback: Any
     ) {
+        if (!MeshHelper.isConnectedToProxy()) {
+            doVendorCallback(
+                callback,
+                false,
+                CallbackMsg(CommonErrorMsg.DISCONNECTED.code, CommonErrorMsg.DISCONNECTED.msg)
+            )
+        }
+
         if (MeshHelper.getSelectedMeshNode()?.uuid != uuid) {
             MeshHelper.getProvisionNode()?.forEach { node ->
                 if (node.uuid == uuid) {
@@ -583,6 +577,7 @@ object MeshSDK {
             )
         )
 
+        var msgIndex = -1
         val element = MeshHelper.getSelectedElement()
         if (element != null) {
             val model = MeshHelper.getSelectedModel()
@@ -604,13 +599,88 @@ object MeshSDK {
                             message,
                             object : MeshCallback {
                                 override fun onReceive(msg: MeshMessage) {
-                                    if (msg is VendorModelMessageStatus && msg.parameter.size >= 83) {
-                                        Utils.printLog(TAG, "param:${String(msg.parameter)}")
+                                    if (msg is VendorModelMessageStatus && MeshHelper.isConnectedToProxy()) {
+                                        synchronized(msgIndex) {
+                                            when (opcode) {
+                                                "00" -> {//四元组
+                                                    if (msgIndex < 0) {
+                                                        var pk = ByteArray(11)
+                                                        var ps = ByteArray(16)
+                                                        var dn = ByteArray(20)
+                                                        var ds = ByteArray(32)
+                                                        System.arraycopy(
+                                                            msg.parameter,
+                                                            0,
+                                                            pk,
+                                                            0,
+                                                            11
+                                                        )
+                                                        System.arraycopy(
+                                                            msg.parameter,
+                                                            12,
+                                                            ps,
+                                                            0,
+                                                            16
+                                                        )
+                                                        System.arraycopy(
+                                                            msg.parameter,
+                                                            29,
+                                                            dn,
+                                                            0,
+                                                            20
+                                                        )
+                                                        System.arraycopy(
+                                                            msg.parameter,
+                                                            50,
+                                                            ds,
+                                                            0,
+                                                            32
+                                                        )
+                                                        Utils.printLog(
+                                                            TAG,
+                                                            "pk:${String(pk)},ps:${String(ps)},dn:${String(
+                                                                dn
+                                                            )},ds:${String(
+                                                                ds
+                                                            )}"
+                                                        )
+
+                                                        var map = HashMap<String, Any>()
+                                                        map.put("pk", String(pk))
+                                                        map.put("ps", String(ps))
+                                                        map.put("dn", String(dn))
+                                                        map.put("ds", String(ds))
+                                                        map.put(
+                                                            "code",
+                                                            ConnectState.COMMON_SUCCESS.code
+                                                        )
+                                                        if (callback is MapCallback) {
+                                                            callback.onResult(map)
+                                                        }
+                                                        MeshHelper.unRegisterMeshMsg()
+                                                        msgIndex = 0
+                                                    }
+                                                }
+                                                "05" -> {//cwrgb
+                                                    if (callback is BooleanCallback) {
+                                                        callback.onResult(true)
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        doVendorCallback(
+                                            callback, false,
+                                            CallbackMsg(
+                                                CommonErrorMsg.DISCONNECTED.code,
+                                                CommonErrorMsg.DISCONNECTED.msg
+                                            )
+                                        )
                                     }
                                 }
 
                                 override fun onError(msg: CallbackMsg) {
-
+                                    doVendorCallback(callback, false, msg)
                                 }
                             })
                     }
@@ -622,64 +692,17 @@ object MeshSDK {
         }
     }
 
-    fun getDeviceIdentityKeys(uuid: String, callback: MapCallback) {
-        var map = HashMap<String, Any>()
-        if (MeshHelper.getSelectedMeshNode()?.uuid != uuid) {
-            MeshHelper.getProvisionNode()?.forEach { node ->
-                if (node.uuid == uuid) {
-                    MeshHelper.setSelectedMeshNode(node)
-                }
-            }
+    private fun doVendorCallback(callback: Any, result: Boolean, msg: CallbackMsg?) {
+        if (callback is BooleanCallback) {
+            callback.onResult(result)
+        } else if (callback is MapCallback && msg != null) {
+            var map = HashMap<String, Any>()
+            doMapCallback(map, callback, msg)
         }
+    }
 
-        MeshHelper.setSelectedModel(
-            MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(0),
-            MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(0)?.meshModels?.get(
-                VENDOR_MODELID
-            )
-        )
-        var msgIndex = -1
-        MeshHelper.sendVendorModelMessage(
-            Integer.valueOf("00", 16),
-            null,
-            false, object : MeshCallback {
-                override fun onReceive(msg: MeshMessage) {
-                    if (msg is VendorModelMessageStatus && msg.parameter.size >= 83) {
-                        Utils.printLog(TAG, "param:${String(msg.parameter)}")
-                        synchronized(msgIndex) {
-                            if (msgIndex < 0) {
-                                var pk = ByteArray(11)
-                                var ps = ByteArray(16)
-                                var dn = ByteArray(20)
-                                var ds = ByteArray(32)
-                                System.arraycopy(msg.parameter, 0, pk, 0, 11)
-                                System.arraycopy(msg.parameter, 12, ps, 0, 16)
-                                System.arraycopy(msg.parameter, 29, dn, 0, 20)
-                                System.arraycopy(msg.parameter, 50, ds, 0, 32)
-                                Utils.printLog(
-                                    TAG,
-                                    "pk:${String(pk)},ps:${String(ps)},dn:${String(dn)},ds:${String(
-                                        ds
-                                    )}"
-                                )
-                                map.put("pk", String(pk))
-                                map.put("ps", String(ps))
-                                map.put("dn", String(dn))
-                                map.put("ds", String(ds))
-                                map.put("code", ConnectState.COMMON_SUCCESS.code)
-                                callback.onResult(map)
-                                MeshHelper.unRegisterMeshMsg()
-                                msgIndex = 0
-                            }
-                        }
-                    }
-                }
-
-                override fun onError(msg: CallbackMsg) {
-                    doMapCallback(map, callback, msg)
-                }
-            }
-        )
+    fun getDeviceIdentityKeys(uuid: String, callback: MapCallback) {
+        sendMeshMessage(uuid, 0, 0, "00", "", callback)
     }
 
     fun resetNode(uuid: String) {
