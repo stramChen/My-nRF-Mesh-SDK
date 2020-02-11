@@ -103,10 +103,10 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
 
         tv_ping.setOnClickListener {
-            MeshSDK.getDeviceIdentityKeys(mUUID, object : MapCallback {
+            MeshSDK.getDeviceIdentityKeys(mUUID,object : MapCallback {
                 override fun onResult(result: HashMap<String, Any>) {
                     result.forEach { t, u ->
-                        Log.e(TAG, "key:$t,value:$u")
+                        Log.e(TAG,"key:$t,value:$u")
                     }
                 }
             })

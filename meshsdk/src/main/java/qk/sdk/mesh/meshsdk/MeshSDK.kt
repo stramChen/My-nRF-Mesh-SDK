@@ -560,6 +560,7 @@ object MeshSDK {
                 false,
                 CallbackMsg(CommonErrorMsg.DISCONNECTED.code, CommonErrorMsg.DISCONNECTED.msg)
             )
+            return
         }
 
         if (MeshHelper.getSelectedMeshNode()?.uuid != uuid) {
@@ -599,11 +600,24 @@ object MeshSDK {
                             message,
                             object : MeshCallback {
                                 override fun onReceive(msg: MeshMessage) {
-                                    if (msg is VendorModelMessageStatus && MeshHelper.isConnectedToProxy()) {
+                                    Utils.printLog(
+                                        TAG,
+                                        "vendor msg:${ByteUtil.bytesToHexString(msg.parameter)}"
+                                    )
+                                    if (msg is VendorModelMessageStatus) {
+                                        if (!MeshHelper.isConnectedToProxy()) {
+                                            doVendorCallback(
+                                                callback, false,
+                                                CallbackMsg(
+                                                    CommonErrorMsg.DISCONNECTED.code,
+                                                    CommonErrorMsg.DISCONNECTED.msg
+                                                )
+                                            )
+                                        }
                                         synchronized(msgIndex) {
                                             when (opcode) {
                                                 "00" -> {//四元组
-                                                    if (msgIndex < 0) {
+                                                    if (msgIndex < 0 && msg.parameter.size >= 83) {
                                                         var pk = ByteArray(11)
                                                         var ps = ByteArray(16)
                                                         var dn = ByteArray(20)
@@ -662,20 +676,13 @@ object MeshSDK {
                                                     }
                                                 }
                                                 "05" -> {//cwrgb
-                                                    if (callback is BooleanCallback) {
+                                                    if (msgIndex < 0 && callback is BooleanCallback) {
                                                         callback.onResult(true)
                                                     }
+                                                    msgIndex = 0
                                                 }
                                             }
                                         }
-                                    } else {
-                                        doVendorCallback(
-                                            callback, false,
-                                            CallbackMsg(
-                                                CommonErrorMsg.DISCONNECTED.code,
-                                                CommonErrorMsg.DISCONNECTED.msg
-                                            )
-                                        )
                                     }
                                 }
 
@@ -699,6 +706,7 @@ object MeshSDK {
             var map = HashMap<String, Any>()
             doMapCallback(map, callback, msg)
         }
+        return
     }
 
     fun getDeviceIdentityKeys(uuid: String, callback: MapCallback) {
