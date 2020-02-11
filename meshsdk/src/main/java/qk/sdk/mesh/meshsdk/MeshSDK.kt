@@ -7,6 +7,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import me.weyye.hipermission.PermissionCallback
 import no.nordicsemi.android.meshprovisioner.UnprovisionedBeacon
+import no.nordicsemi.android.meshprovisioner.models.VendorModel
 import no.nordicsemi.android.meshprovisioner.transport.*
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
@@ -25,7 +26,7 @@ object MeshSDK {
     private var mContext: Context? = null
     private var mExtendedBluetoothDeviceMap = HashMap<String, ExtendedBluetoothDevice>()
 
-    const val CWRGB_MODELID = 6094849
+    const val VENDOR_MODELID = 6094849
     const val ON_OFF_MODELID = 4096
 //    const val ELEMENT_ADDRESS = 2
 
@@ -540,7 +541,7 @@ object MeshSDK {
         MeshHelper.setSelectedModel(
             MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(0),
             MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(0)?.meshModels?.get(
-                CWRGB_MODELID
+                VENDOR_MODELID
             )
         )
 
@@ -549,6 +550,7 @@ object MeshSDK {
                 g
             )}${ByteUtil.rgbtoHex(b)}"
         )
+        Log.e(TAG, "cwrgb param:${params.toString()}")
         MeshHelper.sendVendorModelMessage(
             Integer.valueOf("05", 16),
             ByteUtil.hexStringToBytes(params.toString()),
@@ -566,7 +568,58 @@ object MeshSDK {
         value: String,
         callback: BooleanCallback
     ) {
+        if (MeshHelper.getSelectedMeshNode()?.uuid != uuid) {
+            MeshHelper.getProvisionNode()?.forEach { node ->
+                if (node.uuid == uuid) {
+                    MeshHelper.setSelectedMeshNode(node)
+                }
+            }
+        }
 
+        MeshHelper.setSelectedModel(
+            MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(element),
+            MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(element)?.meshModels?.get(
+                if (model == 0) VENDOR_MODELID else model
+            )
+        )
+
+        val element = MeshHelper.getSelectedElement()
+        if (element != null) {
+            val model = MeshHelper.getSelectedModel()
+            if (model != null && model is VendorModel) {
+                if (model.boundAppKeyIndexes.size > 0) {
+                    val appKeyIndex = model.boundAppKeyIndexes[0]
+                    val appKey = MeshHelper.getMeshNetwork()?.getAppKey(appKeyIndex)
+                    val message: MeshMessage
+                    if (appKey != null) {
+                        message = VendorModelMessageUnacked(
+                            appKey,
+                            model.modelId,
+                            model.companyIdentifier,
+                            Integer.valueOf(opcode, 16),
+                            ByteUtil.hexStringToBytes(value)
+                        )
+                        MeshHelper.sendMessage(
+                            element.elementAddress,
+                            message,
+                            object : MeshCallback {
+                                override fun onReceive(msg: MeshMessage) {
+                                    if (msg is VendorModelMessageStatus && msg.parameter.size >= 83) {
+                                        Utils.printLog(TAG, "param:${String(msg.parameter)}")
+                                    }
+                                }
+
+                                override fun onError(msg: CallbackMsg) {
+
+                                }
+                            })
+                    }
+                } else {
+                    //todo
+                    Utils.printLog(TAG, "model don't boundAppKey")
+                }
+            }
+        }
     }
 
     fun getDeviceIdentityKeys(uuid: String, callback: MapCallback) {
@@ -578,10 +631,11 @@ object MeshSDK {
                 }
             }
         }
+
         MeshHelper.setSelectedModel(
             MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(0),
             MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(0)?.meshModels?.get(
-                CWRGB_MODELID
+                VENDOR_MODELID
             )
         )
         var msgIndex = -1

@@ -10,6 +10,7 @@
 |0.1.2|添加错误码描述、修改connect接口传参、添加callback次数描述|
 |0.1.3|添加获取四元组接口、修改connect只回调一次|
 |0.1.4|修改provision参数、添加netKey增加返回值|
+|0.1.5|修改获取四元组接口命名，添加自定义消息参数示例|
 
 ---- 
 
@@ -186,7 +187,7 @@ MeshSDK.connect(networkKey: string, callback(error: Map))
 ```
 ### 获取四元组信息：callback回调一次
 ```kotlin
-MeshSDK.getQuadruples(uuid: String, callback(result: Map))
+MeshSDK.getDeviceIdentityKeys(uuid: String, callback(result: Map))
 Map
 - result
 	- `{code:int,pk: string, ps: string,dn: string,ds: string}`
@@ -201,10 +202,12 @@ Map
 MeshSDK.setGenericOnOff(uuid: string, bool, callback(success: bool)) // true: 开, false: 关
 MeshSDK.setLightProperties(uuid: string, C: int, W: int, R: int, G: int, B: int, callback(success: bool))
 MeshSDK.sendMeshMessage(uuid: string, element: int, model: int, opcode: string, value: string, callback(success: bool))
+- sendMeshMessage接口用于vendor model消息的发送（GenericOnOff不属于vendor model）。参数示例如下
+- 如：自定义cwrgb，参数为(uuid,0,0,"05","0016000000",callback），其中value为cwrgb的十六进制字符串
+- 如：获取四元组，参数为(uuid,0,0,"00","",callback）
 ```
 
 注意，调用 `setGenericOnOff ` 或 `setLightProperties ` 方法之前务必之行 `setCurrentNode `方法。
-TODO: Android 消息转发应用层有概率收不到设备回复的消息，需要排查一下 @王悦
 
 
 ### 对设备进行重置

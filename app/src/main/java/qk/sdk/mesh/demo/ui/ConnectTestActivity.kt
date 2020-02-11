@@ -102,8 +102,18 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
 
         tv_ping.setOnClickListener {
-            MeshSDK.getDeviceIdentityKeys(mUUID,object : MapCallback {
-                override fun onResult(result: HashMap<String, Any>) {
+//            MeshSDK.getDeviceIdentityKeys(mUUID,object : MapCallback {
+//                override fun onResult(result: HashMap<String, Any>) {
+//
+//                }
+//            })
+//            MeshSDK.sendMeshMessage(mUUID,0,0,"05","0016000000",object :BooleanCallback{
+//                override fun onResult(boolean: Boolean) {
+//
+//                }
+//            })
+            MeshSDK.sendMeshMessage(mUUID,0,0,"00","",object :BooleanCallback{
+                override fun onResult(boolean: Boolean) {
 
                 }
             })
