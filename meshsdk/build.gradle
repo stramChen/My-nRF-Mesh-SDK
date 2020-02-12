@@ -99,7 +99,7 @@ dependencies {
 //    api 'androidx.room:room-runtime:2.2.2'
 //    annotationProcessor 'androidx.room:room-compiler:2.2.2'
 //    androidTestImplementation 'androidx.room:room-testing:2.2.2'
-//    implementation fileTree(dir: 'libs', include: ['*.aar', '*.jar'], exclude: [])
+    implementation fileTree(dir: 'libs', include: ['*.aar', '*.jar'], exclude: [])
 }
 
 uploadArchives {
@@ -112,7 +112,7 @@ uploadArchives {
             repository(url:"file:///Users/wangyue/Documents/mxchip/aar/")
             pom.project {
                 name 'meshsdk'
-                version '0.3.3'
+                version '0.4.1'
                 artifactId 'meshsdk'
                 groupId 'cn.mxchip.mesh.test'
                 packaging 'aar'

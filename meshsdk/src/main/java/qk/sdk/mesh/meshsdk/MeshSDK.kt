@@ -604,86 +604,98 @@ object MeshSDK {
                                         TAG,
                                         "vendor msg:${ByteUtil.bytesToHexString(msg.parameter)}"
                                     )
-                                    if (msg is VendorModelMessageStatus) {
-                                        if (!MeshHelper.isConnectedToProxy()) {
-                                            doVendorCallback(
-                                                callback, false,
-                                                CallbackMsg(
-                                                    CommonErrorMsg.DISCONNECTED.code,
-                                                    CommonErrorMsg.DISCONNECTED.msg
-                                                )
-                                            )
-                                        }
-                                        synchronized(msgIndex) {
-                                            when (opcode) {
-                                                "00" -> {//四元组
-                                                    if (msgIndex < 0 && msg.parameter.size >= 83) {
-                                                        var pk = ByteArray(11)
-                                                        var ps = ByteArray(16)
-                                                        var dn = ByteArray(20)
-                                                        var ds = ByteArray(32)
-                                                        System.arraycopy(
-                                                            msg.parameter,
-                                                            0,
-                                                            pk,
-                                                            0,
-                                                            11
-                                                        )
-                                                        System.arraycopy(
-                                                            msg.parameter,
-                                                            12,
-                                                            ps,
-                                                            0,
-                                                            16
-                                                        )
-                                                        System.arraycopy(
-                                                            msg.parameter,
-                                                            29,
-                                                            dn,
-                                                            0,
-                                                            20
-                                                        )
-                                                        System.arraycopy(
-                                                            msg.parameter,
-                                                            50,
-                                                            ds,
-                                                            0,
-                                                            32
-                                                        )
-                                                        Utils.printLog(
-                                                            TAG,
-                                                            "pk:${String(pk)},ps:${String(ps)},dn:${String(
-                                                                dn
-                                                            )},ds:${String(
-                                                                ds
-                                                            )}"
-                                                        )
+                                    if (!MeshHelper.isConnectedToProxy()) {
+                                        Utils.printLog(
+                                            TAG,
+                                            "disconnect"
+                                        )
+                                        doVendorCallback(
+                                            callback, false,
+                                            CallbackMsg(
+                                                CommonErrorMsg.DISCONNECTED.code,
+                                                CommonErrorMsg.DISCONNECTED.msg
 
-                                                        var map = HashMap<String, Any>()
-                                                        map.put("pk", String(pk))
-                                                        map.put("ps", String(ps))
-                                                        map.put("dn", String(dn))
-                                                        map.put("ds", String(ds))
-                                                        map.put(
-                                                            "code",
-                                                            ConnectState.COMMON_SUCCESS.code
-                                                        )
-                                                        if (callback is MapCallback) {
-                                                            callback.onResult(map)
-                                                        }
-                                                        MeshHelper.unRegisterMeshMsg()
-                                                        msgIndex = 0
+                                            )
+                                        )
+                                    }
+                                    Utils.printLog(
+                                        TAG,
+                                        "opcode:$opcode"
+                                    )
+                                    synchronized(msgIndex) {
+                                        when (opcode) {
+                                            "00" -> {//四元组
+                                                Utils.printLog(
+                                                    TAG,
+                                                    "quadruple size:${msg.parameter.size} ,content：${String(msg.parameter)}"
+                                                )
+                                                if (msgIndex < 0 && msg.parameter.size >= 83) {
+                                                    var pk = ByteArray(11)
+                                                    var ps = ByteArray(16)
+                                                    var dn = ByteArray(20)
+                                                    var ds = ByteArray(32)
+                                                    System.arraycopy(
+                                                        msg.parameter,
+                                                        0,
+                                                        pk,
+                                                        0,
+                                                        11
+                                                    )
+                                                    System.arraycopy(
+                                                        msg.parameter,
+                                                        12,
+                                                        ps,
+                                                        0,
+                                                        16
+                                                    )
+                                                    System.arraycopy(
+                                                        msg.parameter,
+                                                        29,
+                                                        dn,
+                                                        0,
+                                                        20
+                                                    )
+                                                    System.arraycopy(
+                                                        msg.parameter,
+                                                        50,
+                                                        ds,
+                                                        0,
+                                                        32
+                                                    )
+                                                    Utils.printLog(
+                                                        TAG,
+                                                        "pk:${String(pk)},ps:${String(ps)},dn:${String(
+                                                            dn
+                                                        )},ds:${String(
+                                                            ds
+                                                        )}"
+                                                    )
+
+                                                    var map = HashMap<String, Any>()
+                                                    map.put("pk", String(pk))
+                                                    map.put("ps", String(ps))
+                                                    map.put("dn", String(dn))
+                                                    map.put("ds", String(ds))
+                                                    map.put(
+                                                        "code",
+                                                        ConnectState.COMMON_SUCCESS.code
+                                                    )
+                                                    if (callback is MapCallback) {
+                                                        callback.onResult(map)
                                                     }
-                                                }
-                                                "05" -> {//cwrgb
-                                                    if (msgIndex < 0 && callback is BooleanCallback) {
-                                                        callback.onResult(true)
-                                                    }
+                                                    MeshHelper.unRegisterMeshMsg()
                                                     msgIndex = 0
                                                 }
                                             }
+                                            "05" -> {//cwrgb
+                                                if (msgIndex < 0 && callback is BooleanCallback) {
+                                                    callback.onResult(true)
+                                                }
+                                                msgIndex = 0
+                                            }
                                         }
                                     }
+
                                 }
 
                                 override fun onError(msg: CallbackMsg) {

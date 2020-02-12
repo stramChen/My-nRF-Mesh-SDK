@@ -3,7 +3,7 @@
 我们先定义 SDK 的名字，比如 `MeshSDK`。
 
 ## 版本
-|错误码|错误信息|
+|版本号|修改内容|
 |:---|:---|
 |0.1.0|定义 API 需求|
 |0.1.1|「对设备进行网络配置 - Bind Application Key 阶段」API 变动，增加 applicationKey 参数|
@@ -11,6 +11,7 @@
 |0.1.3|添加获取四元组接口、修改connect只回调一次|
 |0.1.4|修改provision参数、添加netKey增加返回值|
 |0.1.5|修改获取四元组接口命名，添加自定义消息参数示例|
+|0.1.6|删除过期接口|
 
 ---- 
 
@@ -20,21 +21,6 @@
 ```js
 MeshSDK.init()
 ```
-
----- 
-
-## 权限相关
-
-### 检查蓝牙权限
-
-```js
-MeshSDK.checkPermission(callback)
-```
-
-关于 callback 的参数: String
-- 已经授权 GRANTED
-- 用户拒绝 DENIED
-- 可能更多
 
 ---- 
 
@@ -157,7 +143,6 @@ callback
 
 ```js
 MeshSDK.bindApplicationKeyForNode(uuid: string, applicationKey: string, callback())
-MeshSDK.bindApplicationKeyForBaseModel(uuid: string, applicationKey: string, callback()) // 先实现绑定两个基本的 model
 ```
 绑定model需要一个一个顺序进行，否则会出错。
 
@@ -165,21 +150,6 @@ MeshSDK.bindApplicationKeyForBaseModel(uuid: string, applicationKey: string, cal
 
 ---- 
 ## 控制设备
-
-### 获取本地已经配置的节点：callback只会回调一次。
-
-```js
-MeshSDK.getProvisionedNodes(callback(Array<Map>))
-```
-
-Map
-- name: string
-- mac: string
-- elements: Array\<Map\>
-	- elementAddress: int
-	- models: Array\<Map\>
-		- modelId: string
-		- subscriptionAddresses: Array\<int\>
 
 ### 连接某一个 mesh 网络中的设备(同上)：callback回调一次。ios无此方法，只有android需要。
 ```js
@@ -208,9 +178,6 @@ MeshSDK.sendMeshMessage(uuid: string, element: int, model: int, opcode: string, 
         - 如：自定义cwrgb，参数为(uuid,0,0,"05","0016000000",callback），其中value为cwrgb的十六进制字符串
         - 如：获取四元组，参数为(uuid,0,0,"00","",callback）
 ```
-
-注意，调用 `setGenericOnOff ` 或 `setLightProperties ` 方法之前务必之行 `setCurrentNode `方法。
-
 
 ### 对设备进行重置
 此方法包含 2 个步骤：
@@ -255,3 +222,4 @@ MeshSDK.importConfiguration(data: JSONString, callback(success:string))
 |401|netKey正在使用中，需先删除netKey对应的设备|
 |402|appKey正在使用中，需先删除appKey对应的设备|
 |403|netKey不存在|
+|-200|mesh连接断开|
