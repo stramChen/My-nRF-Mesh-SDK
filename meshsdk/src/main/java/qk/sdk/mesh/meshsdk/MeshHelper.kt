@@ -40,7 +40,7 @@ object MeshHelper {
     fun startScan(filterUuid: UUID, scanCallback: ScanCallback?, networkKey: String = "") {
         rx.Observable.create<String> {
         }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
-            MeshProxyService.mMeshProxyService?.startScan(filterUuid, scanCallback, networkKey)
+            MeshProxyService.mMeshProxyService?.startScan(filterUuid, scanCallback, networkKey.toUpperCase())
         }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
@@ -382,16 +382,22 @@ object MeshHelper {
 
     fun createApplicationKey(networkKey: String): String {
         getAllNetworkKey()?.forEach { netKey ->
-            if (ByteUtil.bytesToHexString(netKey.key) == networkKey) {
+            if (ByteUtil.bytesToHexString(netKey.key) == networkKey.toUpperCase()) {
                 var appKey =
                     MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.createAppKey()
                 if (appKey != null) {
-                    Utils.printLog(TAG, "")
                     appKey.boundNetKeyIndex = netKey.keyIndex
+                    Utils.printLog(
+                        TAG,
+                        "appKey.boundNetKeyIndex:${appKey.boundNetKeyIndex},appkey:${ByteUtil.bytesToHexString(appKey.key)}"
+                    )
                     MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.let { network ->
                         network.addAppKey(appKey)
+                        Utils.printLog(TAG, "appKey.boundNetKeyIndex:${appKey.boundNetKeyIndex}")
                         return ByteUtil.bytesToHexString(appKey.key)
                     }
+                } else {
+                    Utils.printLog(TAG, "create appkey is null")
                 }
             }
         }
@@ -401,7 +407,7 @@ object MeshHelper {
 
     fun getNetKeyByKeyName(networkKey: String): NetworkKey? {
         getAllNetworkKey()?.forEach { netKey ->
-            if (ByteUtil.bytesToHexString(netKey.key) == networkKey) {
+            if (ByteUtil.bytesToHexString(netKey.key) == networkKey.toUpperCase()) {
                 return netKey
             }
         }

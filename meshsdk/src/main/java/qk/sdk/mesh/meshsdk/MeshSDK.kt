@@ -329,15 +329,13 @@ object MeshSDK {
                                         "add app key failed,because ${msg.statusCodeName}!"
                                     )
                                     map.clear()
-                                    map.put(
-                                        Constants.KEY_MESSAGE,
-                                        msg.statusCodeName
+                                    doMapCallback(
+                                        map, callback,
+                                        CallbackMsg(
+                                            ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.code,
+                                            msg.statusCodeName
+                                        )
                                     )
-                                    map.put(
-                                        Constants.KEY_CODE,
-                                        ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.code
-                                    )
-                                    callback.onResult(map)
                                 }
                             } else if (msg is ConfigModelAppStatus) {
                                 synchronized(bindedIndex) {
@@ -627,60 +625,38 @@ object MeshSDK {
                                             "00" -> {//四元组
                                                 Utils.printLog(
                                                     TAG,
-                                                    "quadruple size:${msg.parameter.size} ,content：${String(msg.parameter)}"
+                                                    "quadruple size:${msg.parameter.size} ,content：${String(
+                                                        msg.parameter
+                                                    )}"
                                                 )
-                                                if (msgIndex < 0 && msg.parameter.size >= 83) {
-                                                    var pk = ByteArray(11)
-                                                    var ps = ByteArray(16)
-                                                    var dn = ByteArray(20)
-                                                    var ds = ByteArray(32)
-                                                    System.arraycopy(
-                                                        msg.parameter,
-                                                        0,
-                                                        pk,
-                                                        0,
-                                                        11
-                                                    )
-                                                    System.arraycopy(
-                                                        msg.parameter,
-                                                        12,
-                                                        ps,
-                                                        0,
-                                                        16
-                                                    )
-                                                    System.arraycopy(
-                                                        msg.parameter,
-                                                        29,
-                                                        dn,
-                                                        0,
-                                                        20
-                                                    )
-                                                    System.arraycopy(
-                                                        msg.parameter,
-                                                        50,
-                                                        ds,
-                                                        0,
-                                                        32
-                                                    )
-                                                    Utils.printLog(
-                                                        TAG,
-                                                        "pk:${String(pk)},ps:${String(ps)},dn:${String(
-                                                            dn
-                                                        )},ds:${String(
-                                                            ds
-                                                        )}"
-                                                    )
-
+                                                var infos = ByteUtil.bytesToHexString(msg.parameter)
+                                                    .split("00")
+                                                if (msgIndex < 0 && msg.parameter.size >= 40) {
                                                     var map = HashMap<String, Any>()
-                                                    map.put("pk", String(pk))
-                                                    map.put("ps", String(ps))
-                                                    map.put("dn", String(dn))
-                                                    map.put("ds", String(ds))
+                                                    map.put(
+                                                        "pk",
+                                                        String(ByteUtil.hexStringToBytes(infos[0]))
+                                                    )
+                                                    map.put(
+                                                        "ps",
+                                                        String(ByteUtil.hexStringToBytes(infos[1]))
+                                                    )
+                                                    map.put(
+                                                        "dn",
+                                                        String(ByteUtil.hexStringToBytes(infos[2]))
+                                                    )
+                                                    map.put(
+                                                        "ds",
+                                                        String(ByteUtil.hexStringToBytes(infos[3]))
+                                                    )
                                                     map.put(
                                                         "code",
                                                         ConnectState.COMMON_SUCCESS.code
                                                     )
                                                     if (callback is MapCallback) {
+                                                        map.forEach { t, u ->
+                                                            Log.e(TAG, "key:$t,value:$u")
+                                                        }
                                                         callback.onResult(map)
                                                     }
                                                     MeshHelper.unRegisterMeshMsg()
