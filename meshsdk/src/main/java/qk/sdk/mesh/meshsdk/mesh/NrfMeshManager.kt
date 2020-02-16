@@ -324,7 +324,7 @@ class NrfMeshManager(
         isNetworkRetransmitSetCompleted = false
         mConnectDevice = device
         val bluetoothDevice = device.device
-        Utils.printLog(TAG,"$connectToNetwork")
+        Utils.printLog(TAG, "$connectToNetwork")
         initIsConnectedLiveData()
         mConnectionState.postValue(
             CallbackMsg(
@@ -1084,7 +1084,7 @@ class NrfMeshManager(
 
         private val TAG = NrfMeshManager::class.java.simpleName
         private val ATTENTION_TIMER = 5
-//        val EXPORT_PATH = Environment.getExternalStorageDirectory().absolutePath + File.separator +
+        //        val EXPORT_PATH = Environment.getExternalStorageDirectory().absolutePath + File.separator +
 //                "mxchip" + File.separator + "nRFMesh" + File.separator
         private val EXPORTED_PATH =
             "sdcard" + File.separator + "mxchip" + File.separator + "nRFMesh" + File.separator
@@ -1102,6 +1102,7 @@ class NrfMeshManager(
 
                     updateScannerLiveData(result)
                 } else if (mFilterUuid == BleMeshManager.MESH_PROXY_UUID) {
+                    Utils.printLog(TAG, "scan callback:${result.device.name} ")
                     val scanRecord = result.scanRecord
                     val serviceData = Utils.getServiceData(result, MESH_PROXY_UUID)
                     if (scanRecord != null) {
@@ -1122,6 +1123,8 @@ class NrfMeshManager(
                                 }
                             }
                         }
+                    }else{
+                        Utils.printLog(TAG,"scanRecord is null")
                     }
 
                     if (meshManagerApi.isAdvertisingWithNetworkIdentity(serviceData) && mNetworkId != null) {
@@ -1294,7 +1297,7 @@ class NrfMeshManager(
             }
             val scanner = BluetoothLeScannerCompat.getScanner()
             scanner.startScan(filters, settings, mScanCallbacks)
-
+            Utils.printLog(TAG, "start scan")
             registerBroadcastReceivers()
         } catch (e: java.lang.Exception) {
             e.printStackTrace()

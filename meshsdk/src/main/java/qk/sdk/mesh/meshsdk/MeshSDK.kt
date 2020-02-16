@@ -727,6 +727,7 @@ object MeshSDK {
                 ) {
                     if (devices.isNotEmpty()) {
                         MeshHelper.stopScan()
+                        Utils.printLog(TAG, "onScanResult:${devices[0].getAddress()}")
                         MeshHelper.connect(devices[0], true, object :
                             ConnectCallback {
                             override fun onConnect() {
@@ -757,7 +758,7 @@ object MeshSDK {
                 override fun onError(msg: CallbackMsg) {
                     doMapCallback(map, callback, msg)
                 }
-            }, networkKey)
+            }, networkKey.toUpperCase())
         } else {
             doMapCallback(
                 map, callback,
