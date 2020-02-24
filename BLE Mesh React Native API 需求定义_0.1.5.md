@@ -173,8 +173,8 @@ MeshSDK.setLightProperties(uuid: string, C: int, W: int, R: int, G: int, B: int,
 ```
 
 ```kotlin
-MeshSDK.sendMeshMessage(uuid: string, element: int, model: int, opcode: string, value: string, callback(success: bool))
-    - sendMeshMessage接口用于vendor model消息的发送（GenericOnOff不属于vendor model)。参数示例如下:
+MeshSDK.sendMeshMessage(uuid: string, element: int, model: int, opcode: string, value: string, callback:Any)
+    - sendMeshMessage接口用于vendor model消息的发送（GenericOnOff不属于vendor model),其中callback参数。参数示例如下:
         - 如：自定义cwrgb，参数为(uuid,0,0,"05","0016000000",callback），其中value为cwrgb的十六进制字符串
         - 如：获取四元组，参数为(uuid,0,0,"00","",callback）
 ```

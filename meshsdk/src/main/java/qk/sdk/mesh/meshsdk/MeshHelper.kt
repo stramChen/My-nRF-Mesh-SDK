@@ -40,7 +40,11 @@ object MeshHelper {
     fun startScan(filterUuid: UUID, scanCallback: ScanCallback?, networkKey: String = "") {
         rx.Observable.create<String> {
         }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
-            MeshProxyService.mMeshProxyService?.startScan(filterUuid, scanCallback, networkKey.toUpperCase())
+            MeshProxyService.mMeshProxyService?.startScan(
+                filterUuid,
+                scanCallback,
+                networkKey.toUpperCase()
+            )
         }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
@@ -58,10 +62,10 @@ object MeshHelper {
         connectToNetwork: Boolean,
         callback: ConnectCallback?
     ) {
-        rx.Observable.create<String> {
-        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
-            MeshProxyService.mMeshProxyService?.connect(device, connectToNetwork, callback)
-        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
+//        rx.Observable.create<String> {
+//        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+        MeshProxyService.mMeshProxyService?.connect(device, connectToNetwork, callback)
+//        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
     // 添加蓝牙连接回调
@@ -116,19 +120,19 @@ object MeshHelper {
         networkKey: NetworkKey,
         callback: BaseCallback
     ) {
-        rx.Observable.create<String> {
-        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+//        rx.Observable.create<String> {
+//        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
             MeshProxyService.mMeshProxyService?.startProvisioning(device, networkKey, callback)
-        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
+//        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
     // ??? 获取已经配置的网络的节点列表？
     fun getProvisionedNodeByCallback(callback: ProvisionCallback) {
-        rx.Observable.create<String> {
-        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+//        rx.Observable.create<String> {
+//        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
             mProvisionCallback = callback
             MeshProxyService.mMeshProxyService?.getProvisionedNodes(callback)
-        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
+//        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
     // ??? 获取已经配置的网络的节点列表？—— 和上面函数的区别？
@@ -389,7 +393,9 @@ object MeshHelper {
                     appKey.boundNetKeyIndex = netKey.keyIndex
                     Utils.printLog(
                         TAG,
-                        "appKey.boundNetKeyIndex:${appKey.boundNetKeyIndex},appkey:${ByteUtil.bytesToHexString(appKey.key)}"
+                        "appKey.boundNetKeyIndex:${appKey.boundNetKeyIndex},appkey:${ByteUtil.bytesToHexString(
+                            appKey.key
+                        )}"
                     )
                     MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.let { network ->
                         network.addAppKey(appKey)

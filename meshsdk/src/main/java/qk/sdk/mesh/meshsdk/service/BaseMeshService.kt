@@ -1,6 +1,5 @@
 package qk.sdk.mesh.meshsdk.service
 
-import android.content.Context
 import android.content.Intent
 import android.os.IBinder
 import android.util.Log
@@ -116,7 +115,12 @@ open class BaseMeshService : LifecycleService() {
         mNrfMeshManager?.connectionState?.observe(this, Observer {
             if (it != null) {
                 mConnectCallback?.onConnectStateChange(it)
-                Utils.printLog(TAG, it.msg)
+                Utils.printLog(TAG, " mNrfMeshManager?.connectionState:${it.msg}")
+                LogFileUtil.writeLogToInnerFile(
+                    this@BaseMeshService,
+                    "${it.msg}",
+                    LogFileUtil.getInnerFileName(Constants.MESH_LOG_FILE_NAME)
+                )
             }
         })
         mNrfMeshManager?.provisionedNodes?.observe(this, Observer {
@@ -206,10 +210,17 @@ open class BaseMeshService : LifecycleService() {
                             network.assignUnicastAddress(unicast)
                             if (!isProvisioningStarted) {
                                 var node = mNrfMeshManager?.unprovisionedMeshNode?.value
-                                if (node != null && node.provisioningCapabilities.availableOOBTypes.size == 1 && node.provisioningCapabilities.availableOOBTypes[0] == AuthenticationOOBMethods.NO_OOB_AUTHENTICATION) {
+                                if (node != null && node.provisioningCapabilities.availableOOBTypes.size == 1
+                                    && node.provisioningCapabilities.availableOOBTypes[0] == AuthenticationOOBMethods.NO_OOB_AUTHENTICATION
+                                ) {
                                     node.nodeName = mNrfMeshManager?.meshNetworkLiveData?.nodeName
                                     mNrfMeshManager?.meshManagerApi?.startProvisioning(node)
                                     Utils.printLog(TAG, "开始provisioning")
+                                    LogFileUtil.writeLogToInnerFile(
+                                        this@BaseMeshService,
+                                        "开始provisioning",
+                                        LogFileUtil.getInnerFileName(Constants.MESH_LOG_FILE_NAME)
+                                    )
                                     isProvisioningStarted = true
                                 }
                             }

@@ -1,5 +1,8 @@
 package qk.sdk.mesh.meshsdk.util
 
+import android.os.Environment
+import java.io.File
+
 object Constants {
     /**
      * 错误码说明：int 类型
@@ -63,4 +66,19 @@ object Constants {
         DFU_FILE_NOT_EXIST("更新包不存在", 601),
         DFU_PARAM_ERROR("传参错误", 601)
     }
+
+    /**
+     * 本地存储目录
+     */
+    val BASE_PATH = Environment
+        .getExternalStorageDirectory().absolutePath + File.separator
+    val FOLDER_STYD = BASE_PATH + "mxchip" + File.separator
+
+    /**
+     * 本地存储目录————二级目录
+     */
+    val FOLDER_CACHE = FOLDER_STYD + "cache" + File.separator
+    val FOLDER_DOWNLOAD = FOLDER_STYD + "download" + File.separator
+
+    val MESH_LOG_FILE_NAME = "mesh_log"
 }

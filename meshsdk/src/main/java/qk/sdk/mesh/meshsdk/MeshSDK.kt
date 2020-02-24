@@ -114,7 +114,7 @@ object MeshSDK {
         var map = HashMap<String, Any>()
         doBaseCheck(uuid, map, callback)
         if (networkKey.isEmpty() || getAllNetworkKey().size <= 0 || !getAllNetworkKey().contains(
-                networkKey
+                networkKey.toUpperCase()
             )
         ) {
             map.put(Constants.KEY_MESSAGE, ConnectState.NET_KEY_IS_NULL.msg)
@@ -122,7 +122,7 @@ object MeshSDK {
             callback.onResult(map)
             return
         }
-        setCurrentNetworkKey(networkKey)
+        setCurrentNetworkKey(networkKey.toUpperCase())
 
         mContext?.let { _ ->
             mExtendedBluetoothDeviceMap.get(uuid)?.let { extendedBluetoothDevice ->
@@ -221,6 +221,8 @@ object MeshSDK {
                                         }
                                     }
                                 }
+                            } else {
+                                doMapCallback(map, callback, msg)
                             }
                         }
 
@@ -233,10 +235,6 @@ object MeshSDK {
                     })
             }
         }
-    }
-
-    fun stopProvision() {
-        //todo
     }
 
     fun isConnectedToProxy(callback: BooleanCallback) {
@@ -252,7 +250,7 @@ object MeshSDK {
     }
 
     fun setCurrentNetworkKey(networkKey: String) {
-        MeshHelper.setCurrentNetworkKey(networkKey)
+        MeshHelper.setCurrentNetworkKey(networkKey.toUpperCase())
     }
 
     fun getCurrentNetworkKey(callback: StringCallback) {
@@ -260,24 +258,23 @@ object MeshSDK {
     }
 
     fun createNetworkKey(networkKey: String): Boolean {
-        if (networkKey.isNotEmpty() && getAllNetworkKey().contains(networkKey)) {
+        if (networkKey.isEmpty() || getAllNetworkKey().contains(networkKey.toUpperCase())) {
             return false
         }
-        Utils.printLog(TAG, "createNetworkKey:${networkKey}")
         MeshHelper.createNetworkKey(networkKey)
         return true
     }
 
     fun removeNetworkKey(key: String, callback: MapCallback) {
-        MeshHelper.removeNetworkKey(key, callback)
+        MeshHelper.removeNetworkKey(key.toUpperCase(), callback)
     }
 
     fun createApplicationKey(networkKey: String): String {
-        return MeshHelper.createApplicationKey(networkKey)
+        return MeshHelper.createApplicationKey(networkKey.toUpperCase())
     }
 
     fun getAllApplicationKey(networkKey: String, callback: ArrayStringCallback) {
-        MeshHelper.getAllApplicationKey(networkKey, callback)
+        MeshHelper.getAllApplicationKey(networkKey.toUpperCase(), callback)
     }
 
     fun removeApplicationKey(appKey: String, callback: IntCallback) {
@@ -744,7 +741,7 @@ object MeshSDK {
                                 if (msg.code == ConnectState.DISCONNECTED.code) {//连接断开，自动寻找代理节点重连
                                     disConnect()
                                     MeshHelper.unRegisterConnectListener()
-                                    connect(networkKey, callback)
+                                    connect(networkKey.toUpperCase(), callback)
                                 }
                             }
 

@@ -1102,7 +1102,6 @@ class NrfMeshManager(
 
                     updateScannerLiveData(result)
                 } else if (mFilterUuid == BleMeshManager.MESH_PROXY_UUID) {
-                    Utils.printLog(TAG, "scan callback:${result.device.name} ")
                     val scanRecord = result.scanRecord
                     val serviceData = Utils.getServiceData(result, MESH_PROXY_UUID)
                     if (scanRecord != null) {
