@@ -1,232 +1,235 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    tools:context=".ui.ConnectMeshActivity">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <Button
+        android:id="@+id/btn_add_app_key"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="addAppKey"
+        android:textSize="12sp"
+        android:visibility="gone"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        style="@style/tv_content_title"
+        android:text="@string/get_state"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_add_app_key" />
+
+    <TextView
+        android:id="@+id/tv_state"
+        style="@style/tv_content_title"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_add_app_key" />
+
+    <TextView
+        style="@style/tv_line"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_state" />
+
+    <TextView
+        style="@style/tv_content_title"
+        android:text="@string/proxy"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_state" />
+
+    <TextView
+        android:id="@+id/tv_proxy_address"
+        style="@style/tv_content_title"
+        android:layout_marginTop="1dp"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_state" />
+
+    <TextView
+        style="@style/tv_line"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_proxy_address" />
+
+    <TextView
+        style="@style/tv_content_title"
+        android:text="@string/address"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_proxy_address" />
+
+    <TextView
+        android:id="@+id/tv_address"
+        style="@style/tv_content_title"
+        android:layout_marginTop="1dp"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_proxy_address" />
+
+    <TextView
+        style="@style/tv_line"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_address" />
+
+    <TextView
+        style="@style/tv_content_title"
+        android:layout_marginTop="1dp"
+        android:text="@string/ttl"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_address" />
+
+    <TextView
+        android:id="@+id/tv_ttl"
+        style="@style/tv_content_title"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_address" />
+
+    <TextView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="16dp"
-        tools:context=".ui.ConnectMeshActivity">
+        android:layout_height="20dp"
+        android:background="@color/line_gray"
+        app:layout_constraintTop_toBottomOf="@id/tv_ttl" />
 
-        <Button
-            android:id="@+id/btn_add_app_key"
-            android:layout_width="100dp"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="addAppKey"
-            android:textSize="12sp"
-            android:visibility="gone"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+    <TextView
+        style="@style/tv_content_title"
+        android:layout_marginTop="21dp"
+        android:text="@string/on_off"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_ttl" />
 
-        <TextView
-            style="@style/tv_content_title"
-            android:text="@string/get_state"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/btn_add_app_key" />
+    <Switch
+        android:id="@+id/switch_on_off"
+        android:layout_width="100dp"
+        android:layout_height="@dimen/tv_content_height"
+        android:layout_marginTop="21dp"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_ttl" />
 
-        <TextView
-            android:id="@+id/tv_state"
-            style="@style/tv_content_title"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/btn_add_app_key" />
+    <TextView
+        style="@style/tv_line"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/switch_on_off" />
 
-        <TextView
-            style="@style/tv_line"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tv_state" />
+    <TextView
+        style="@style/tv_content_title"
+        android:layout_marginTop="1dp"
+        android:text="@string/ping"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/switch_on_off" />
 
-        <TextView
-            style="@style/tv_content_title"
-            android:text="@string/proxy"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tv_state" />
+    <TextView
+        android:id="@+id/tv_ping"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/tv_content_height"
+        android:layout_marginTop="1dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:text="@string/ping"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/switch_on_off" />
 
-        <TextView
-            android:id="@+id/tv_proxy_address"
-            style="@style/tv_content_title"
-            android:layout_marginTop="1dp"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tv_state" />
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="20dp"
+        android:background="@color/line_gray"
+        app:layout_constraintTop_toBottomOf="@id/tv_ping" />
 
-        <TextView
-            style="@style/tv_line"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tv_proxy_address" />
+    <TextView
+        style="@style/tv_content_title"
+        android:layout_marginTop="21dp"
+        android:text="C"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_ping" />
 
-        <TextView
-            style="@style/tv_content_title"
-            android:text="@string/address"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tv_proxy_address" />
+    <SeekBar
+        android:id="@+id/sb_vendor_c"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="60dp"
+        app:layout_constraintTop_toBottomOf="@+id/tv_ping" />
 
-        <TextView
-            android:id="@+id/tv_address"
-            style="@style/tv_content_title"
-            android:layout_marginTop="1dp"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tv_proxy_address" />
+    <TextView
+        style="@style/tv_content_title"
+        android:text="W"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/sb_vendor_c" />
 
-        <TextView
-            style="@style/tv_line"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tv_address" />
+    <SeekBar
+        android:id="@+id/sb_vendor_w"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        app:layout_constraintTop_toBottomOf="@+id/sb_vendor_c" />
 
-        <TextView
-            style="@style/tv_content_title"
-            android:layout_marginTop="1dp"
-            android:text="@string/ttl"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_address" />
+    <TextView
+        style="@style/tv_content_title"
+        android:text="R"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/sb_vendor_w" />
 
-        <TextView
-            android:id="@+id/tv_ttl"
-            style="@style/tv_content_title"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tv_address" />
+    <SeekBar
+        android:id="@+id/sb_vendor_r"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        app:layout_constraintTop_toBottomOf="@+id/sb_vendor_w" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="20dp"
-            android:background="@color/line_gray"
-            app:layout_constraintTop_toBottomOf="@id/tv_ttl" />
+    <TextView
+        style="@style/tv_content_title"
+        android:text="G"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/sb_vendor_r" />
 
-        <TextView
-            style="@style/tv_content_title"
-            android:layout_marginTop="21dp"
-            android:text="@string/on_off"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tv_ttl" />
+    <SeekBar
+        android:id="@+id/sb_vendor_g"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        app:layout_constraintTop_toBottomOf="@+id/sb_vendor_r" />
 
-        <Switch
-            android:id="@+id/switch_on_off"
-            android:layout_width="100dp"
-            android:layout_height="@dimen/tv_content_height"
-            android:layout_marginTop="21dp"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tv_ttl" />
+    <TextView
+        style="@style/tv_content_title"
+        android:text="B"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/sb_vendor_g" />
 
-        <TextView
-            style="@style/tv_line"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/switch_on_off" />
+    <SeekBar
+        android:id="@+id/sb_vendor_b"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        app:layout_constraintTop_toBottomOf="@+id/sb_vendor_g" />
 
-        <TextView
-            style="@style/tv_content_title"
-            android:layout_marginTop="1dp"
-            android:text="@string/ping"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/switch_on_off" />
+    <Button
+        android:id="@+id/btn_send_vendor"
+        android:layout_width="80dp"
+        android:layout_height="35dp"
+        android:layout_margin="20dp"
+        android:gravity="center"
+        android:text="set"
+        android:textColor="@color/white"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/sb_vendor_b" />
 
-        <TextView
-            android:id="@+id/tv_ping"
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/tv_content_height"
-            android:layout_marginTop="1dp"
-            android:paddingLeft="10dp"
-            android:paddingRight="10dp"
-            android:text="@string/ping"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/switch_on_off" />
+    <Button
+        android:id="@+id/btn_set_publication"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@color/red"
+        android:gravity="center"
+        android:text="@string/reset"
+        android:textColor="@color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="20dp"
-            android:background="@color/line_gray"
-            app:layout_constraintTop_toBottomOf="@id/tv_ping" />
+    <Button
+        android:id="@+id/btn_subscribe"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="subscribe"
+        android:layout_marginLeft="10dp"
+        app:layout_constraintLeft_toRightOf="@+id/btn_set_publication"
+        app:layout_constraintTop_toTopOf="@+id/btn_set_publication" />
 
-        <TextView
-            style="@style/tv_content_title"
-            android:layout_marginTop="21dp"
-            android:text="C"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tv_ping" />
-
-        <SeekBar
-            android:id="@+id/sb_vendor_c"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="60dp"
-            app:layout_constraintTop_toBottomOf="@+id/tv_ping" />
-
-        <TextView
-            style="@style/tv_content_title"
-            android:text="W"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/sb_vendor_c" />
-
-        <SeekBar
-            android:id="@+id/sb_vendor_w"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="40dp"
-            app:layout_constraintTop_toBottomOf="@+id/sb_vendor_c" />
-
-        <TextView
-            style="@style/tv_content_title"
-            android:text="R"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/sb_vendor_w" />
-
-        <SeekBar
-            android:id="@+id/sb_vendor_r"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="40dp"
-            app:layout_constraintTop_toBottomOf="@+id/sb_vendor_w" />
-
-        <TextView
-            style="@style/tv_content_title"
-            android:text="G"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/sb_vendor_r" />
-
-        <SeekBar
-            android:id="@+id/sb_vendor_g"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="40dp"
-            app:layout_constraintTop_toBottomOf="@+id/sb_vendor_r" />
-
-        <TextView
-            style="@style/tv_content_title"
-            android:text="B"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/sb_vendor_g" />
-
-        <SeekBar
-            android:id="@+id/sb_vendor_b"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="40dp"
-            app:layout_constraintTop_toBottomOf="@+id/sb_vendor_g" />
-
-        <Button
-            android:id="@+id/btn_send_vendor"
-            android:layout_width="80dp"
-            android:layout_height="35dp"
-            android:layout_margin="20dp"
-            android:gravity="center"
-            android:text="set"
-            android:textColor="@color/white"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/sb_vendor_b" />
-
-        <Button
-            android:id="@+id/btn_reset"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="90dp"
-            android:layout_marginRight="90dp"
-            android:background="@color/red"
-            android:gravity="center"
-            android:text="@string/reset"
-            android:textColor="@color/white"
-            app:layout_constraintBottom_toBottomOf="parent" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-</ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

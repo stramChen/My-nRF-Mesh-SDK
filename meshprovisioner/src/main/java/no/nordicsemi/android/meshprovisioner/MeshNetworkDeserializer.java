@@ -66,7 +66,7 @@ public final class MeshNetworkDeserializer implements JsonSerializer<MeshNetwork
                     jsonObject.getAsJsonArray("nodes"), network.meshUUID);
 
         if (jsonObject.has("groups"))
-            network.groups = deserializeGroups(jsonObject, network.meshUUID);
+            network.groups = (ArrayList<Group>) deserializeGroups(jsonObject, network.meshUUID);
 
         if (jsonObject.has("scenes"))
             network.scenes = deserializeScenes(jsonObject, network.meshUUID);

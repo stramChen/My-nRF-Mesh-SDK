@@ -102,11 +102,11 @@ public final class MeshNetwork extends BaseMeshNetwork {
     }
 
 
-    public List<Group> getGroups() {
+    public ArrayList<Group> getGroups() {
         return groups;
     }
 
-    void setGroups(final List<Group> groups) {
+    void setGroups(final ArrayList<Group> groups) {
         this.groups = groups;
     }
 

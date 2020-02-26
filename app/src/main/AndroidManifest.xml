@@ -19,8 +19,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".ui.NetKeyActivity"></activity>
-<!--        <activity android:name=".ui.ConnectMeshActivity" />-->
+        <activity android:name=".ui.GroupActivity"></activity>
+        <activity android:name=".ui.NetKeyActivity" /> <!-- <activity android:name=".ui.ConnectMeshActivity" /> -->
         <activity android:name=".ui.ConnectTestActivity" />
         <activity android:name=".ui.MainMeshActivity">
             <intent-filter>

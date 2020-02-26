@@ -540,6 +540,9 @@ object MeshSDK {
         sendMeshMessage(uuid, 0, VENDOR_MODELID, "05", params.toString(), callback)
     }
 
+    fun getLightProperties(uuid: String, callback: MapCallback) {
+        sendMeshMessage(uuid, 0, VENDOR_MODELID, "04", "", callback)
+    }
 
     fun sendMeshMessage(
         uuid: String,
@@ -660,7 +663,10 @@ object MeshSDK {
                                                     msgIndex = 0
                                                 }
                                             }
-                                            "05" -> {//cwrgb
+                                            "04" -> {//set cwrgb
+
+                                            }
+                                            "05" -> {//get cwrgb
                                                 if (msgIndex < 0 && callback is BooleanCallback) {
                                                     callback.onResult(true)
                                                 }
@@ -782,6 +788,10 @@ object MeshSDK {
             return
         }
         MeshHelper.importMeshNetwork(json, callback)
+    }
+
+    fun createGroup(groupName: String, callback: BooleanCallback) {
+        callback.onResult(MeshHelper.createGroup(groupName))
     }
 
 //    fun updateDeviceImg(uuid: String, path: String, callback: MapCallback) {

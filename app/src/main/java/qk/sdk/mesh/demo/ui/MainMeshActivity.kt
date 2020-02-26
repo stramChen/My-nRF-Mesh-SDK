@@ -55,7 +55,7 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
         tv_add.setOnClickListener(this)
         tv_export.setOnClickListener(this)
         tv_import.setOnClickListener(this)
-        tv_update.setOnClickListener(this)
+        tv_groups.setOnClickListener(this)
 
         rv_provisioned_nodes.layoutManager = LinearLayoutManager(this)
         mNodeAdapter = NodeAdapter(
@@ -137,7 +137,7 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
                     })
                 }).start()
             }
-            R.id.tv_update -> {
+//            R.id.tv_update -> {
 //                Thread(Runnable {
 //                    MeshSDK.updateDeviceImg("01003510-8C04-7863-D0F1-410000000000","/storage/emulated/0/mxchip_light-b7a7b10b9b23db4d04d91291448af183.bin",object :
 //                        MapCallback {
@@ -146,6 +146,9 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
 //                        }
 //                    })
 //                }).start()
+//            }
+            R.id.tv_groups -> {
+                startActivity(Intent(this, GroupActivity::class.java))
             }
         }
     }

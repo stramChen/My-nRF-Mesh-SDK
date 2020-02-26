@@ -12,6 +12,7 @@
     <string name="reset">Reset</string>
     <string name="address">Address</string>
     <string name="proxy">Proxy address</string>
+    <string name="groups">groups</string>
 
     <string name="connecting">connecting</string>
     <string name="connect_failed">connect failed</string>

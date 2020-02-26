@@ -98,15 +98,20 @@ class ConnectTestActivity : BaseMeshActivity() {
             })
         }
 
-        btn_reset.setOnClickListener {
-            MeshSDK.resetNode(mUUID)
+        btn_set_publication.setOnClickListener {
+            //            MeshSDK.resetNode(mUUID)
+            Utils.printLog(TAG, "set publication:${MeshHelper.setPublication(mUUID)}")
+        }
+
+        btn_subscribe.setOnClickListener {
+            Utils.printLog(TAG, "set publication:${MeshHelper.subscribe(mUUID)}")
         }
 
         tv_ping.setOnClickListener {
-            MeshSDK.getDeviceIdentityKeys(mUUID,object : MapCallback {
+            MeshSDK.getDeviceIdentityKeys(mUUID, object : MapCallback {
                 override fun onResult(result: HashMap<String, Any>) {
                     result.forEach { t, u ->
-                        Log.e(TAG,"key:$t,value:$u")
+                        Log.e(TAG, "key:$t,value:$u")
                     }
                 }
             })

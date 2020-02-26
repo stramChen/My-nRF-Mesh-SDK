@@ -133,7 +133,7 @@ class NrfMeshManager(
     private val mProvisionedNodes = MutableLiveData<ArrayList<ProvisionedMeshNode>>()
     //    private final MutableLiveData<ProvisionedMeshNode> mSelectedProvisionedNode = new MutableLiveData<>();
 
-    private val mGroups = MutableLiveData<List<Group>>()
+    internal val mGroups = MutableLiveData<ArrayList<Group>>()
 
     private val mTransactionStatus = SingleLiveData<TransactionStatus>()
 
@@ -215,9 +215,6 @@ class NrfMeshManager(
 
     internal val nodes: LiveData<ArrayList<ProvisionedMeshNode>>
         get() = mProvisionedNodes
-
-    internal val groups: LiveData<List<Group>>
-        get() = mGroups
 
     internal val networkLoadState: LiveData<String>
         get() = mNetworkImportState

@@ -4,7 +4,11 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import com.joker.api.wrapper.ListenerWrapper
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import no.nordicsemi.android.meshprovisioner.ApplicationKey
+import no.nordicsemi.android.meshprovisioner.Group
 import no.nordicsemi.android.meshprovisioner.MeshNetwork
 import no.nordicsemi.android.meshprovisioner.NetworkKey
 import no.nordicsemi.android.meshprovisioner.models.VendorModel
@@ -122,7 +126,7 @@ object MeshHelper {
     ) {
 //        rx.Observable.create<String> {
 //        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
-            MeshProxyService.mMeshProxyService?.startProvisioning(device, networkKey, callback)
+        MeshProxyService.mMeshProxyService?.startProvisioning(device, networkKey, callback)
 //        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
@@ -130,8 +134,8 @@ object MeshHelper {
     fun getProvisionedNodeByCallback(callback: ProvisionCallback) {
 //        rx.Observable.create<String> {
 //        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
-            mProvisionCallback = callback
-            MeshProxyService.mMeshProxyService?.getProvisionedNodes(callback)
+        mProvisionCallback = callback
+        MeshProxyService.mMeshProxyService?.getProvisionedNodes(callback)
 //        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
@@ -724,6 +728,126 @@ object MeshHelper {
 //            Utils.printLog(TAG, "dfu 未初始化！")
 //        }
 //    }
+
+
+    fun createGroup(uuid: String): Boolean {
+        try {
+            val network = MeshProxyService.mMeshProxyService?.getMeshNetwork()
+            var group = network?.createGroup(network.getSelectedProvisioner()!!, uuid)
+            if (group != null) {
+                if (network?.addGroup(group) ?: false) {
+                    return true
+                }
+            }
+        } catch (ex: IllegalArgumentException) {
+            ex.printStackTrace()
+        }
+        return false
+    }
+
+    fun getGroup(): ArrayList<Group> {
+        return MeshProxyService.mMeshProxyService?.mNrfMeshManager?.mGroups?.value ?: ArrayList()
+    }
+
+    private fun getGroupByName(uuid: String): Group? {
+        getGroup().forEach {
+            if (uuid.contains(it.name)) {
+                return it
+            }
+        }
+        return null
+    }
+
+    fun setPublication(uuid: String) {
+        //通过uuid获取group
+        var group = getGroupByName(uuid)
+        if (group == null) {
+            Utils.printLog(TAG, "setPublication group is null")
+            return
+        }
+
+        //获取provisioned节点
+        var node = getProvisionedNodeByUUID(uuid)
+        if (node == null) {
+            Utils.printLog(TAG, "setPublication node is null")
+            return
+        }
+
+        var publishAddress = group.address
+        node.elements.values.elementAt(0).meshModels?.values?.forEach { meshModel ->
+            if (meshModel.boundAppKeyIndexes?.size ?: 0 > 0) {
+                runBlocking {
+                    launch {
+                        delay(1000)
+                        var meshMsg = ConfigModelPublicationSet(
+                            node.elements.values.elementAt(0).elementAddress
+                            ,
+                            publishAddress,
+                            meshModel.boundAppKeyIndexes?.get(0) ?: 0,
+                            false,
+                            MeshParserUtils.USE_DEFAULT_TTL
+                            ,
+                            53,
+                            0,
+                            1,
+                            1,
+                            meshModel.modelId
+                        )
+
+                        try {
+                            MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi
+                                ?.createMeshPdu(node.unicastAddress, meshMsg)
+                        } catch (ex: IllegalArgumentException) {
+                            ex.printStackTrace()
+                        }
+                    }
+                }
+
+            }
+
+        }
+
+    }
+
+    fun subscribe(uuid: String) {
+        var node = getProvisionedNodeByUUID(uuid)
+        if (node == null) {
+            Utils.printLog(TAG, "subscribe node is null")
+            return
+        }
+
+        var group = getGroupByName(uuid)
+        if (group == null) {
+            Utils.printLog(TAG, "subscribe group is null")
+            return
+        }
+        node.elements.values.elementAt(0).meshModels?.values?.forEach { model ->
+            runBlocking {
+                launch {
+                    delay(1000)
+                    val modelIdentifier = model.getModelId()
+                    val configModelSubscriptionAdd: MeshMessage
+                    var elementAddress = node.elements.values.elementAt(0).elementAddress
+                    if (group.addressLabel == null) {
+                        configModelSubscriptionAdd =
+                            ConfigModelSubscriptionAdd(
+                                elementAddress,
+                                group.getAddress(),
+                                modelIdentifier
+                            )
+                    } else {
+                        configModelSubscriptionAdd = ConfigModelSubscriptionVirtualAddressAdd(
+                            elementAddress,
+                            group.getAddressLabel()!!,
+                            modelIdentifier
+                        )
+                    }
+                    sendMessage(node.unicastAddress, configModelSubscriptionAdd)
+
+                }
+            }
+        }
+    }
 
     internal class MeshProxyService : BaseMeshService() {
         companion object {

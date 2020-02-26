@@ -98,7 +98,7 @@ class ConnectMeshActivity : BaseMeshActivity() {
             }
         }
 
-        btn_reset.setOnClickListener {
+        btn_set_publication.setOnClickListener {
             val configNodeReset = ConfigNodeReset()
             sendMessage(MeshHelper.getSelectedMeshNode()?.unicastAddress ?: 0, configNodeReset)
         }

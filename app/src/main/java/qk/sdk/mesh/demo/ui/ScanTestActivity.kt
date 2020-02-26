@@ -63,21 +63,21 @@ class ScanTestActivity : BaseMeshActivity(),
 
 
     private fun startScan(type: String, callback: ArrayMapCallback) {
-//        MeshSDK.checkPermission(object : StringCallback {
-//            override fun onResultMsg(msg: String) {
-//                if (msg == Constants.PERMISSION_GRANTED) {
-        Thread(Runnable {
-            MeshSDK.startScan(type, callback, object : IntCallback {
-                override fun onResultMsg(code: Int) {
-                    Utils.printLog(TAG, "scan error:$code")
+        MeshSDK.checkPermission(object : StringCallback {
+            override fun onResultMsg(msg: String) {
+                if (msg == Constants.PERMISSION_GRANTED) {
+                    Thread(Runnable {
+                        MeshSDK.startScan(type, callback, object : IntCallback {
+                            override fun onResultMsg(code: Int) {
+                                Utils.printLog(TAG, "scan error:$code")
+                            }
+                        })
+                    }).start()
+                } else {
+                    Utils.printLog(TAG, "PERMISSION:$msg")
                 }
-            })
-        }).start()
-//                } else {
-//                    Utils.printLog(TAG, "PERMISSION:$msg")
-//                }
-//            }
-//        })
+            }
+        })
 
     }
 
