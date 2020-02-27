@@ -730,10 +730,10 @@ object MeshHelper {
 //    }
 
 
-    fun createGroup(uuid: String): Boolean {
+    fun createGroup(groupName: String): Boolean {
         try {
             val network = MeshProxyService.mMeshProxyService?.getMeshNetwork()
-            var group = network?.createGroup(network.getSelectedProvisioner()!!, uuid)
+            var group = network?.createGroup(network.getSelectedProvisioner()!!, groupName)
             if (group != null) {
                 if (network?.addGroup(group) ?: false) {
                     return true
@@ -749,25 +749,26 @@ object MeshHelper {
         return MeshProxyService.mMeshProxyService?.mNrfMeshManager?.mGroups?.value ?: ArrayList()
     }
 
-    private fun getGroupByName(uuid: String): Group? {
+    fun getGroupByName(groupName: String): Group? {
         getGroup().forEach {
-            if (uuid.contains(it.name)) {
+            if (groupName.contains(it.name)) {
                 return it
             }
         }
         return null
     }
 
-    fun setPublication(uuid: String) {
+    fun setPublication(groupName: String) {
+        var map = HashMap<String, Any>()
         //通过uuid获取group
-        var group = getGroupByName(uuid)
+        var group = getGroupByName(groupName)
         if (group == null) {
             Utils.printLog(TAG, "setPublication group is null")
             return
         }
 
         //获取provisioned节点
-        var node = getProvisionedNodeByUUID(uuid)
+        var node = getProvisionedNodeByUUID(groupName)
         if (node == null) {
             Utils.printLog(TAG, "setPublication node is null")
             return

@@ -12,6 +12,7 @@
 |0.1.4|修改provision参数、添加netKey增加返回值|
 |0.1.5|修改获取四元组接口命名，添加自定义消息参数示例|
 |0.1.6|删除过期接口|
+|0.1.7|添加获取设备cwrgb状态接口|
 
 ---- 
 
@@ -202,6 +203,17 @@ MeshSDK.exportConfiguration(callback(data: JSONString))
 ```js
 MeshSDK.importConfiguration(data: JSONString, callback(success:string))
 ```
+### 获取当前cwrgb状态
+
+```kotlin
+MeshSDK.getLightProperties(uuid: String, callback(result:Map))
+- result
+	- `{code:int,c: int, w: int,r: int,g: int,b: int,isOn :boolean}`
+		- code == 200 成功
+		- c/w/r/g/b 值范围0～255
+		- isOn true为开，false为关
+
+```
 ## code定义
 |错误码|错误信息|
 |:---|:---|
@@ -222,4 +234,6 @@ MeshSDK.importConfiguration(data: JSONString, callback(success:string))
 |401|netKey正在使用中，需先删除netKey对应的设备|
 |402|appKey正在使用中，需先删除appKey对应的设备|
 |403|netKey不存在|
+|701|group群组不存在|
+|702|节点不存在|
 |-200|mesh连接断开|

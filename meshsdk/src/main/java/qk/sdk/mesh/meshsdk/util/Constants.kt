@@ -10,6 +10,7 @@ object Constants {
      * PROVISION错误码：200起
      * 导入导出错误码：500起
      * dfu错误码：600起
+     * group错误码：700起
      */
 
     //------未初始化SDK
@@ -64,7 +65,10 @@ object Constants {
         IMPORT_MESH_JSON_EMPTY_ERR("mesh json is null", 501),
 
         DFU_FILE_NOT_EXIST("更新包不存在", 601),
-        DFU_PARAM_ERROR("传参错误", 601)
+        DFU_PARAM_ERROR("传参错误", 601),
+
+        GROUP_NOT_EXIST("group群组",701),
+        NODE_NOT_EXIST("节点不存在",702)
     }
 
     /**

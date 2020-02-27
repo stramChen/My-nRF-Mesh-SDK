@@ -9,6 +9,7 @@ import me.weyye.hipermission.PermissionCallback
 import no.nordicsemi.android.meshprovisioner.UnprovisionedBeacon
 import no.nordicsemi.android.meshprovisioner.models.VendorModel
 import no.nordicsemi.android.meshprovisioner.transport.*
+import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.bean.CommonErrorMsg
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
@@ -547,7 +548,7 @@ object MeshSDK {
     fun sendMeshMessage(
         uuid: String,
         element: Int,
-        model: Int,
+        modelId: Int,
         opcode: String,
         value: String,
         callback: Any
@@ -572,7 +573,7 @@ object MeshSDK {
         MeshHelper.setSelectedModel(
             MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(element),
             MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(element)?.meshModels?.get(
-                if (model == 0) VENDOR_MODELID else model
+                if (modelId == 0) VENDOR_MODELID else modelId
             )
         )
 
@@ -664,7 +665,26 @@ object MeshSDK {
                                                 }
                                             }
                                             "04" -> {//set cwrgb
+                                                if (callback is MapCallback && msg.parameter.size == 5) {
+                                                    var map = HashMap<String, Any>()
 
+                                                    var c = msg.parameter[0].toInt()
+                                                    var w = msg.parameter[1].toInt()
+                                                    var r = msg.parameter[2].toInt()
+                                                    var g = msg.parameter[3].toInt()
+                                                    var b = msg.parameter[4].toInt()
+                                                    map.put("c", c)
+                                                    map.put("w", w)
+                                                    map.put("r", r)
+                                                    map.put("g", g)
+                                                    map.put("b", b)
+                                                    map.put(
+                                                        "isOn",
+                                                        if (c == 0 && w == 0 && r == 0 && g == 0 && b == 0) false else true
+                                                    )
+                                                    callback.onResult(map)
+                                                    msgIndex = 0
+                                                }
                                             }
                                             "05" -> {//get cwrgb
                                                 if (msgIndex < 0 && callback is BooleanCallback) {
@@ -792,6 +812,137 @@ object MeshSDK {
 
     fun createGroup(groupName: String, callback: BooleanCallback) {
         callback.onResult(MeshHelper.createGroup(groupName))
+    }
+
+    fun setPublication(uuid: String, groupName: String, callback: MapCallback) {
+        var map = HashMap<String, Any>()
+        //通过groupName获取group
+        var group = MeshHelper.getGroupByName(groupName)
+        if (group == null) {
+            doMapCallback(
+                map,
+                callback,
+                CallbackMsg(ConnectState.GROUP_NOT_EXIST.code, ConnectState.GROUP_NOT_EXIST.msg)
+            )
+            return
+        }
+
+        //获取provisioned节点
+        var node = MeshHelper.getProvisionedNodeByUUID(uuid)
+        if (node == null) {
+            doMapCallback(
+                map,
+                callback,
+                CallbackMsg(ConnectState.NODE_NOT_EXIST.code, ConnectState.NODE_NOT_EXIST.msg)
+            )
+            return
+        }
+
+        var publishAddress = group.address
+        var index = 0
+        node.elements.values.elementAt(0).meshModels?.values?.forEach { meshModel ->
+            if (meshModel.boundAppKeyIndexes?.size ?: 0 > 0) {
+                runBlocking {
+                    launch {
+                        delay(1000)
+                        var meshMsg = ConfigModelPublicationSet(
+                            node.elements.values.elementAt(0).elementAddress
+                            ,
+                            publishAddress,
+                            meshModel.boundAppKeyIndexes!!.get(0),
+                            false,
+                            MeshParserUtils.USE_DEFAULT_TTL
+                            ,
+                            53,
+                            0,
+                            1,
+                            1,
+                            meshModel.modelId
+                        )
+
+                        try {
+                            MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi
+                                ?.createMeshPdu(node.unicastAddress, meshMsg)
+                            index++
+                        } catch (ex: IllegalArgumentException) {
+                            ex.printStackTrace()
+                        }
+                    }
+                }
+            } else {
+                index++
+            }
+        }
+
+        if (index == node.elements.values.elementAt(0).meshModels?.values?.size) {
+            doMapCallback(
+                map,
+                callback,
+                CallbackMsg(ConnectState.COMMON_SUCCESS.code, ConnectState.COMMON_SUCCESS.msg)
+            )
+        }
+
+    }
+
+    fun subscribe(uuid: String, groupName: String, callback: MapCallback) {
+        var map = HashMap<String, Any>()
+        //通过uuid获取group
+        var group = MeshHelper.getGroupByName(groupName)
+        if (group == null) {
+            doMapCallback(
+                map,
+                callback,
+                CallbackMsg(ConnectState.GROUP_NOT_EXIST.code, ConnectState.GROUP_NOT_EXIST.msg)
+            )
+            return
+        }
+
+        //获取provisioned节点
+        var node = MeshHelper.getProvisionedNodeByUUID(uuid)
+        if (node == null) {
+            doMapCallback(
+                map,
+                callback,
+                CallbackMsg(ConnectState.NODE_NOT_EXIST.code, ConnectState.NODE_NOT_EXIST.msg)
+            )
+            return
+        }
+
+        var index = 0
+        node.elements.values.elementAt(0).meshModels?.values?.forEach { model ->
+            runBlocking {
+                launch {
+                    delay(1000)
+                    val modelIdentifier = model.getModelId()
+                    val configModelSubscriptionAdd: MeshMessage
+                    var elementAddress = node.elements.values.elementAt(0).elementAddress
+                    if (group.addressLabel == null) {
+                        configModelSubscriptionAdd =
+                            ConfigModelSubscriptionAdd(
+                                elementAddress,
+                                group.getAddress(),
+                                modelIdentifier
+                            )
+                    } else {
+                        configModelSubscriptionAdd = ConfigModelSubscriptionVirtualAddressAdd(
+                            elementAddress,
+                            group.getAddressLabel()!!,
+                            modelIdentifier
+                        )
+                    }
+                    MeshHelper.sendMessage(node.unicastAddress, configModelSubscriptionAdd)
+                    index++
+                }
+            }
+        }
+
+        if (index == node.elements.values.elementAt(0).meshModels?.values?.size) {
+            doMapCallback(
+                map,
+                callback,
+                CallbackMsg(ConnectState.COMMON_SUCCESS.code, ConnectState.COMMON_SUCCESS.msg)
+            )
+        }
     }
 
 //    fun updateDeviceImg(uuid: String, path: String, callback: MapCallback) {

@@ -100,11 +100,23 @@ class ConnectTestActivity : BaseMeshActivity() {
 
         btn_set_publication.setOnClickListener {
             //            MeshSDK.resetNode(mUUID)
-            Utils.printLog(TAG, "set publication:${MeshHelper.setPublication(mUUID)}")
+            MeshSDK.setPublication(mUUID, object : MapCallback {
+                override fun onResult(result: HashMap<String, Any>) {
+                    result.forEach { t, u ->
+                        Utils.printLog(TAG, "set publication,key:$t,value:$u")
+                    }
+                }
+            })
         }
 
         btn_subscribe.setOnClickListener {
-            Utils.printLog(TAG, "set publication:${MeshHelper.subscribe(mUUID)}")
+            MeshSDK.subscribe(mUUID, object : MapCallback {
+                override fun onResult(result: HashMap<String, Any>) {
+                    result.forEach { t, u ->
+                        Utils.printLog(TAG, "set subscribe,key:$t,value:$u")
+                    }
+                }
+            })
         }
 
         tv_ping.setOnClickListener {
