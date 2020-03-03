@@ -689,8 +689,31 @@ object MeshSDK {
                                             "05" -> {//get cwrgb
                                                 if (msgIndex < 0 && callback is BooleanCallback) {
                                                     callback.onResult(true)
+                                                    msgIndex = 0
                                                 }
-                                                msgIndex = 0
+                                            }
+                                            "0C" -> {//获取灯当前状态，会返回除了开关之外的所有属性
+                                                if (msg.parameter.size >= 8) {
+                                                    var mode = msg.parameter[0]
+                                                    var h = ByteUtil.byteToShort(
+                                                        byteArrayOf(
+                                                            msg.parameter[2],
+                                                            msg.parameter[1]
+                                                        )
+                                                    )
+                                                    var s = msg.parameter[3].toInt()
+                                                    var v = msg.parameter[4].toInt()
+                                                    var b = msg.parameter[5].toInt()
+                                                    var t = ByteUtil.byteArrayToInt(
+                                                        byteArrayOf(
+                                                            0x00,
+                                                            0x00,
+                                                            msg.parameter[6],
+                                                            msg.parameter[7]
+                                                        )
+                                                    )
+                                                    Utils.printLog(TAG, "h:$h,s:$s,v:$v,b:$b,t:$t")
+                                                }
                                             }
                                         }
                                     }
@@ -816,133 +839,154 @@ object MeshSDK {
 
     fun setPublication(uuid: String, groupName: String, callback: MapCallback) {
         var map = HashMap<String, Any>()
-        //通过groupName获取group
-        var group = MeshHelper.getGroupByName(groupName)
-        if (group == null) {
-            doMapCallback(
-                map,
-                callback,
-                CallbackMsg(ConnectState.GROUP_NOT_EXIST.code, ConnectState.GROUP_NOT_EXIST.msg)
-            )
-            return
-        }
+        if (doProxyCheck(uuid, map, callback)) {
+            //通过groupName获取group
+            var group = MeshHelper.getGroupByName(groupName)
+            if (group == null) {
+                doMapCallback(
+                    map,
+                    callback,
+                    CallbackMsg(ConnectState.GROUP_NOT_EXIST.code, ConnectState.GROUP_NOT_EXIST.msg)
+                )
+                return
+            }
 
-        //获取provisioned节点
-        var node = MeshHelper.getProvisionedNodeByUUID(uuid)
-        if (node == null) {
-            doMapCallback(
-                map,
-                callback,
-                CallbackMsg(ConnectState.NODE_NOT_EXIST.code, ConnectState.NODE_NOT_EXIST.msg)
-            )
-            return
-        }
+            //获取provisioned节点
+            var node = MeshHelper.getProvisionedNodeByUUID(uuid)
+            if (node == null) {
+                doMapCallback(
+                    map,
+                    callback,
+                    CallbackMsg(ConnectState.NODE_NOT_EXIST.code, ConnectState.NODE_NOT_EXIST.msg)
+                )
+                return
+            }
 
-        var publishAddress = group.address
-        var index = 0
-        node.elements.values.elementAt(0).meshModels?.values?.forEach { meshModel ->
-            if (meshModel.boundAppKeyIndexes?.size ?: 0 > 0) {
-                runBlocking {
-                    launch {
-                        delay(1000)
-                        var meshMsg = ConfigModelPublicationSet(
-                            node.elements.values.elementAt(0).elementAddress
-                            ,
-                            publishAddress,
-                            meshModel.boundAppKeyIndexes!!.get(0),
-                            false,
-                            MeshParserUtils.USE_DEFAULT_TTL
-                            ,
-                            53,
-                            0,
-                            1,
-                            1,
-                            meshModel.modelId
-                        )
+            var publishAddress = group.address
+            var index = 0
+            node.elements.values.elementAt(0).meshModels?.values?.forEach { meshModel ->
+                if (meshModel.boundAppKeyIndexes?.size ?: 0 > 0) {
+                    runBlocking {
+                        launch {
+                            delay(1000)
+                            var meshMsg = ConfigModelPublicationSet(
+                                node.elements.values.elementAt(0).elementAddress
+                                ,
+                                publishAddress,
+                                meshModel.boundAppKeyIndexes!!.get(0),
+                                false,
+                                MeshParserUtils.USE_DEFAULT_TTL
+                                ,
+                                53,
+                                0,
+                                1,
+                                1,
+                                meshModel.modelId
+                            )
 
-                        try {
-                            MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi
-                                ?.createMeshPdu(node.unicastAddress, meshMsg)
-                            index++
-                        } catch (ex: IllegalArgumentException) {
-                            ex.printStackTrace()
+                            try {
+                                MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi
+                                    ?.createMeshPdu(node.unicastAddress, meshMsg)
+                                index++
+                            } catch (ex: IllegalArgumentException) {
+                                ex.printStackTrace()
+                            }
                         }
                     }
+                } else {
+                    index++
                 }
-            } else {
-                index++
             }
-        }
 
-        if (index == node.elements.values.elementAt(0).meshModels?.values?.size) {
-            doMapCallback(
-                map,
-                callback,
-                CallbackMsg(ConnectState.COMMON_SUCCESS.code, ConnectState.COMMON_SUCCESS.msg)
-            )
+            if (index == node.elements.values.elementAt(0).meshModels?.values?.size) {
+                doMapCallback(
+                    map,
+                    callback,
+                    CallbackMsg(ConnectState.COMMON_SUCCESS.code, ConnectState.COMMON_SUCCESS.msg)
+                )
+            }
         }
 
     }
 
     fun subscribe(uuid: String, groupName: String, callback: MapCallback) {
         var map = HashMap<String, Any>()
-        //通过uuid获取group
-        var group = MeshHelper.getGroupByName(groupName)
-        if (group == null) {
-            doMapCallback(
-                map,
-                callback,
-                CallbackMsg(ConnectState.GROUP_NOT_EXIST.code, ConnectState.GROUP_NOT_EXIST.msg)
-            )
-            return
-        }
+        if (doProxyCheck(uuid, map, callback)) {
+            //通过uuid获取group
+            var group = MeshHelper.getGroupByName(groupName)
+            if (group == null) {
+                doMapCallback(
+                    map,
+                    callback,
+                    CallbackMsg(ConnectState.GROUP_NOT_EXIST.code, ConnectState.GROUP_NOT_EXIST.msg)
+                )
+                return
+            }
 
-        //获取provisioned节点
-        var node = MeshHelper.getProvisionedNodeByUUID(uuid)
-        if (node == null) {
-            doMapCallback(
-                map,
-                callback,
-                CallbackMsg(ConnectState.NODE_NOT_EXIST.code, ConnectState.NODE_NOT_EXIST.msg)
-            )
-            return
-        }
+            //获取provisioned节点
+            var node = MeshHelper.getProvisionedNodeByUUID(uuid)
 
-        var index = 0
-        node.elements.values.elementAt(0).meshModels?.values?.forEach { model ->
-            runBlocking {
-                launch {
-                    delay(1000)
-                    val modelIdentifier = model.getModelId()
-                    val configModelSubscriptionAdd: MeshMessage
-                    var elementAddress = node.elements.values.elementAt(0).elementAddress
-                    if (group.addressLabel == null) {
-                        configModelSubscriptionAdd =
-                            ConfigModelSubscriptionAdd(
+            var index = 0
+            node?.elements?.values?.elementAt(0)?.meshModels?.values?.forEach { model ->
+                runBlocking {
+                    launch {
+                        delay(1000)
+                        val modelIdentifier = model.getModelId()
+                        val configModelSubscriptionAdd: MeshMessage
+                        var elementAddress = node.elements.values.elementAt(0).elementAddress
+                        if (group.addressLabel == null) {
+                            configModelSubscriptionAdd =
+                                ConfigModelSubscriptionAdd(
+                                    elementAddress,
+                                    group.getAddress(),
+                                    modelIdentifier
+                                )
+                        } else {
+                            configModelSubscriptionAdd = ConfigModelSubscriptionVirtualAddressAdd(
                                 elementAddress,
-                                group.getAddress(),
+                                group.getAddressLabel()!!,
                                 modelIdentifier
                             )
-                    } else {
-                        configModelSubscriptionAdd = ConfigModelSubscriptionVirtualAddressAdd(
-                            elementAddress,
-                            group.getAddressLabel()!!,
-                            modelIdentifier
-                        )
+                        }
+                        MeshHelper.sendMessage(node.unicastAddress, configModelSubscriptionAdd)
+                        index++
                     }
-                    MeshHelper.sendMessage(node.unicastAddress, configModelSubscriptionAdd)
-                    index++
                 }
+            }
+
+            if (index == node?.elements?.values?.elementAt(0)?.meshModels?.values?.size) {
+                doMapCallback(
+                    map,
+                    callback,
+                    CallbackMsg(ConnectState.COMMON_SUCCESS.code, ConnectState.COMMON_SUCCESS.msg)
+                )
+            }
+        }
+    }
+
+    fun lightControl(uuid: String, params: HashMap<String, Any>, callback: MapCallback) {
+        var map = HashMap<String, Any>()
+        if (doProxyCheck(uuid, map, callback)) {
+            var hsv = params["HSVColor"]
+            var bright = params["b"]
+            var tempreture = params["t"]
+
+            if (hsv != null) {
+                var hsvMap = hsv as HashMap<String, Int>
+                var h = hsvMap["Hue"]
+                var s = hsvMap["Saturation"]
+                var v = hsvMap["Value"]
+                sendMeshMessage(uuid, 0, 0, "0D", "00646363", callback)
+            } else if (bright != null) {
+
+            } else if (tempreture != null) {
+
+            } else {
+                sendMeshMessage(uuid, 0, 0, "0C", "", callback)
             }
         }
 
-        if (index == node.elements.values.elementAt(0).meshModels?.values?.size) {
-            doMapCallback(
-                map,
-                callback,
-                CallbackMsg(ConnectState.COMMON_SUCCESS.code, ConnectState.COMMON_SUCCESS.msg)
-            )
-        }
+//        sendMeshMessage(uuid)
     }
 
 //    fun updateDeviceImg(uuid: String, path: String, callback: MapCallback) {
@@ -971,5 +1015,33 @@ object MeshSDK {
         map.put("code", msg.code)
         map.put("message", msg.msg)
         callback.onResult(map)
+    }
+
+    private fun doProxyCheck(
+        uuid: String,
+        map: HashMap<String, Any>,
+        callback: MapCallback
+    ): Boolean {
+        doBaseCheck(uuid, map, callback)
+        var node = MeshHelper.getProvisionedNodeByUUID(uuid)
+
+        if (!MeshHelper.isConnectedToProxy()) {
+            doMapCallback(
+                map, callback,
+                CallbackMsg(CommonErrorMsg.DISCONNECTED.code, CommonErrorMsg.DISCONNECTED.msg)
+            )
+            return false
+        }
+
+        if (node == null) {
+            doMapCallback(
+                map, callback,
+                CallbackMsg(ConnectState.NODE_NOT_EXIST.code, ConnectState.NODE_NOT_EXIST.msg)
+            )
+
+            return false
+        }
+
+        return true
     }
 }

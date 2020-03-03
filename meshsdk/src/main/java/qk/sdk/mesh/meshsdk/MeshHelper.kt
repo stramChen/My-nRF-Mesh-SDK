@@ -759,7 +759,6 @@ object MeshHelper {
     }
 
     fun setPublication(groupName: String) {
-        var map = HashMap<String, Any>()
         //通过uuid获取group
         var group = getGroupByName(groupName)
         if (group == null) {

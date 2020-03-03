@@ -99,32 +99,48 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
 
         btn_set_publication.setOnClickListener {
-            //            MeshSDK.resetNode(mUUID)
-            MeshSDK.setPublication(mUUID, object : MapCallback {
-                override fun onResult(result: HashMap<String, Any>) {
-                    result.forEach { t, u ->
-                        Utils.printLog(TAG, "set publication,key:$t,value:$u")
-                    }
-                }
-            })
+            MeshSDK.resetNode(mUUID)
+//            MeshSDK.setPublication(mUUID, "",object : MapCallback {
+//                override fun onResult(result: HashMap<String, Any>) {
+//                    result.forEach { t, u ->
+//                        Utils.printLog(TAG, "set publication,key:$t,value:$u")
+//                    }
+//                }
+//            })
         }
 
         btn_subscribe.setOnClickListener {
-            MeshSDK.subscribe(mUUID, object : MapCallback {
+            //            MeshSDK.subscribe(mUUID, object : MapCallback {
+//                override fun onResult(result: HashMap<String, Any>) {
+//                    result.forEach { t, u ->
+//                        Utils.printLog(TAG, "set subscribe,key:$t,value:$u")
+//                    }
+//                }
+//            })
+            var map = HashMap<String, Any>()
+            var hsvMap = HashMap<String, Int>()
+            map["HSVColor"] = hsvMap
+            hsvMap["Hue"] = 100
+            hsvMap["Saturation"] = 100
+            hsvMap["Value"] = 100
+            MeshSDK.lightControl(mUUID, map, object : MapCallback {
                 override fun onResult(result: HashMap<String, Any>) {
-                    result.forEach { t, u ->
-                        Utils.printLog(TAG, "set subscribe,key:$t,value:$u")
-                    }
+
                 }
             })
         }
 
         tv_ping.setOnClickListener {
-            MeshSDK.getDeviceIdentityKeys(mUUID, object : MapCallback {
+            //            MeshSDK.getDeviceIdentityKeys(mUUID, object : MapCallback {
+//                override fun onResult(result: HashMap<String, Any>) {
+//                    result.forEach { t, u ->
+//                        Log.e(TAG, "key:$t,value:$u")
+//                    }
+//                }
+//            })
+            MeshSDK.lightControl(mUUID, HashMap(), object : MapCallback {
                 override fun onResult(result: HashMap<String, Any>) {
-                    result.forEach { t, u ->
-                        Log.e(TAG, "key:$t,value:$u")
-                    }
+
                 }
             })
 //            MeshSDK.sendMeshMessage(mUUID,0,0,"05","0016000000",object :BooleanCallback{
