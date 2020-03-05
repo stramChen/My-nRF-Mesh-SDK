@@ -3,6 +3,7 @@ package qk.sdk.mesh.meshsdk
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import androidx.lifecycle.LiveData
 import com.joker.api.wrapper.ListenerWrapper
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -13,8 +14,10 @@ import no.nordicsemi.android.meshprovisioner.MeshNetwork
 import no.nordicsemi.android.meshprovisioner.NetworkKey
 import no.nordicsemi.android.meshprovisioner.models.VendorModel
 import no.nordicsemi.android.meshprovisioner.transport.*
+import no.nordicsemi.android.meshprovisioner.utils.AddressArray
 import no.nordicsemi.android.meshprovisioner.utils.MeshAddress
 import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils
+import no.nordicsemi.android.meshprovisioner.utils.ProxyFilterType
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
 import qk.sdk.mesh.meshsdk.callback.*
 import qk.sdk.mesh.meshsdk.service.BaseMeshService
@@ -156,9 +159,9 @@ object MeshHelper {
     }
 
     fun getProvisionedNodeByUUID(uuid: String): ProvisionedMeshNode? {
-        getProvisionNode()?.forEach {
-            if (it.uuid == uuid) {
-                return it
+        for (node: ProvisionedMeshNode in getProvisionNode() ?: ArrayList()) {
+            if (node.uuid == uuid) {
+                return node
             }
         }
         return null
@@ -732,15 +735,48 @@ object MeshHelper {
 
     fun createGroup(groupName: String): Boolean {
         try {
+            var group: Group? = getGroupByName(groupName)
+            if (group != null) {
+                addPoxyFilter(MeshAddress.formatAddress(group!!.address, false))
+                return true
+            }
+
             val network = MeshProxyService.mMeshProxyService?.getMeshNetwork()
-            var group = network?.createGroup(network.getSelectedProvisioner()!!, groupName)
+            group = network?.createGroup(network.getSelectedProvisioner()!!, groupName)
             if (group != null) {
                 if (network?.addGroup(group) ?: false) {
+                    addPoxyFilter(MeshAddress.formatAddress(group.address, false))
                     return true
                 }
             }
         } catch (ex: IllegalArgumentException) {
             ex.printStackTrace()
+        }
+        return false
+    }
+
+    private fun addPoxyFilter(groupAdd: String): Boolean {
+        val address = MeshParserUtils.toByteArray(groupAdd)
+        Utils.printLog(TAG, "address bytes:${ByteUtil.bytesToHexString(address)}")
+
+        val addAddressToFilter = ProxyConfigAddAddressToFilter(
+            arrayListOf(
+                AddressArray(
+                    address[0],
+                    address[1]
+                )
+            )
+        )
+
+        try {
+            MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.createMeshPdu(
+                MeshAddress.UNASSIGNED_ADDRESS,
+                addAddressToFilter
+            )
+            return true
+        } catch (ex: IllegalArgumentException) {
+            ex.printStackTrace()
+            return false
         }
         return false
     }
@@ -847,6 +883,14 @@ object MeshHelper {
                 }
             }
         }
+    }
+
+    fun subscribeLightStatus(mapCallback: MeshCallback) {
+        MeshProxyService.mMeshProxyService?.subscribeLightStatus(mapCallback)
+    }
+
+    fun unSubscribeLightStatus(){
+        MeshProxyService.mMeshProxyService?.unSubscribeLightStatus()
     }
 
     internal class MeshProxyService : BaseMeshService() {

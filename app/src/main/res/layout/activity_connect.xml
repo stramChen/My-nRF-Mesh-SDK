@@ -75,13 +75,21 @@
     <TextView
         style="@style/tv_content_title"
         android:layout_marginTop="1dp"
-        android:text="@string/ttl"
+        android:text="Mode"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_address" />
 
     <TextView
         android:id="@+id/tv_ttl"
         style="@style/tv_content_title"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_address" />
+
+    <Switch
+        android:id="@+id/switch_mode"
+        android:layout_width="100dp"
+        android:layout_height="@dimen/tv_content_height"
+        android:layout_marginTop="1dp"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tv_address" />
 
@@ -138,7 +146,7 @@
     <TextView
         style="@style/tv_content_title"
         android:layout_marginTop="21dp"
-        android:text="C"
+        android:text="H"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tv_ping" />
 
@@ -151,7 +159,7 @@
 
     <TextView
         style="@style/tv_content_title"
-        android:text="W"
+        android:text="S"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/sb_vendor_c" />
 
@@ -164,7 +172,7 @@
 
     <TextView
         style="@style/tv_content_title"
-        android:text="R"
+        android:text="V"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/sb_vendor_w" />
 
@@ -177,7 +185,7 @@
 
     <TextView
         style="@style/tv_content_title"
-        android:text="G"
+        android:text="B"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/sb_vendor_r" />
 
@@ -190,7 +198,7 @@
 
     <TextView
         style="@style/tv_content_title"
-        android:text="B"
+        android:text="T"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/sb_vendor_g" />
 
@@ -227,7 +235,7 @@
         android:id="@+id/btn_subscribe"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="subscribe"
+        android:text="publish"
         android:layout_marginLeft="10dp"
         app:layout_constraintLeft_toRightOf="@+id/btn_set_publication"
         app:layout_constraintTop_toTopOf="@+id/btn_set_publication" />

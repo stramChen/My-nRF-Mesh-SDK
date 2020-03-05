@@ -11,6 +11,7 @@ import qk.sdk.mesh.demo.R
 import qk.sdk.mesh.demo.base.BaseMeshActivity
 import qk.sdk.mesh.demo.widget.base.BaseAdapter
 import qk.sdk.mesh.demo.widget.base.BaseViewHolder
+import qk.sdk.mesh.demo.widget.base.OnItemLongClickListener
 import qk.sdk.mesh.meshsdk.MeshHelper
 import qk.sdk.mesh.meshsdk.MeshSDK
 import qk.sdk.mesh.meshsdk.callback.BooleanCallback
@@ -27,11 +28,13 @@ class GroupActivity : BaseMeshActivity() {
 
     override fun init() {
         btn_add_group.setOnClickListener {
-            MeshSDK.createGroup(MeshHelper.getProvisionNode()?.get(0)?.uuid?:"", object : BooleanCallback {
-                override fun onResult(boolean: Boolean) {
-                    Utils.printLog(TAG, "createGroup result:$boolean")
-                }
-            })
+            MeshSDK.createGroup(
+                "01029012901920",
+                object : BooleanCallback {
+                    override fun onResult(boolean: Boolean) {
+                        Utils.printLog(TAG, "createGroup result:$boolean")
+                    }
+                })
         }
 
         initAdapter()
@@ -41,6 +44,16 @@ class GroupActivity : BaseMeshActivity() {
         var adapter = GroupAdapter(this, MeshHelper.getGroup())
         rv_groups.layoutManager = LinearLayoutManager(this)
         rv_groups.adapter = adapter
+        adapter.setOnItemLongClickListener(object : OnItemLongClickListener<Group> {
+            override fun onItemLongClick(data: Group, position: Int): Boolean {
+                val network = MeshHelper.getMeshNetwork()
+                val group = network?.getGroups()?.get(position)
+                if (network?.getModels(group)?.size == 0) {
+                    network?.removeGroup(group!!)
+                }
+                return true
+            }
+        })
     }
 
     inner class GroupAdapter(context: Context, groups: ArrayList<Group>) :

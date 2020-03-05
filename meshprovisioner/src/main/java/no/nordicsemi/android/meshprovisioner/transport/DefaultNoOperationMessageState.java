@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import no.nordicsemi.android.meshprovisioner.Group;
 import no.nordicsemi.android.meshprovisioner.MeshManagerApi;
 import no.nordicsemi.android.meshprovisioner.MeshNetwork;
@@ -17,6 +18,7 @@ import no.nordicsemi.android.meshprovisioner.opcodes.ApplicationMessageOpCodes;
 import no.nordicsemi.android.meshprovisioner.opcodes.ConfigMessageOpCodes;
 import no.nordicsemi.android.meshprovisioner.opcodes.ProxyConfigMessageOpCodes;
 import no.nordicsemi.android.meshprovisioner.utils.AddressArray;
+import no.nordicsemi.android.meshprovisioner.utils.ByteUtil;
 import no.nordicsemi.android.meshprovisioner.utils.ExtendedInvalidCipherTextException;
 import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils;
 import no.nordicsemi.android.meshprovisioner.utils.NetworkTransmitSettings;
@@ -338,16 +340,18 @@ class DefaultNoOperationMessageState extends MeshMessageState {
                 }
                 break;
             case 3:
-                if (mMeshMessage instanceof VendorModelMessageAcked) {
-                    final VendorModelMessageAcked vendorModelMessageAcked = (VendorModelMessageAcked) mMeshMessage;
-                    final VendorModelMessageStatus status = new VendorModelMessageStatus(message, vendorModelMessageAcked.getModelIdentifier());
-                    mMeshStatusCallbacks.onMeshMessageReceived(message.getSrc(), status);
-                    Log.v(TAG, "Vendor model Access PDU Received: " + MeshParserUtils.bytesToHex(accessPayload, false));
-                } else if (mMeshMessage instanceof VendorModelMessageUnacked) {
-                    final VendorModelMessageUnacked vendorModelMessageUnacked = (VendorModelMessageUnacked) mMeshMessage;
-                    final VendorModelMessageStatus status = new VendorModelMessageStatus(message, vendorModelMessageUnacked.getModelIdentifier());
-                    mMeshStatusCallbacks.onMeshMessageReceived(message.getSrc(), status);
-                }
+//                Log.e(TAG, "VendorModelMessage:" + ByteUtil.bytesToHexString(message.getParameters()));
+//                VendorModelMessageStatus meshMessage=new VendorModelMessageStatus(message)
+//                if (mMeshMessage instanceof VendorModelMessageAcked) {
+//                final VendorModelMessageAcked vendorModelMessageAcked = (VendorModelMessageAcked) mMeshMessage;
+                final VendorModelMessageStatus status = new VendorModelMessageStatus(message, 0);
+                mMeshStatusCallbacks.onMeshMessageReceived(message.getSrc(), status);
+                Log.v(TAG, "Vendor model Access PDU Received: " + MeshParserUtils.bytesToHex(accessPayload, false));
+//                } else if (mMeshMessage instanceof VendorModelMessageUnacked) {
+//                    final VendorModelMessageUnacked vendorModelMessageUnacked = (VendorModelMessageUnacked) mMeshMessage;
+//                    final VendorModelMessageStatus status = new VendorModelMessageStatus(message, vendorModelMessageUnacked.getModelIdentifier());
+//                    mMeshStatusCallbacks.onMeshMessageReceived(message.getSrc(), status);
+//                }
                 break;
             default:
                 Log.v(TAG, "Unknown Access PDU Received: " + MeshParserUtils.bytesToHex(accessPayload, false));

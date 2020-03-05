@@ -71,6 +71,10 @@ public class ByteUtil {
         return array;
     }
 
+    public static String byteTobitString(byte b) {
+        return Integer.toBinaryString(b);
+    }
+
     public static byte[] hexStringToBytes(String hex) {
         int m = 0, n = 0;
         int byteLen = hex.length() / 2; // 每两个字符描述一个字节

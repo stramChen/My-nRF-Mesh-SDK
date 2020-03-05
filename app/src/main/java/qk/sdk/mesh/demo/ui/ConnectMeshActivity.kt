@@ -156,6 +156,7 @@ class ConnectMeshActivity : BaseMeshActivity() {
     var connectCallback: ConnectCallback? = object :
         ConnectCallback {
         override fun onConnect() {
+            MeshHelper.createGroup("01029012901920")
             tv_proxy_address.text = MeshHelper.getConnectedDevice()?.getAddress()
             if (MeshHelper.getSelectedModel() == null && MeshHelper.getSelectedElement() == null) {
                 btn_add_app_key.isEnabled = true

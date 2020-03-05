@@ -76,13 +76,13 @@ object Constants {
      */
     val BASE_PATH = Environment
         .getExternalStorageDirectory().absolutePath + File.separator
-    val FOLDER_STYD = BASE_PATH + "mxchip" + File.separator
+    val FOLDER_MXCHIP = BASE_PATH + "mxchip" + File.separator
 
     /**
      * 本地存储目录————二级目录
      */
-    val FOLDER_CACHE = FOLDER_STYD + "cache" + File.separator
-    val FOLDER_DOWNLOAD = FOLDER_STYD + "download" + File.separator
+    val FOLDER_CACHE = FOLDER_MXCHIP + "cache" + File.separator
+    val FOLDER_DOWNLOAD = FOLDER_MXCHIP + "download" + File.separator
 
     val MESH_LOG_FILE_NAME = "mesh_log"
 }

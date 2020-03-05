@@ -58,17 +58,15 @@ import no.nordicsemi.android.meshprovisioner.transport.VendorModelMessageStatus
 import no.nordicsemi.android.meshprovisioner.utils.MeshAddress
 import qk.sdk.mesh.meshsdk.bean.provision.ProvisioningStatusLiveData
 import qk.sdk.mesh.meshsdk.bean.provision.TransactionStatus
-import qk.sdk.mesh.meshsdk.util.ProvisionerStates
-import qk.sdk.mesh.meshsdk.util.Utils
 
 import no.nordicsemi.android.meshprovisioner.MeshManagerApi.MESH_PROXY_UUID
+import no.nordicsemi.android.meshprovisioner.utils.ByteUtil
 import no.nordicsemi.android.support.v18.scanner.*
 import qk.sdk.mesh.meshsdk.bean.*
 import qk.sdk.mesh.meshsdk.bean.scan.ScannerLiveData
 import qk.sdk.mesh.meshsdk.bean.scan.ScannerStateLiveData
-import qk.sdk.mesh.meshsdk.util.Constants
+import qk.sdk.mesh.meshsdk.util.*
 import qk.sdk.mesh.meshsdk.util.Constants.ConnectState.*
-import qk.sdk.mesh.meshsdk.util.NetworkExportUtils
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -1093,6 +1091,10 @@ class NrfMeshManager(
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             try {
                 if (mFilterUuid == BleMeshManager.MESH_PROVISIONING_UUID) {
+                    Utils.printLog(
+                        TAG,
+                        "onScanResult"
+                    )
                     // If the packet has been obtained while Location was disabled, mark Location as not required
                     if (Utils.isLocationRequired(mContext) && !Utils.isLocationEnabled(mContext))
                         Utils.markLocationNotRequired(mContext)
@@ -1119,8 +1121,8 @@ class NrfMeshManager(
                                 }
                             }
                         }
-                    }else{
-                        Utils.printLog(TAG,"scanRecord is null")
+                    } else {
+                        Utils.printLog(TAG, "scanRecord is null")
                     }
 
                     if (meshManagerApi.isAdvertisingWithNetworkIdentity(serviceData) && mNetworkId != null) {
@@ -1192,6 +1194,10 @@ class NrfMeshManager(
         val scanRecord = result.scanRecord
         if (scanRecord != null) {
             if (scanRecord.bytes != null) {
+                Utils.printLog(
+                    TAG,
+                    "scanRecord have data"
+                )
                 val beaconData = meshManagerApi.getMeshBeaconData(scanRecord.bytes!!)
                 if (beaconData != null) {
                     mScannerLiveData.deviceDiscovered(

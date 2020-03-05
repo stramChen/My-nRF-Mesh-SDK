@@ -594,6 +594,10 @@ object MeshSDK {
                             Integer.valueOf(opcode, 16),
                             ByteUtil.hexStringToBytes(value)
                         )
+                        Utils.printLog(
+                            TAG,
+                            "value hex:$value,value bytes:${ByteUtil.hexStringToBytes(value)}"
+                        )
                         MeshHelper.sendMessage(
                             element.elementAddress,
                             message,
@@ -694,27 +698,31 @@ object MeshSDK {
                                             }
                                             "0C" -> {//获取灯当前状态，会返回除了开关之外的所有属性
                                                 if (msg.parameter.size >= 8) {
-                                                    var mode = msg.parameter[0]
-                                                    var h = ByteUtil.byteToShort(
-                                                        byteArrayOf(
-                                                            msg.parameter[2],
-                                                            msg.parameter[1]
+                                                    if (callback is MapCallback) {
+                                                        parseLightStatus(
+                                                            msg.parameter,
+                                                            callback,
+                                                            HashMap<String, Any>()
                                                         )
-                                                    )
-                                                    var s = msg.parameter[3].toInt()
-                                                    var v = msg.parameter[4].toInt()
-                                                    var b = msg.parameter[5].toInt()
-                                                    var t = ByteUtil.byteArrayToInt(
-                                                        byteArrayOf(
-                                                            0x00,
-                                                            0x00,
-                                                            msg.parameter[6],
-                                                            msg.parameter[7]
-                                                        )
-                                                    )
-                                                    Utils.printLog(TAG, "h:$h,s:$s,v:$v,b:$b,t:$t")
+                                                        msgIndex = 0
+                                                    }
                                                 }
                                             }
+                                            "0D", "0E", "0F", "11" -> {//set HSV
+                                                if (msgIndex < 0 && callback is BooleanCallback) {
+                                                    callback.onResult(true)
+                                                    msgIndex = 0
+                                                }
+                                            }
+//                                            "0E" -> {//set bright
+//
+//                                            }
+//                                            "0F" -> {//set temperature
+//
+//                                            }
+//                                            "11" -> {//set light mode
+//
+//                                            }
                                         }
                                     }
 
@@ -964,29 +972,177 @@ object MeshSDK {
         }
     }
 
-    fun lightControl(uuid: String, params: HashMap<String, Any>, callback: MapCallback) {
-        var map = HashMap<String, Any>()
-        if (doProxyCheck(uuid, map, callback)) {
-            var hsv = params["HSVColor"]
-            var bright = params["b"]
-            var tempreture = params["t"]
+    fun modifyLightStatus(uuid: String, params: HashMap<String, Any>, callback: BooleanCallback) {
+        var hsv = params["HSVColor"]
+        var bright = params["Brightness"]
+        var temperature = params["Temperature"]
+        var mode = params["LightMode"]
+        var onOff = params["LightSwitch"]
 
-            if (hsv != null) {
-                var hsvMap = hsv as HashMap<String, Int>
-                var h = hsvMap["Hue"]
-                var s = hsvMap["Saturation"]
-                var v = hsvMap["Value"]
-                sendMeshMessage(uuid, 0, 0, "0D", "00646363", callback)
-            } else if (bright != null) {
-
-            } else if (tempreture != null) {
-
-            } else {
-                sendMeshMessage(uuid, 0, 0, "0C", "", callback)
-            }
+        if (hsv != null) {
+            var vendorMap = hsv as HashMap<String, Int>
+            var h = vendorMap["hue"]?.toShort()
+            var s = vendorMap["saturation"]
+            var v = vendorMap["value"]
+            sendMeshMessage(
+                uuid,
+                0,
+                0,
+                "0D",
+                "${ByteUtil.bytesToHexString(
+                    ByteUtil.shortToByte(
+                        h ?: 0
+                    )
+                )}${ByteUtil.bytesToHexString(
+                    byteArrayOf((s ?: 0).toByte())
+                )}${ByteUtil.bytesToHexString(
+                    byteArrayOf((v ?: 0).toByte())
+                )}",
+                callback
+            )
+        } else if (bright != null) {
+            sendMeshMessage(
+                uuid,
+                0,
+                0,
+                "0E",
+                "${ByteUtil.bytesToHexString(
+                    byteArrayOf((bright as Int).toByte())
+                )}",
+                callback
+            )
+        } else if (temperature != null) {
+            sendMeshMessage(
+                uuid,
+                0,
+                0,
+                "0F",
+                "${ByteUtil.bytesToHexString(
+                    ByteUtil.shortToByte((temperature as Int).toShort())
+                )}",
+                callback
+            )
+        } else if (mode != null) {
+            sendMeshMessage(
+                uuid,
+                0,
+                0,
+                "11",
+                "${ByteUtil.bytesToHexString(
+                    byteArrayOf((mode as Int).toByte())
+                )}",
+                callback
+            )
+        } else if (onOff != null) {
+            setGenericOnOff(uuid, if (onOff as Int == 0) false else true, callback)
         }
+    }
 
-//        sendMeshMessage(uuid)
+    fun fetchLightCurrentStatus(uuid: String, callback: MapCallback) {
+        sendMeshMessage(uuid, 0, 0, "0C", "", callback)
+    }
+
+    fun subscribeLightStatus(uuid: String, callback: MapCallback) {
+        MeshHelper.subscribeLightStatus(object : MeshCallback {
+            override fun onReceive(msg: MeshMessage) {
+                var node = MeshHelper?.getMeshNetwork()?.getNode(msg.src)
+                if (uuid.isNotEmpty() && node?.uuid?.toUpperCase() != uuid.toUpperCase()) {
+                    return
+                }
+
+                var map = HashMap<String, Any>()
+                map["uuid"] = node?.uuid ?: ""
+                if (msg is GenericOnOffStatus) {
+                    var param = msg.parameter
+                    if (param.size == 1) {
+                        map["isOn"] = if (param[0].toInt() == 0) false else true
+                        Utils.printLog(
+                            TAG,
+                            "onreceive node:${node?.uuid?.toUpperCase()}, isOn:${map["isOn"]}"
+                        )
+                        callback.onResult(map)
+                    }
+                } else if (msg is VendorModelMessageStatus) {
+                    if (msg.parameter.size >= 8) {
+                        parseLightStatus(msg.parameter, callback, map)
+                        Utils.printLog(
+                            TAG,
+                            "onreceive node:${node?.uuid?.toUpperCase()}, isOn:${map["isOn"]}"
+                        )
+                    }
+                }
+            }
+
+            override fun onError(msg: CallbackMsg) {
+
+            }
+        })
+    }
+
+    fun unSubscribeLightStatus() {
+        MeshHelper.unSubscribeLightStatus()
+    }
+
+    private fun parseLightStatus(
+        params: ByteArray,
+        callback: MapCallback,
+        map: HashMap<String, Any>
+    ) {
+        var modeByte = params[0]
+        var modeBits = ByteUtil.byteTobitArray(modeByte)
+        var modeBitString = ByteUtil.byteTobitString(modeByte)
+        Utils.printLog(
+            TAG,
+            "mode Int:${modeByte.toInt()},modeBitString:$modeBitString,statuHex:${ByteUtil.bytesToHexString(
+                params
+            )}"
+        )
+        var mode = ByteUtil.byteToShort(byteArrayOf(modeBits[6],modeBits[5])).toInt()
+        var isOn = modeBits[7].toShort()
+
+        var h = ByteUtil.byteToShort(
+            byteArrayOf(
+                params[2],
+                params[1]
+            )
+        )
+        var s = params[3].toInt()
+        var v = params[4].toInt()
+        var b = params[5].toInt()
+        var t = ByteUtil.byteArrayToInt(
+            byteArrayOf(
+                0x00,
+                0x00,
+                params[6],
+                params[7]
+            )
+        )
+        Utils.printLog(TAG, "h:$h,s:$s,v:$v,b:$b,t:$t")
+        map["code"] = 200
+        var lightStatus = HashMap<String, Any>()
+        lightStatus["LightMode"] = mode
+        lightStatus["Brightness"] = b
+        lightStatus["ColorTemperature"] = t
+        lightStatus["LightSwitch"] = isOn
+
+        var HSVColor = HashMap<String, Int>()
+        HSVColor["Hue"] = h.toInt()
+        HSVColor["Saturation"] = s
+        HSVColor["Value"] = v
+        lightStatus["HSVColor"] = HSVColor
+        map["data"] = lightStatus
+
+
+        if (callback is MapCallback) {
+            doMapCallback(
+                map,
+                callback,
+                CallbackMsg(
+                    ConnectState.COMMON_SUCCESS.code,
+                    ConnectState.COMMON_SUCCESS.msg
+                )
+            )
+        }
     }
 
 //    fun updateDeviceImg(uuid: String, path: String, callback: MapCallback) {

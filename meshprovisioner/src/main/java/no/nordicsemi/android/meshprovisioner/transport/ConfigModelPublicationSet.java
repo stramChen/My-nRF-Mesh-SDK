@@ -28,6 +28,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 import no.nordicsemi.android.meshprovisioner.opcodes.ConfigMessageOpCodes;
+import no.nordicsemi.android.meshprovisioner.utils.ByteUtil;
 import no.nordicsemi.android.meshprovisioner.utils.MeshAddress;
 import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils;
 
@@ -152,6 +153,7 @@ public class ConfigModelPublicationSet extends ConfigMessage {
             paramsBuffer.put(modelIdentifier[2]);
             mParameters = paramsBuffer.array();
         }
+        Log.e(TAG,"assembleMessageParameters:"+ ByteUtil.bytesToHexString(mParameters));
         Log.v(TAG, "Publication set: " + MeshParserUtils.bytesToHex(mParameters, false));
     }
 

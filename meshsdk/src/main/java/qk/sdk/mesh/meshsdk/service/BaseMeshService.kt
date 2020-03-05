@@ -4,6 +4,8 @@ import android.content.Intent
 import android.os.IBinder
 import android.util.Log
 import androidx.lifecycle.LifecycleService
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import no.nordicsemi.android.meshprovisioner.*
 import no.nordicsemi.android.meshprovisioner.transport.Element
@@ -363,5 +365,15 @@ open class BaseMeshService : LifecycleService() {
         mNrfMeshManager?.mNetworkImportState?.observe(this, Observer {
             mapCallback.onResultMsg(it)
         })
+    }
+
+    internal fun subscribeLightStatus(callback: MeshCallback) {
+        mNrfMeshManager?.meshMessageLiveData?.observe(this, Observer {
+            callback?.onReceive(it)
+        })
+    }
+
+    internal fun unSubscribeLightStatus() {
+        mNrfMeshManager?.meshMessageLiveData?.removeObservers(this)
     }
 }
