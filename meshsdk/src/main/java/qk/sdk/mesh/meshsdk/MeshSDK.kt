@@ -696,8 +696,8 @@ object MeshSDK {
                                                     msgIndex = 0
                                                 }
                                             }
-                                            "0C" -> {//获取灯当前状态，会返回除了开关之外的所有属性
-                                                if (msg.parameter.size >= 8) {
+                                            "0C" -> {//获取灯当前状态，会返回所有属性
+                                                if (msg.parameter.size >= 8 && msgIndex < 0) {
                                                     if (callback is MapCallback) {
                                                         parseLightStatus(
                                                             msg.parameter,
@@ -978,12 +978,18 @@ object MeshSDK {
         var temperature = params["Temperature"]
         var mode = params["LightMode"]
         var onOff = params["LightSwitch"]
+        Utils.printLog(TAG, "Brightness:$bright,Temperature:$temperature,mode:$mode,onOff:$onOff")
 
         if (hsv != null) {
-            var vendorMap = hsv as HashMap<String, Int>
-            var h = vendorMap["hue"]?.toShort()
-            var s = vendorMap["saturation"]
-            var v = vendorMap["value"]
+            var vendorMap = hsv as HashMap<String, Any>
+            var h = vendorMap["Hue"]
+            var s = vendorMap["Saturation"]
+            var v = vendorMap["Value"]
+
+            var paramType = getNumberType(h)
+            if (paramType < 0 || h == null || s == null || v == null)
+                callback.onResult(false)
+
             sendMeshMessage(
                 uuid,
                 0,
@@ -991,34 +997,37 @@ object MeshSDK {
                 "0D",
                 "${ByteUtil.bytesToHexString(
                     ByteUtil.shortToByte(
-                        h ?: 0
+                        if (paramType == 1) (h as Int).toShort() else if (paramType == 2) (h as Double).toShort() else (h as Float).toShort()
                     )
                 )}${ByteUtil.bytesToHexString(
-                    byteArrayOf((s ?: 0).toByte())
+                    byteArrayOf((if (paramType == 1) (s as Int).toByte() else if (paramType == 2) (s as Double).toByte() else (s as Float).toByte()))
                 )}${ByteUtil.bytesToHexString(
-                    byteArrayOf((v ?: 0).toByte())
+                    byteArrayOf((if (paramType == 1) (v as Int).toByte() else if (paramType == 2) (v as Double).toByte() else (v as Float).toByte()))
                 )}",
                 callback
             )
-        } else if (bright != null) {
+        } else if (bright != null && getNumberType(bright) > 0) {
+            var briType = getNumberType(bright)
+
             sendMeshMessage(
                 uuid,
                 0,
                 0,
                 "0E",
                 "${ByteUtil.bytesToHexString(
-                    byteArrayOf((bright as Int).toByte())
+                    byteArrayOf((if (briType == 1) (bright as Int).toByte() else if (briType == 2) (bright as Double).toByte() else (bright as Float).toByte()))
                 )}",
                 callback
             )
-        } else if (temperature != null) {
+        } else if (temperature != null && getNumberType(temperature) > 0) {
+            var temType = getNumberType(temperature)
             sendMeshMessage(
                 uuid,
                 0,
                 0,
                 "0F",
                 "${ByteUtil.bytesToHexString(
-                    ByteUtil.shortToByte((temperature as Int).toShort())
+                    ByteUtil.shortToByte((if (temType == 1) (temperature as Int).toShort() else if (temType == 2) (temperature as Double).toShort() else (temperature as Float).toShort()))
                 )}",
                 callback
             )
@@ -1029,13 +1038,22 @@ object MeshSDK {
                 0,
                 "11",
                 "${ByteUtil.bytesToHexString(
-                    byteArrayOf((mode as Int).toByte())
+                    byteArrayOf(("$mode".toDouble().toInt()).toByte())
                 )}",
                 callback
             )
-        } else if (onOff != null) {
-            setGenericOnOff(uuid, if (onOff as Int == 0) false else true, callback)
+        } else if (onOff != null && getNumberType(onOff) >= 0) {
+            var onOffType = getNumberType(onOff)
+            var onOffParam =
+                if (onOffType == 1) onOff as Int else if (onOffType == 2) (onOff as Double).toInt() else (onOff as Float).toInt()
+            setGenericOnOff(uuid, if (onOffParam == 0) false else true, callback)
         }
+    }
+
+    private fun getNumberType(number: Any?): Int {
+        if (number == null)
+            return -2
+        return if (number is Int) 1 else if (number is Double) 2 else if (number is Float) 3 else -1
     }
 
     fun fetchLightCurrentStatus(uuid: String, callback: MapCallback) {
@@ -1097,7 +1115,7 @@ object MeshSDK {
                 params
             )}"
         )
-        var mode = ByteUtil.byteToShort(byteArrayOf(modeBits[6],modeBits[5])).toInt()
+        var mode = ByteUtil.byteToShort(byteArrayOf(modeBits[6], modeBits[5])).toInt()
         var isOn = modeBits[7].toShort()
 
         var h = ByteUtil.byteToShort(
@@ -1122,7 +1140,7 @@ object MeshSDK {
         var lightStatus = HashMap<String, Any>()
         lightStatus["LightMode"] = mode
         lightStatus["Brightness"] = b
-        lightStatus["ColorTemperature"] = t
+        lightStatus["Temperature"] = t
         lightStatus["LightSwitch"] = isOn
 
         var HSVColor = HashMap<String, Int>()
@@ -1199,5 +1217,21 @@ object MeshSDK {
         }
 
         return true
+    }
+
+    fun getCurrentNode(callback: MapCallback) {
+        MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager?.mExtendedMeshNode?.let { node ->
+            var map = HashMap<String, Any>()
+            map.put("uuid", node.uuid)
+            var elementsMap = HashMap<String, Any>()
+            node.elements.forEach { key, element ->
+                var eleMap = HashMap<String, Any>()
+                var modelsMap = HashMap<String, Any>()
+//                eleMap.put(eleMap.)
+//                elementsMap.put(key, eleMap)
+            }
+            map.put("element", elementsMap)
+            callback.onResult(map)
+        }
     }
 }

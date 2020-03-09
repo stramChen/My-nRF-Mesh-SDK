@@ -13,6 +13,7 @@
 |0.1.5|修改获取四元组接口命名，添加自定义消息参数示例|
 |0.1.6|删除过期接口|
 |0.1.7|添加获取设备cwrgb状态接口|
+|0.1.8|添加hsvbt、设备上报、获取当前设备节点信息接口|
 
 ---- 
 
@@ -214,6 +215,68 @@ MeshSDK.getLightProperties(uuid: String, callback(result:Map))
 		- isOn true为开，false为关
 
 ```
+
+```kotlin
+操作设备，native获取到何种传参就做何种操作，结果只回调一次
+MeshSDK.modifyLightStatus(uuid: String,params: Map/Dictionary,callback(result:Boolean))
+
+|params                 |
+|参数名称|参数类型|参数定义|
+|:---|:---|:---|
+|HSVColor|Map/Dictionary|Hue: Number 色相值（0~360）<br>Saturation: Number 饱和度（0~100）<br>Value: Number 明度（0~100）|
+|Brightness|Number|亮度（0~100）|
+|Temperature|Number|色温（2700~6500)|
+|LightSwitch|Number|0 - 关<br>1 - 开|
+|LightMode|Number|0 - mono（白光）<br>1 - color（彩光）|
+
+```
+
+```kotlin
+获取设备当前状态，结果只回调一次
+MeshSDK.fetchLightCurrentStatus(uuid: String,callback(result:Map/Dictionary)
+
+|result                 |
+|参数名称|参数类型|参数定义|
+|:---|:---|:---|
+|HSVColor|Map/Dictionary|Hue: Number 色相值（0~360）<br>Saturation: Number 饱和度（0~100）<br>Value: Number 明度（0~100）|
+|Brightness|Number|亮度（0~100）|
+|Temperature|Number|色温（2700~6500)|
+|LightSwitch|Number|0 - 关<br>1 - 开|
+|LightMode|Number|0 - mono（白光）<br>1 - color（彩光）|
+
+```
+
+```kotlin
+监听设备状态上报，结果只回调一次
+MeshSDK.subscribeLightStatus(uuid: String,callback(result:Map/Dictionary))
+
+
+|result                 |
+|参数名称|参数类型|参数定义|
+|:---|:---|:---|
+|HSVColor|Map/Dictionary|Hue: Number 色相值（0~360）<br>Saturation: Number 饱和度（0~100）<br>Value: Number 明度（0~100）|
+|Brightness|Number|亮度（0~100）|
+|Temperature|Number|色温（2700~6500)|
+|LightSwitch|Number|0 - 关<br>1 - 开|
+|LightMode|Number|0 - mono（白光）<br>1 - color（彩光）|
+
+```
+
+```kotlin
+获取当前子设备的节点信息，结果只回调一次
+MeshSDK.getCurrentNode(callback(result:Map/Dictionary))
+
+
+|result                 |
+|参数名称|参数类型|参数定义|
+|:---|:---|:---|
+|uuid|String|设备的uuid|
+|iotId|String|飞燕后台生成的iotId|
+|elements|Array<Map/Dictionary>|节点信息,element下包含model信息<br>address - element address <br> models - model信息 <br>  - address <br>  - type model类型：vendor|
+
+```
+
+
 ## code定义
 |错误码|错误信息|
 |:---|:---|
