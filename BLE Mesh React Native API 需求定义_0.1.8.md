@@ -220,7 +220,7 @@ MeshSDK.getLightProperties(uuid: String, callback(result:Map))
 操作设备，native获取到何种传参就做何种操作，结果只回调一次
 MeshSDK.modifyLightStatus(uuid: String,params: Map/Dictionary,callback(result:Boolean))
 
-|params                 |
+#### params定义                 
 |参数名称|参数类型|参数定义|
 |:---|:---|:---|
 |HSVColor|Map/Dictionary|Hue: Number 色相值（0~360）<br>Saturation: Number 饱和度（0~100）<br>Value: Number 明度（0~100）|
@@ -235,7 +235,7 @@ MeshSDK.modifyLightStatus(uuid: String,params: Map/Dictionary,callback(result:Bo
 获取设备当前状态，结果只回调一次
 MeshSDK.fetchLightCurrentStatus(uuid: String,callback(result:Map/Dictionary)
 
-|result                 |
+#### result定义                 
 |参数名称|参数类型|参数定义|
 |:---|:---|:---|
 |HSVColor|Map/Dictionary|Hue: Number 色相值（0~360）<br>Saturation: Number 饱和度（0~100）<br>Value: Number 明度（0~100）|
@@ -251,7 +251,7 @@ MeshSDK.fetchLightCurrentStatus(uuid: String,callback(result:Map/Dictionary)
 MeshSDK.subscribeLightStatus(uuid: String,callback(result:Map/Dictionary))
 
 
-|result                 |
+#### result 定义                 
 |参数名称|参数类型|参数定义|
 |:---|:---|:---|
 |HSVColor|Map/Dictionary|Hue: Number 色相值（0~360）<br>Saturation: Number 饱和度（0~100）<br>Value: Number 明度（0~100）|
@@ -267,7 +267,7 @@ MeshSDK.subscribeLightStatus(uuid: String,callback(result:Map/Dictionary))
 MeshSDK.getCurrentNode(callback(result:Map/Dictionary))
 
 
-|result                 |
+#### result定义                 
 |参数名称|参数类型|参数定义|
 |:---|:---|:---|
 |uuid|String|设备的uuid|
