@@ -219,7 +219,7 @@ MeshSDK.getLightProperties(uuid: String, callback(result:Map))
 ```kotlin
 操作设备，native获取到何种传参就做何种操作，结果只回调一次
 MeshSDK.modifyLightStatus(uuid: String,params: Map/Dictionary,callback(result:Boolean))
-
+```
 #### params定义                 
 |参数名称|参数类型|参数定义|
 |:---|:---|:---|
@@ -229,12 +229,11 @@ MeshSDK.modifyLightStatus(uuid: String,params: Map/Dictionary,callback(result:Bo
 |LightSwitch|Number|0 - 关<br>1 - 开|
 |LightMode|Number|0 - mono（白光）<br>1 - color（彩光）|
 
-```
 
 ```kotlin
 获取设备当前状态，结果只回调一次
 MeshSDK.fetchLightCurrentStatus(uuid: String,callback(result:Map/Dictionary)
-
+```
 #### result定义                 
 |参数名称|参数类型|参数定义|
 |:---|:---|:---|
@@ -244,13 +243,10 @@ MeshSDK.fetchLightCurrentStatus(uuid: String,callback(result:Map/Dictionary)
 |LightSwitch|Number|0 - 关<br>1 - 开|
 |LightMode|Number|0 - mono（白光）<br>1 - color（彩光）|
 
-```
-
 ```kotlin
 监听设备状态上报，结果只回调一次
 MeshSDK.subscribeLightStatus(uuid: String,callback(result:Map/Dictionary))
-
-
+```
 #### result 定义                 
 |参数名称|参数类型|参数定义|
 |:---|:---|:---|
@@ -260,21 +256,18 @@ MeshSDK.subscribeLightStatus(uuid: String,callback(result:Map/Dictionary))
 |LightSwitch|Number|0 - 关<br>1 - 开|
 |LightMode|Number|0 - mono（白光）<br>1 - color（彩光）|
 
-```
 
 ```kotlin
 获取当前子设备的节点信息，结果只回调一次
 MeshSDK.getCurrentNode(callback(result:Map/Dictionary))
 
-
+```
 #### result定义                 
 |参数名称|参数类型|参数定义|
 |:---|:---|:---|
 |uuid|String|设备的uuid|
 |iotId|String|飞燕后台生成的iotId|
 |elements|Array<Map/Dictionary>|节点信息,element下包含model信息<br>address - element address <br> models - model信息 <br>  - address <br>  - type model类型：vendor|
-
-```
 
 
 ## code定义
