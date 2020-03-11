@@ -697,11 +697,13 @@ class NrfMeshManager(
         provisioningState?.onMeshNodeStateUpdated(ProvisionerStates.fromStatusCode(state.state))
     }
 
-    private fun onProvisioningCompleted(node: ProvisionedMeshNode) {//todo 不重新扫描，直接连接
+    private fun onProvisioningCompleted(node: ProvisionedMeshNode) {
         isProvisioningComplete = true
         mProvisionedMeshNode = node
         mIsReconnecting.postValue(true)
         bleMeshManager!!.disconnect().enqueue()
+        Utils.printLog(TAG, "onProvisioningCompleted disconnect ")
+//        mConnectionState.postValue(CallbackMsg(PROVISION_SUCCESS.code,PROVISION_SUCCESS.msg))
         loadNodes()
 //        mHandler.post { mConnectionState.postValue("Scanning for provisioned node") }
 //        mHandler.postDelayed(
@@ -1090,11 +1092,11 @@ class NrfMeshManager(
 
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             try {
+                Utils.printLog(
+                    TAG,
+                    "onScanResult:$mFilterUuid"
+                )
                 if (mFilterUuid == BleMeshManager.MESH_PROVISIONING_UUID) {
-                    Utils.printLog(
-                        TAG,
-                        "onScanResult"
-                    )
                     // If the packet has been obtained while Location was disabled, mark Location as not required
                     if (Utils.isLocationRequired(mContext) && !Utils.isLocationEnabled(mContext))
                         Utils.markLocationNotRequired(mContext)
@@ -1198,14 +1200,16 @@ class NrfMeshManager(
                     TAG,
                     "scanRecord have data"
                 )
-                val beaconData = meshManagerApi.getMeshBeaconData(scanRecord.bytes!!)
-                if (beaconData != null) {
-                    mScannerLiveData.deviceDiscovered(
-                        result,
-                        meshManagerApi.getMeshBeacon(beaconData)
-                    )
-                } else if (mFilterUuid == BleMeshManager.MESH_PROXY_UUID) {
+                if (mFilterUuid == BleMeshManager.MESH_PROXY_UUID) {
                     mScannerLiveData.deviceDiscovered(result)
+                } else {
+                    val beaconData = meshManagerApi.getMeshBeaconData(scanRecord.bytes!!)
+                    if (beaconData != null) {
+                        mScannerLiveData.deviceDiscovered(
+                            result,
+                            meshManagerApi.getMeshBeacon(beaconData)
+                        )
+                    }
                 }
                 mScannerStateLiveData.deviceFound()
             }
@@ -1295,7 +1299,10 @@ class NrfMeshManager(
                 JBConstructor.isAccessible = true
                 instance.set(BluetoothLeScannerCompat.getScanner(), JBConstructor.newInstance())
             } else {
+//                if (filterUuid == BleMeshManager.MESH_PROXY_UUID)
                 filters.add(ScanFilter.Builder().setServiceUuid(ParcelUuid(filterUuid)).build())
+//                else
+//                    filters.add(ScanFilter.Builder().setDeviceAddress("04:78:63:D0:F1:41").build())
             }
             val scanner = BluetoothLeScannerCompat.getScanner()
             scanner.startScan(filters, settings, mScanCallbacks)

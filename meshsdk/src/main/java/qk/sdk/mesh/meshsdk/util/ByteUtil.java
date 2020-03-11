@@ -1,5 +1,18 @@
 package qk.sdk.mesh.meshsdk.util;
 
+import android.os.ParcelUuid;
+import android.util.Log;
+import android.util.SparseArray;
+
+import androidx.annotation.Nullable;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 public class ByteUtil {
     static final String TAG = "ByteUtil";
 
@@ -118,5 +131,52 @@ public class ByteUtil {
             value += (bytes[i] & 0x000000FF) << shift;// 往高位游
         }
         return value;
+    }
+
+    public static byte[] parseFromBytes(@Nullable final byte[] scanRecord) {
+        if (scanRecord == null) {
+            return null;
+        }
+
+        int currentPos = 0;
+        int advertiseFlag = -1;
+        int txPowerLevel = Integer.MIN_VALUE;
+        String localName = null;
+        List<ParcelUuid> serviceUuids = null;
+        SparseArray<byte[]> manufacturerData = null;
+        Map<ParcelUuid, byte[]> serviceData = null;
+
+        try {
+            while (currentPos < scanRecord.length) {
+                // length is unsigned int.
+                final int length = scanRecord[currentPos++] & 0xFF;
+                if (length == 0) {
+                    break;
+                }
+                // Note the length includes the length of the field type itself.
+                final int dataLength = length - 1;
+                // fieldType is unsigned int.
+                final int fieldType = scanRecord[currentPos++] & 0xFF;
+                switch (fieldType) {
+                    case 0x16:
+                        byte[] uuid = new byte[dataLength - 1];
+                        uuid[0] = 0x00;
+                        uuid[1] = scanRecord[currentPos + 2];
+                        System.arraycopy(scanRecord, currentPos + 2, uuid, 2, uuid.length);
+                        Utils.INSTANCE.printLog(TAG, "currentPos:" + currentPos + "uuid:" + ByteUtil.bytesToHexString(uuid) + " ,scanRecord:" + ByteUtil.bytesToHexString(scanRecord));
+                        return uuid;
+                    default:
+                        // Just ignore, we don't handle such data type.
+                        break;
+                }
+                currentPos += dataLength;
+            }
+
+        } catch (final Exception e) {
+            Log.e(TAG, "unable to parse scan record: " + Arrays.toString(scanRecord));
+            // As the record is invalid, ignore all the parsed results for this packet
+            // and return an empty record with raw scanRecord bytes in results
+        }
+        return null;
     }
 }
