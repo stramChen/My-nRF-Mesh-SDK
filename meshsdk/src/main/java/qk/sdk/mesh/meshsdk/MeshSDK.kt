@@ -147,38 +147,38 @@ object MeshSDK {
                         override fun onConnectStateChange(msg: CallbackMsg) {
                             //todo 日志管理
                             Log.e(TAG, "onConnectStateChange:${msg.msg}")
-                            if (msg.code == ConnectState.DISCONNECTED.code) {
-                                var node = MeshHelper.getProvisionNode()
-                                Utils.printLog(TAG, "getProvisionNode:${node?.size}")
-                                node?.forEach {
-                                    if (it.uuid == uuid) {
-                                        stopScan()
-                                        runBlocking {
-                                            launch {
-                                                delay(1000)
-                                                MeshHelper.setSelectedMeshNode(it)
-                                                MeshHelper.setSelectedModel(null, null)
-                                                MeshHelper.startScan(BleMeshManager.MESH_PROXY_UUID,
-                                                    object :
-                                                        ScanCallback {
-                                                        override fun onScanResult(
-                                                            devices: List<ExtendedBluetoothDevice>,
-                                                            updatedIndex: Int?
-                                                        ) {
-                                                            devices.forEach { device ->
-                                                                MeshHelper.getSelectedMeshNode()
-                                                                    ?.let {
-                                                                        if (mExtendedBluetoothDeviceMap.get(
-                                                                                uuid
-                                                                            )!!.getAddress() == device.getAddress()
-                                                                        ) {
-                                                                            stopScan()
-                                                                            MeshHelper.connect(
-                                                                                device,
-                                                                                true,
-                                                                                object :
-                                                                                    ConnectCallback {
-                                                                                    override fun onConnect() {
+                            if (msg.code == ConnectState.PROVISION_SUCCESS.code) {
+//                                var node = MeshHelper.getProvisionNode()
+//                                Utils.printLog(TAG, "getProvisionNode:${node?.size}")
+//                                node?.forEach {
+//                                    if (it.uuid == uuid) {
+//                                        stopScan()
+//                                        runBlocking {
+//                                            launch {
+//                                                delay(1000)
+//                                                MeshHelper.setSelectedMeshNode(it)
+//                                                MeshHelper.setSelectedModel(null, null)
+//                                                MeshHelper.startScan(BleMeshManager.MESH_PROXY_UUID,
+//                                                    object :
+//                                                        ScanCallback {
+//                                                        override fun onScanResult(
+//                                                            devices: List<ExtendedBluetoothDevice>,
+//                                                            updatedIndex: Int?
+//                                                        ) {
+//                                                            devices.forEach { device ->
+//                                                                MeshHelper.getSelectedMeshNode()
+//                                                                    ?.let {
+//                                                                        if (mExtendedBluetoothDeviceMap.get(
+//                                                                                uuid
+//                                                                            )!!.getAddress() == device.getAddress()
+//                                                                        ) {
+//                                                                            stopScan()
+//                                                                            MeshHelper.connect(
+//                                                                                device,
+//                                                                                true,
+//                                                                                object :
+//                                                                                    ConnectCallback {
+//                                                                                    override fun onConnect() {
                                                                                         map.clear()
                                                                                         doMapCallback(
                                                                                             map,
@@ -189,39 +189,39 @@ object MeshSDK {
                                                                                             )
                                                                                         )
                                                                                         MeshHelper.unRegisterConnectListener()
-                                                                                    }
-
-                                                                                    override fun onConnectStateChange(
-                                                                                        msg: CallbackMsg
-                                                                                    ) {
-
-                                                                                    }
-
-                                                                                    override fun onError(
-                                                                                        msg: CallbackMsg
-                                                                                    ) {
-                                                                                        doMapCallback(
-                                                                                            map,
-                                                                                            callback,
-                                                                                            msg
-                                                                                        )
-                                                                                    }
-                                                                                })
-                                                                        }
-                                                                    }
-                                                            }
-                                                        }
-
-                                                        override fun onError(msg: CallbackMsg) {
-                                                            map.clear()
-                                                            callback.onResult(map)
-                                                            doMapCallback(map, callback, msg)
-                                                        }
-                                                    })
-                                            }
-                                        }
-                                    }
-                                }
+//                                                                                    }
+//
+//                                                                                    override fun onConnectStateChange(
+//                                                                                        msg: CallbackMsg
+//                                                                                    ) {
+//
+//                                                                                    }
+//
+//                                                                                    override fun onError(
+//                                                                                        msg: CallbackMsg
+//                                                                                    ) {
+//                                                                                        doMapCallback(
+//                                                                                            map,
+//                                                                                            callback,
+//                                                                                            msg
+//                                                                                        )
+//                                                                                    }
+//                                                                                })
+//                                                                        }
+//                                                                    }
+//                                                            }
+//                                                        }
+//
+//                                                        override fun onError(msg: CallbackMsg) {
+//                                                            map.clear()
+//                                                            callback.onResult(map)
+//                                                            doMapCallback(map, callback, msg)
+//                                                        }
+//                                                    })
+//                                            }
+//                                        }
+//                                    }
+//                                }
                             } else {
                                 doMapCallback(map, callback, msg)
                             }

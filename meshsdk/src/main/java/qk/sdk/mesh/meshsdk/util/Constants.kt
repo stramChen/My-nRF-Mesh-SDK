@@ -46,7 +46,6 @@ object Constants {
         BLE_NOT_AVAILABLE("蓝牙未开启", 104),//未开启蓝牙
         NET_KEY_IS_NULL("networkKey is null", 105),//没有setCurrentNetworkKey
 
-        PROVISION_SUCCESS("provisioned", 200),//provision 成功
         COMMON_SUCCESS("success", 200),// 全局通用，操作成功
 
         BIND_APP_KEY_FOR_NODE_FAILED("", 208),//绑定appkey失败
@@ -56,7 +55,7 @@ object Constants {
         RECONNETCING("正在重连", 205),
         DISCONNECTING("正在断开连接", 206),
         DISCONNECTED("连接已断开", 207),
-
+        PROVISION_SUCCESS("provisioned", 208),//provision 成功
 
         NET_KEY_DELETE_FAILED("netKey正在使用中，需先删除netKey对应的设备", 401),//netKey正在使用中，需先删除netKey对应的设备
         NET_KEY_NOT_EXIST("netKey不存在", 403),//netKey正在使用中，需先删除netKey对应的设备

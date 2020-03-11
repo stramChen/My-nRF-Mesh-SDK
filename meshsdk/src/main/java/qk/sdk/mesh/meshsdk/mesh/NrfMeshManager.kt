@@ -701,9 +701,9 @@ class NrfMeshManager(
         isProvisioningComplete = true
         mProvisionedMeshNode = node
         mIsReconnecting.postValue(true)
-        bleMeshManager!!.disconnect().enqueue()
+//        bleMeshManager!!.disconnect().enqueue()
         Utils.printLog(TAG, "onProvisioningCompleted disconnect ")
-//        mConnectionState.postValue(CallbackMsg(PROVISION_SUCCESS.code,PROVISION_SUCCESS.msg))
+        mConnectionState.postValue(CallbackMsg(PROVISION_SUCCESS.code,PROVISION_SUCCESS.msg))
         loadNodes()
 //        mHandler.post { mConnectionState.postValue("Scanning for provisioned node") }
 //        mHandler.postDelayed(
