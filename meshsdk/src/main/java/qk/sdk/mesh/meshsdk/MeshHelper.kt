@@ -169,7 +169,10 @@ object MeshHelper {
 
     // ？？？
     // 设置要操作的节点
-    fun setSelectedMeshNode(node: ProvisionedMeshNode) {
+    fun setSelectedMeshNode(node: ProvisionedMeshNode?) {
+        if (node == null)
+            return
+
         MeshProxyService.mMeshProxyService?.setSelectedNode(node)
     }
 
@@ -889,7 +892,7 @@ object MeshHelper {
         MeshProxyService.mMeshProxyService?.subscribeLightStatus(mapCallback)
     }
 
-    fun unSubscribeLightStatus(){
+    fun unSubscribeLightStatus() {
         MeshProxyService.mMeshProxyService?.unSubscribeLightStatus()
     }
 

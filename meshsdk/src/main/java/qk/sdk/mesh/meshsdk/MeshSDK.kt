@@ -781,6 +781,380 @@ object MeshSDK {
         callback.onResult(MeshHelper.createGroup(groupName))
     }
 
+//    fun setPublication(uuid: String, groupName: String, callback: MapCallback) {
+//        var map = HashMap<String, Any>()
+//        if (doProxyCheck(uuid, map, callback)) {
+//            //通过groupName获取group
+//            var group = MeshHelper.getGroupByName(groupName)
+//            if (group == null) {
+//                doMapCallback(
+//                    map,
+//                    callback,
+//                    CallbackMsg(ConnectState.GROUP_NOT_EXIST.code, ConnectState.GROUP_NOT_EXIST.msg)
+//                )
+//                return
+//            }
+//
+//            //获取provisioned节点
+//            var node = MeshHelper.getProvisionedNodeByUUID(uuid)
+//            if (node == null) {
+//                doMapCallback(
+//                    map,
+//                    callback,
+//                    CallbackMsg(ConnectState.NODE_NOT_EXIST.code, ConnectState.NODE_NOT_EXIST.msg)
+//                )
+//                return
+//            }
+//
+//            var publishAddress = group.address
+//            var index = 0
+//            node.elements.values.elementAt(0).meshModels?.values?.forEach { meshModel ->
+//                if (meshModel.boundAppKeyIndexes?.size ?: 0 > 0) {
+//                    runBlocking {
+//                        launch {
+//                            delay(1000)
+//                            var meshMsg = ConfigModelPublicationSet(
+//                                node.elements.values.elementAt(0).elementAddress
+//                                ,
+//                                publishAddress,
+//                                meshModel.boundAppKeyIndexes!!.get(0),
+//                                false,
+//                                MeshParserUtils.USE_DEFAULT_TTL
+//                                ,
+//                                53,
+//                                0,
+//                                1,
+//                                1,
+//                                meshModel.modelId
+//                            )
+//
+//                            try {
+//                                MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi
+//                                    ?.createMeshPdu(node.unicastAddress, meshMsg)
+//                                index++
+//                            } catch (ex: IllegalArgumentException) {
+//                                ex.printStackTrace()
+//                            }
+//                        }
+//                    }
+//                } else {
+//                    index++
+//                }
+//            }
+//
+//            if (index == node.elements.values.elementAt(0).meshModels?.values?.size) {
+//                doMapCallback(
+//                    map,
+//                    callback,
+//                    CallbackMsg(ConnectState.COMMON_SUCCESS.code, ConnectState.COMMON_SUCCESS.msg)
+//                )
+//            }
+//        }
+//
+//    }
+//
+//    fun subscribe(uuid: String, groupName: String, callback: MapCallback) {
+//        var map = HashMap<String, Any>()
+//        if (doProxyCheck(uuid, map, callback)) {
+//            //通过uuid获取group
+//            var group = MeshHelper.getGroupByName(groupName)
+//            if (group == null) {
+//                doMapCallback(
+//                    map,
+//                    callback,
+//                    CallbackMsg(ConnectState.GROUP_NOT_EXIST.code, ConnectState.GROUP_NOT_EXIST.msg)
+//                )
+//                return
+//            }
+//
+//            //获取provisioned节点
+//            var node = MeshHelper.getProvisionedNodeByUUID(uuid)
+//
+//            var index = 0
+//            node?.elements?.values?.elementAt(0)?.meshModels?.values?.forEach { model ->
+//                runBlocking {
+//                    launch {
+//                        delay(1000)
+//                        val modelIdentifier = model.getModelId()
+//                        val configModelSubscriptionAdd: MeshMessage
+//                        var elementAddress = node.elements.values.elementAt(0).elementAddress
+//                        if (group.addressLabel == null) {
+//                            configModelSubscriptionAdd =
+//                                ConfigModelSubscriptionAdd(
+//                                    elementAddress,
+//                                    group.getAddress(),
+//                                    modelIdentifier
+//                                )
+//                        } else {
+//                            configModelSubscriptionAdd = ConfigModelSubscriptionVirtualAddressAdd(
+//                                elementAddress,
+//                                group.getAddressLabel()!!,
+//                                modelIdentifier
+//                            )
+//                        }
+//                        MeshHelper.sendMessage(node.unicastAddress, configModelSubscriptionAdd)
+//                        index++
+//                    }
+//                }
+//            }
+//
+//            if (index == node?.elements?.values?.elementAt(0)?.meshModels?.values?.size) {
+//                doMapCallback(
+//                    map,
+//                    callback,
+//                    CallbackMsg(ConnectState.COMMON_SUCCESS.code, ConnectState.COMMON_SUCCESS.msg)
+//                )
+//            }
+//        }
+//    }
+
+//    fun modifyLightStatus(uuid: String, params: HashMap<String, Any>, callback: BooleanCallback) {
+//        var hsv = params["HSVColor"]
+//        var bright = params["Brightness"]
+//        var temperature = params["Temperature"]
+//        var mode = params["LightMode"]
+//        var onOff = params["LightSwitch"]
+//        Utils.printLog(TAG, "Brightness:$bright,Temperature:$temperature,mode:$mode,onOff:$onOff")
+//
+//        if (hsv != null) {
+//            var vendorMap = hsv as HashMap<String, Any>
+//            var h = vendorMap["Hue"]
+//            var s = vendorMap["Saturation"]
+//            var v = vendorMap["Value"]
+//
+//            var paramType = getNumberType(h)
+//            if (paramType < 0 || h == null || s == null || v == null)
+//                callback.onResult(false)
+//
+//            sendMeshMessage(
+//                uuid,
+//                0,
+//                0,
+//                "0D",
+//                "${ByteUtil.bytesToHexString(
+//                    ByteUtil.shortToByte(
+//                        if (paramType == 1) (h as Int).toShort() else if (paramType == 2) (h as Double).toShort() else (h as Float).toShort()
+//                    )
+//                )}${ByteUtil.bytesToHexString(
+//                    byteArrayOf((if (paramType == 1) (s as Int).toByte() else if (paramType == 2) (s as Double).toByte() else (s as Float).toByte()))
+//                )}${ByteUtil.bytesToHexString(
+//                    byteArrayOf((if (paramType == 1) (v as Int).toByte() else if (paramType == 2) (v as Double).toByte() else (v as Float).toByte()))
+//                )}",
+//                callback
+//            )
+//        } else if (bright != null && getNumberType(bright) > 0) {
+//            var briType = getNumberType(bright)
+//
+//            sendMeshMessage(
+//                uuid,
+//                0,
+//                0,
+//                "0E",
+//                "${ByteUtil.bytesToHexString(
+//                    byteArrayOf((if (briType == 1) (bright as Int).toByte() else if (briType == 2) (bright as Double).toByte() else (bright as Float).toByte()))
+//                )}",
+//                callback
+//            )
+//        } else if (temperature != null && getNumberType(temperature) > 0) {
+//            var temType = getNumberType(temperature)
+//            sendMeshMessage(
+//                uuid,
+//                0,
+//                0,
+//                "0F",
+//                "${ByteUtil.bytesToHexString(
+//                    ByteUtil.shortToByte((if (temType == 1) (temperature as Int).toShort() else if (temType == 2) (temperature as Double).toShort() else (temperature as Float).toShort()))
+//                )}",
+//                callback
+//            )
+//        } else if (mode != null) {
+//            sendMeshMessage(
+//                uuid,
+//                0,
+//                0,
+//                "11",
+//                "${ByteUtil.bytesToHexString(
+//                    byteArrayOf(("$mode".toDouble().toInt()).toByte())
+//                )}",
+//                callback
+//            )
+//        } else if (onOff != null && getNumberType(onOff) >= 0) {
+//            var onOffType = getNumberType(onOff)
+//            var onOffParam =
+//                if (onOffType == 1) onOff as Int else if (onOffType == 2) (onOff as Double).toInt() else (onOff as Float).toInt()
+//            setGenericOnOff(uuid, if (onOffParam == 0) false else true, callback)
+//        }
+//    }
+//
+//    private fun getNumberType(number: Any?): Int {
+//        if (number == null)
+//            return -2
+//        return if (number is Int) 1 else if (number is Double) 2 else if (number is Float) 3 else -1
+//    }
+//
+//    fun fetchLightCurrentStatus(uuid: String, callback: MapCallback) {
+//        sendMeshMessage(uuid, 0, 0, "0C", "", callback)
+//    }
+//
+//    fun subscribeLightStatus(uuid: String, callback: MapCallback) {
+//        MeshHelper.subscribeLightStatus(object : MeshCallback {
+//            override fun onReceive(msg: MeshMessage) {
+//                var node = MeshHelper?.getMeshNetwork()?.getNode(msg.src)
+//                if (uuid.isNotEmpty() && node?.uuid?.toUpperCase() != uuid.toUpperCase()) {
+//                    return
+//                }
+//
+//                var map = HashMap<String, Any>()
+//                map["uuid"] = node?.uuid ?: ""
+//                if (msg is GenericOnOffStatus) {
+//                    var param = msg.parameter
+//                    if (param.size == 1) {
+//                        map["isOn"] = if (param[0].toInt() == 0) false else true
+//                        Utils.printLog(
+//                            TAG,
+//                            "onreceive node:${node?.uuid?.toUpperCase()}, isOn:${map["isOn"]}"
+//                        )
+//                        callback.onResult(map)
+//                    }
+//                } else if (msg is VendorModelMessageStatus) {
+//                    if (msg.parameter.size >= 8) {
+//                        parseLightStatus(msg.parameter, callback, map)
+//                        Utils.printLog(
+//                            TAG,
+//                            "onreceive node:${node?.uuid?.toUpperCase()}, isOn:${map["isOn"]}"
+//                        )
+//                    }
+//                }
+//            }
+//
+//            override fun onError(msg: CallbackMsg) {
+//
+//            }
+//        })
+//    }
+//
+//    fun unSubscribeLightStatus() {
+//        MeshHelper.unSubscribeLightStatus()
+//    }
+//
+//    private fun parseLightStatus(
+//        params: ByteArray,
+//        callback: MapCallback,
+//        map: HashMap<String, Any>
+//    ) {
+//        var modeByte = params[0]
+//        var modeBits = ByteUtil.byteTobitArray(modeByte)
+//        var modeBitString = ByteUtil.byteTobitString(modeByte)
+//        Utils.printLog(
+//            TAG,
+//            "mode Int:${modeByte.toInt()},modeBitString:$modeBitString,statuHex:${ByteUtil.bytesToHexString(
+//                params
+//            )}"
+//        )
+//        var mode = ByteUtil.byteToShort(byteArrayOf(modeBits[6], modeBits[5])).toInt()
+//        var isOn = modeBits[7].toShort()
+//
+//        var h = ByteUtil.byteToShort(
+//            byteArrayOf(
+//                params[2],
+//                params[1]
+//            )
+//        )
+//        var s = params[3].toInt()
+//        var v = params[4].toInt()
+//        var b = params[5].toInt()
+//        var t = ByteUtil.byteArrayToInt(
+//            byteArrayOf(
+//                0x00,
+//                0x00,
+//                params[6],
+//                params[7]
+//            )
+//        )
+//        Utils.printLog(TAG, "h:$h,s:$s,v:$v,b:$b,t:$t")
+//        map["code"] = 200
+//        var lightStatus = HashMap<String, Any>()
+//        lightStatus["LightMode"] = mode
+//        lightStatus["Brightness"] = b
+//        lightStatus["Temperature"] = t
+//        lightStatus["LightSwitch"] = isOn
+//
+//        var HSVColor = HashMap<String, Int>()
+//        HSVColor["Hue"] = h.toInt()
+//        HSVColor["Saturation"] = s
+//        HSVColor["Value"] = v
+//        lightStatus["HSVColor"] = HSVColor
+//        map["data"] = lightStatus
+//
+//
+//        if (callback is MapCallback) {
+//            doMapCallback(
+//                map,
+//                callback,
+//                CallbackMsg(
+//                    ConnectState.COMMON_SUCCESS.code,
+//                    ConnectState.COMMON_SUCCESS.msg
+//                )
+//            )
+//        }
+//    }
+//
+////    fun updateDeviceImg(uuid: String, path: String, callback: MapCallback) {
+////        var map = HashMap<String, Any>()
+////        doBaseCheck(uuid, map, callback)
+////        MeshHelper.updateDeviceImg(mContext!!,uuid,path,object :DfuAdapter.DfuHelperCallback(){
+////            override fun onStateChanged(p0: Int) {
+////                super.onStateChanged(p0)
+////            }
+////
+////            override fun onProcessStateChanged(p0: Int, p1: Throughput?) {
+////                super.onProcessStateChanged(p0, p1)
+////            }
+////
+////            override fun onProgressChanged(p0: DfuProgressInfo?) {
+////                super.onProgressChanged(p0)
+////            }
+////
+////            override fun onError(p0: Int, p1: Int) {
+////                super.onError(p0, p1)
+////            }
+////        })
+////    }
+//
+//    private fun doMapCallback(map: HashMap<String, Any>, callback: MapCallback, msg: CallbackMsg) {
+//        map.put("code", msg.code)
+//        map.put("message", msg.msg)
+//        callback.onResult(map)
+//    }
+//
+//    private fun doProxyCheck(
+//        uuid: String,
+//        map: HashMap<String, Any>,
+//        callback: MapCallback
+//    ): Boolean {
+//        doBaseCheck(uuid, map, callback)
+//        var node = MeshHelper.getProvisionedNodeByUUID(uuid)
+//
+//        if (!MeshHelper.isConnectedToProxy()) {
+//            doMapCallback(
+//                map, callback,
+//                CallbackMsg(CommonErrorMsg.DISCONNECTED.code, CommonErrorMsg.DISCONNECTED.msg)
+//            )
+//            return false
+//        }
+//
+//        if (node == null) {
+//            doMapCallback(
+//                map, callback,
+//                CallbackMsg(ConnectState.NODE_NOT_EXIST.code, ConnectState.NODE_NOT_EXIST.msg)
+//            )
+//
+//            return false
+//        }
+//
+//        return true
+//    }
+
     fun setPublication(uuid: String, groupName: String, callback: MapCallback) {
         var map = HashMap<String, Any>()
         if (doProxyCheck(uuid, map, callback)) {
@@ -923,8 +1297,10 @@ object MeshSDK {
             var v = vendorMap["Value"]
 
             var paramType = getNumberType(h)
-            if (paramType < 0 || h == null || s == null || v == null)
+            if (paramType < 0 || h == null || s == null || v == null) {
                 callback.onResult(false)
+                return
+            }
 
             sendMeshMessage(
                 uuid,
@@ -1006,17 +1382,18 @@ object MeshSDK {
 
                 var map = HashMap<String, Any>()
                 map["uuid"] = node?.uuid ?: ""
-                if (msg is GenericOnOffStatus) {
-                    var param = msg.parameter
-                    if (param.size == 1) {
-                        map["isOn"] = if (param[0].toInt() == 0) false else true
-                        Utils.printLog(
-                            TAG,
-                            "onreceive node:${node?.uuid?.toUpperCase()}, isOn:${map["isOn"]}"
-                        )
-                        callback.onResult(map)
-                    }
-                } else if (msg is VendorModelMessageStatus) {
+//                if (msg is GenericOnOffStatus) {
+//                    var param = msg.parameter
+//                    if (param.size == 1) {
+//                        map["isOn"] = if (param[0].toInt() == 0) false else true
+//                        Utils.printLog(
+//                            TAG,
+//                            "onreceive node:${node?.uuid?.toUpperCase()}, isOn:${map["isOn"]}"
+//                        )
+//                        callback.onResult(map)
+//                    }
+//                } else
+                if (msg is VendorModelMessageStatus) {
                     if (msg.parameter.size >= 8) {
                         parseLightStatus(msg.parameter, callback, map)
                         Utils.printLog(
@@ -1155,11 +1532,17 @@ object MeshSDK {
         return true
     }
 
+    fun setCurrentNode(uuid: String) {
+        MeshHelper.setSelectedMeshNode(MeshHelper.getProvisionedNodeByUUID(uuid))
+    }
+
     fun getCurrentNode(callback: MapCallback) {
         MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager?.mExtendedMeshNode?.let { node ->
             var map = HashMap<String, Any>()
             map.put("uuid", node.uuid)
             var elementsMap = HashMap<String, Any>()
+            var elementsArr = ArrayList<HashMap<String, Any>>()
+
             node.elements.forEach { key, element ->
                 var eleMap = HashMap<String, Any>()
                 var modelsMap = HashMap<String, Any>()
