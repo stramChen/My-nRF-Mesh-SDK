@@ -889,7 +889,10 @@ object MeshHelper {
     }
 
     fun subscribeLightStatus(mapCallback: MeshCallback) {
-        MeshProxyService.mMeshProxyService?.subscribeLightStatus(mapCallback)
+        rx.Observable.create<String> {
+        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+            MeshProxyService.mMeshProxyService?.subscribeLightStatus(mapCallback)
+        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
     fun unSubscribeLightStatus() {
