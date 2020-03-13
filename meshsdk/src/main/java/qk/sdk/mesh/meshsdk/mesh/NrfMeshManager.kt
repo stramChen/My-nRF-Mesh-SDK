@@ -319,7 +319,7 @@ class NrfMeshManager(
         isNetworkRetransmitSetCompleted = false
         mConnectDevice = device
         val bluetoothDevice = device.device
-        Utils.printLog(TAG, "$connectToNetwork")
+        Utils.printLog(TAG, "connect $connectToNetwork")
         initIsConnectedLiveData()
         mConnectionState.postValue(
             CallbackMsg(
@@ -590,7 +590,7 @@ class NrfMeshManager(
     }
 
     override fun onError(device: BluetoothDevice, message: String, errorCode: Int) {
-        Log.e(TAG, message + " (code: " + errorCode + "), device: " + device.address)
+        Utils.printLog(TAG, message + " (code: " + errorCode + "), device: " + device.address)
         if (errorCode == 133) {
             bleMeshManager?.clearGatt()
         }
@@ -703,7 +703,7 @@ class NrfMeshManager(
         mIsReconnecting.postValue(true)
 //        bleMeshManager!!.disconnect().enqueue()
         Utils.printLog(TAG, "onProvisioningCompleted disconnect ")
-        mConnectionState.postValue(CallbackMsg(PROVISION_SUCCESS.code,PROVISION_SUCCESS.msg))
+        mConnectionState.postValue(CallbackMsg(PROVISION_SUCCESS.code, PROVISION_SUCCESS.msg))
         loadNodes()
 //        mHandler.post { mConnectionState.postValue("Scanning for provisioned node") }
 //        mHandler.postDelayed(
@@ -1298,12 +1298,9 @@ class NrfMeshManager(
                 var JBConstructor = JBClazz.getDeclaredConstructor()
                 JBConstructor.isAccessible = true
                 instance.set(BluetoothLeScannerCompat.getScanner(), JBConstructor.newInstance())
-            } else {
-//                if (filterUuid == BleMeshManager.MESH_PROXY_UUID)
-                filters.add(ScanFilter.Builder().setServiceUuid(ParcelUuid(filterUuid)).build())
-//                else
-//                    filters.add(ScanFilter.Builder().setDeviceAddress("04:78:63:D0:F1:41").build())
             }
+
+            filters.add(ScanFilter.Builder().setServiceUuid(ParcelUuid(filterUuid)).build())
             val scanner = BluetoothLeScannerCompat.getScanner()
             scanner.startScan(filters, settings, mScanCallbacks)
             Utils.printLog(TAG, "start scan")

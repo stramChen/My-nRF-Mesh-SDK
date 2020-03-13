@@ -73,6 +73,7 @@ object MeshSDK {
      * @param callback Callback RN回调callback
      */
     fun startScan(type: String, scanResultCallback: ArrayMapCallback, errCallback: IntCallback) {
+        Utils.printLog(TAG, "startScan startScan")
         if (MeshHelper.isConnectedToProxy())
             disConnect()
         var scanCallback: ScanCallback = object :
@@ -124,6 +125,7 @@ object MeshSDK {
             return
         }
         setCurrentNetworkKey(networkKey.toUpperCase())
+        var hasProvisioned = false
 
         mContext?.let { _ ->
             mExtendedBluetoothDeviceMap.get(uuid)?.let { extendedBluetoothDevice ->
@@ -146,20 +148,46 @@ object MeshSDK {
 
                         override fun onConnectStateChange(msg: CallbackMsg) {
                             //todo 日志管理
-                            Log.e(TAG, "onConnectStateChange:${msg.msg}")
-                            if (msg.code == ConnectState.PROVISION_SUCCESS.code) {
-                                map.clear()
-                                doMapCallback(
-                                    map,
-                                    callback,
-                                    CallbackMsg(
-                                        ConnectState.PROVISION_SUCCESS.code,
-                                        ConnectState.PROVISION_SUCCESS.msg
+                            Log.e(
+                                TAG,
+                                "provision onConnectStateChange code:${msg.code} ,msg:${msg.msg}"
+                            )
+                            when (msg.code) {
+                                ConnectState.PROVISION_SUCCESS.code -> {
+                                    hasProvisioned = true
+                                    map.clear()
+                                    doMapCallback(
+                                        map,
+                                        callback,
+                                        CallbackMsg(
+                                            ConnectState.PROVISION_SUCCESS.code,
+                                            ConnectState.PROVISION_SUCCESS.msg
+                                        )
                                     )
-                                )
-                                MeshHelper.unRegisterConnectListener()
-                            } else {
-                                doMapCallback(map, callback, msg)
+                                }
+                                ConnectState.DISCONNECTED.code,
+                                ConnectState.CONNECT_BLE_RESOURCE_FAILED.code -> {
+                                    if (ConnectState.CONNECT_BLE_RESOURCE_FAILED.code == msg.code) {
+                                        disConnect()
+                                    }
+
+                                    MeshHelper.unRegisterConnectListener()
+                                    if (hasProvisioned) {
+                                        reConnect(callback)
+                                        connect(networkKey, callback)
+                                    } else {
+                                        doMapCallback(
+                                            map,
+                                            callback,
+                                            CallbackMsg(
+                                                ConnectState.PROVISION_FAILED.code,
+                                                ConnectState.PROVISION_FAILED.msg
+                                            )
+                                        )
+                                    }
+                                }
+                                else ->
+                                    doMapCallback(map, callback, msg)
                             }
                         }
 
@@ -172,6 +200,26 @@ object MeshSDK {
                     })
             }
         }
+    }
+
+    private fun reConnect(callback: MapCallback) {
+        var map = HashMap<String, Any>()
+        mConnectCallbacks.forEach { connectStateCallback ->
+            if (connectStateCallback is MapCallback) {
+                doMapCallback(
+                    map, callback,
+                    CallbackMsg(
+                        CommonErrorMsg.DISCONNECTED.code,
+                        CommonErrorMsg.DISCONNECTED.msg
+                    )
+                )
+            } else if (connectStateCallback is BooleanCallback) {
+                connectStateCallback.onResult(false)
+            }
+            mConnectCallbacks.remove(connectStateCallback)
+        }
+        disConnect()
+        MeshHelper.unRegisterConnectListener()
     }
 
     fun isConnectedToProxy(callback: BooleanCallback) {
@@ -444,6 +492,7 @@ object MeshSDK {
             return
         }
 
+        mConnectCallbacks.add(callback)
         try {
             if (MeshHelper.getSelectedMeshNode()?.uuid != uuid) {
                 MeshHelper.getProvisionNode()?.forEach { node ->
@@ -458,6 +507,8 @@ object MeshSDK {
                 MeshHelper.getSelectedElement()?.meshModels?.get(ON_OFF_MODELID)
             )
             MeshHelper.sendGenericOnOff(onOff, 0)
+
+            mConnectCallbacks.remove(callback)
             callback.onResult(true)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -497,6 +548,8 @@ object MeshSDK {
             )
             return
         }
+
+        mConnectCallbacks.add(callback)
 
         if (MeshHelper.getSelectedMeshNode()?.uuid != uuid) {
             MeshHelper.getProvisionNode()?.forEach { node ->
@@ -601,6 +654,7 @@ object MeshSDK {
                                                         callback.onResult(map)
                                                     }
                                                     MeshHelper.unRegisterMeshMsg()
+                                                    mConnectCallbacks.remove(callback)
                                                     msgIndex = 0
                                                 }
                                             }
@@ -623,12 +677,14 @@ object MeshSDK {
                                                         if (c == 0 && w == 0 && r == 0 && g == 0 && b == 0) false else true
                                                     )
                                                     callback.onResult(map)
+                                                    mConnectCallbacks.remove(callback)
                                                     msgIndex = 0
                                                 }
                                             }
                                             "05" -> {//get cwrgb
                                                 if (msgIndex < 0 && callback is BooleanCallback) {
                                                     callback.onResult(true)
+                                                    mConnectCallbacks.remove(callback)
                                                     msgIndex = 0
                                                 }
                                             }
@@ -640,6 +696,8 @@ object MeshSDK {
                                                             callback,
                                                             HashMap<String, Any>()
                                                         )
+
+                                                        mConnectCallbacks.remove(callback)
                                                         msgIndex = 0
                                                     }
                                                 }
@@ -647,18 +705,11 @@ object MeshSDK {
                                             "0D", "0E", "0F", "11" -> {//set HSV
                                                 if (msgIndex < 0 && callback is BooleanCallback) {
                                                     callback.onResult(true)
+
+                                                    mConnectCallbacks.remove(callback)
                                                     msgIndex = 0
                                                 }
                                             }
-//                                            "0E" -> {//set bright
-//
-//                                            }
-//                                            "0F" -> {//set temperature
-//
-//                                            }
-//                                            "11" -> {//set light mode
-//
-//                                            }
                                         }
                                     }
 
@@ -709,6 +760,7 @@ object MeshSDK {
         var map = HashMap<String, Any>()
         doBaseCheck(null, map, callback)
         if (!MeshHelper.isConnectedToProxy()) {
+            Utils.printLog(TAG, "connect start scan")
             MeshHelper.startScan(BleMeshManager.MESH_PROXY_UUID, object :
                 ScanCallback {
                 override fun onScanResult(
@@ -717,10 +769,11 @@ object MeshSDK {
                 ) {
                     if (devices.isNotEmpty()) {
                         MeshHelper.stopScan()
-                        Utils.printLog(TAG, "onScanResult:${devices[0].getAddress()}")
+                        Utils.printLog(TAG, "connect onScanResult:${devices[0].getAddress()}")
                         MeshHelper.connect(devices[0], true, object :
                             ConnectCallback {
                             override fun onConnect() {
+                                stopScan()
                                 doMapCallback(
                                     map, callback,
                                     CallbackMsg(
@@ -731,10 +784,10 @@ object MeshSDK {
                             }
 
                             override fun onConnectStateChange(msg: CallbackMsg) {
+                                Utils.printLog(TAG, "connect onConnectStateChange:${msg.msg}")
                                 if (msg.code == ConnectState.DISCONNECTED.code) {//连接断开，自动寻找代理节点重连
-                                    disConnect()
-                                    MeshHelper.unRegisterConnectListener()
-                                    connect(networkKey.toUpperCase(), callback)
+                                    reConnect(callback)
+                                    connect(networkKey, callback)
                                 }
                             }
 
@@ -1530,6 +1583,17 @@ object MeshSDK {
         }
 
         return true
+    }
+
+    var mConnectCallbacks = ArrayList<Any>(20)
+
+    private fun addConnectStateListner(callback: Any) {
+        if (callback is MapCallback || callback is BooleanCallback)
+            mConnectCallbacks.add(callback)
+    }
+
+    private fun deleteConnectStateKListener(callback: Any) {
+        mConnectCallbacks.remove(callback)
     }
 
     fun setCurrentNode(uuid: String) {

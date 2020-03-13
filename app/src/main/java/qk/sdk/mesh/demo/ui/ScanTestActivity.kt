@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_scan.*
 import kotlinx.android.synthetic.main.item_scan_device.view.*
@@ -104,19 +105,31 @@ class ScanTestActivity : BaseMeshActivity(),
                     object : MapCallback {
                         override fun onResult(msg: HashMap<String, Any>) {
                             tv_status.visibility = View.VISIBLE
-                            msg.get("message")?.let { value ->
+                            msg.get("code")?.let { value ->
+                                var code = value as Int
                                 Utils.printLog(TAG, "$value")
                                 tv_status.text = "$value"
-                                if (value == Constants.ConnectState.PROVISION_SUCCESS.msg) {//配对成功
-                                    Utils.printLog(TAG, "$value")
-
-                                    startActivity(
-                                        Intent(
+                                when (code) {
+                                    Constants.ConnectState.PROVISION_SUCCESS.code -> {
+                                        startActivity(
+                                            Intent(
+                                                this@ScanTestActivity,
+                                                ConnectTestActivity::class.java
+                                            ).putExtra("uuid", data.get("uuid") as String)
+                                        )
+                                        finish()
+                                    }
+                                    Constants.ConnectState.PROVISION_FAILED.code,
+                                    Constants.ConnectState.CONNECT_BLE_RESOURCE_FAILED.code -> {
+                                        MeshSDK.disConnect()
+                                        Toast.makeText(
                                             this@ScanTestActivity,
-                                            ConnectTestActivity::class.java
-                                        ).putExtra("uuid", data.get("uuid") as String)
-                                    )
-                                    finish()
+                                            "配网失败请重试",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        MeshSDK.removeProvisionedNode(data.get("uuid") as String)
+                                        finish()
+                                    }
                                 }
                             }
                         }
@@ -154,6 +167,7 @@ class ScanTestActivity : BaseMeshActivity(),
     }
 
     override fun onDestroy() {
+        MeshSDK.stopScan()
         super.onDestroy()
     }
 }

@@ -71,6 +71,7 @@ object MeshHelper {
     ) {
 //        rx.Observable.create<String> {
 //        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+        unRegisterConnectListener()
         MeshProxyService.mMeshProxyService?.connect(device, connectToNetwork, callback)
 //        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
