@@ -87,12 +87,12 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
 
         switch_on_off.setOnCheckedChangeListener { buttonView, isChecked ->
-            //            MeshSDK.setGenericOnOff(mUUID, isChecked, object :
-//                BooleanCallback {
-//                override fun onResult(boolean: Boolean) {
-//                    Utils.printLog(TAG, "setGenericOnOff result:$boolean")
-//                }
-//            })
+                        MeshSDK.setGenericOnOff(mUUID, isChecked, 0,object :
+                BooleanCallback {
+                override fun onResult(boolean: Boolean) {
+                    Utils.printLog(TAG, "setGenericOnOff result:$boolean")
+                }
+            })
             var map = HashMap<String, Any>()
             map["LightSwitch"] = if (isChecked) 1 else 0
             MeshSDK.modifyLightStatus(mUUID, map, object :
@@ -177,7 +177,7 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
 
         tv_ping.setOnClickListener {
-            //            MeshSDK.getDeviceIdentityKeys(mUUID, object : MapCallback {
+//            MeshSDK.getDeviceIdentityKeys(mUUID, object : MapCallback {
 //                override fun onResult(result: HashMap<String, Any>) {
 //                    result.forEach { t, u ->
 //                        Log.e(TAG, "key:$t,value:$u")

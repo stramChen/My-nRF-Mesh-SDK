@@ -1081,8 +1081,8 @@ class NrfMeshManager(
 
         private val TAG = NrfMeshManager::class.java.simpleName
         private val ATTENTION_TIMER = 5
-        //        val EXPORT_PATH = Environment.getExternalStorageDirectory().absolutePath + File.separator +
-//                "mxchip" + File.separator + "nRFMesh" + File.separator
+        val EXPORT_PATH = Environment.getExternalStorageDirectory().absolutePath + File.separator +
+                "mxchip" + File.separator + "nRFMesh" + File.separator
         private val EXPORTED_PATH =
             "sdcard" + File.separator + "mxchip" + File.separator + "nRFMesh" + File.separator
     }
@@ -1332,8 +1332,8 @@ class NrfMeshManager(
     internal fun exportMeshNetwork(callback: NetworkExportUtils.NetworkExportCallbacks) {
         NetworkExportUtils.exportMeshNetwork(
             meshManagerApi,
-//            EXPORT_PATH,
-//            fileName,
+            EXPORT_PATH,
+            "meshJson",
             callback
         )
     }

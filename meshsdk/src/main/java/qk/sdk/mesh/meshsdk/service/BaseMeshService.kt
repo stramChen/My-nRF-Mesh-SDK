@@ -107,6 +107,7 @@ open class BaseMeshService : LifecycleService() {
     }
 
     private fun setConnectObserver() {
+        Utils.printLog(TAG, "setConnectObserver")
         mNrfMeshManager?.isDeviceReady?.observe(this, Observer {
             if (mNrfMeshManager?.bleMeshManager?.isDeviceReady ?: false) {
                 mConnectCallback?.onConnect()
@@ -136,10 +137,9 @@ open class BaseMeshService : LifecycleService() {
     }
 
     internal fun disConnect() {
+        stopConnect()
         mNrfMeshManager?.unprovisionedMeshNode?.removeObservers(this)
 //        mNrfMeshManager?.mExtendedMeshNode?.removeObservers(this)
-        mNrfMeshManager?.connectionState?.removeObservers(this)
-        mNrfMeshManager?.isDeviceReady?.removeObservers(this)
         mNrfMeshManager?.disconnect()
         isProvisioningStarted = false
     }

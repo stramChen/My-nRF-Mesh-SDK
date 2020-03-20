@@ -31,6 +31,11 @@ object MeshHelper {
     private val TAG = "MeshHelper"
     private var mProvisionCallback: ProvisionCallback? = null
 
+
+    fun getVersion(): String {
+        return "0.8.5"
+    }
+
     // 初始化 mesh
     fun initMesh(context: Context) {
         context.startService(Intent(context, MeshProxyService::class.java))
@@ -316,7 +321,10 @@ object MeshHelper {
             if (element != null) {
                 val model = getSelectedModel()
                 if (model != null) {
-                    Utils.printLog(TAG, "getSelectedModel")
+                    Utils.printLog(
+                        TAG,
+                        "bindAppKey getSelectedEle:${element.elementAddress},getSelectedModel:${model.modelId}"
+                    )
                     val configModelAppUnbind =
                         ConfigModelAppBind(element.elementAddress, model.modelId, appKeyIndex)
                     sendMessage(it.unicastAddress, configModelAppUnbind, meshCallback)

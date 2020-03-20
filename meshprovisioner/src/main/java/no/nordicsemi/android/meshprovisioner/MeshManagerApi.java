@@ -622,9 +622,9 @@ public class MeshManagerApi implements MeshMngrApi {
                         byte[] uuid = new byte[dataLength - 1];
                         uuid[0] = 0x00;
                         uuid[1] = scanRecord[currentPos + 2];
-                        Log.e(TAG,"currentPos:"+currentPos);
-                        System.arraycopy(scanRecord, currentPos + 2, uuid, 2, uuid.length-2);
-                        Log.e(TAG, "currentPos:" + currentPos + "uuid:" + ByteUtil.bytesToHexString(uuid) + " ,scanRecord:" + ByteUtil.bytesToHexString(scanRecord));
+                        Log.e(TAG, "currentPos:" + currentPos);
+                        System.arraycopy(scanRecord, currentPos + 2, uuid, 2, uuid.length - 2);
+                        Log.e(TAG, "currentPos:" + currentPos + "uuid:" + ByteUtil.bytesToHexString(uuid));
                         return uuid;
                     default:
                         // Just ignore, we don't handle such data type.

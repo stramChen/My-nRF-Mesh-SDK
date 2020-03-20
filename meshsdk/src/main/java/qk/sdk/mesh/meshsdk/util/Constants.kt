@@ -57,6 +57,7 @@ object Constants {
         DISCONNECTED("连接已断开", 207),
         PROVISION_SUCCESS("provisioned", 208),//provision 成功
         PROVISION_FAILED("provision failed", -208),//provision 失败
+        STOP_CONNECT("stop connect", 209),
 
         NET_KEY_DELETE_FAILED("netKey正在使用中，需先删除netKey对应的设备", 401),//netKey正在使用中，需先删除netKey对应的设备
         NET_KEY_NOT_EXIST("netKey不存在", 403),//netKey正在使用中，需先删除netKey对应的设备
