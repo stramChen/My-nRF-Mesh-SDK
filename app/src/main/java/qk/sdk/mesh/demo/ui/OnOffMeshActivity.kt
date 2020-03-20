@@ -1,11 +1,11 @@
 package qk.sdk.mesh.demo.ui
 
 import android.os.Bundle
-import kotlinx.android.synthetic.main.activity_connect.*
 import kotlinx.android.synthetic.main.activity_connect.btn_add_app_key
 import kotlinx.android.synthetic.main.activity_on_off_mesh.*
 import qk.sdk.mesh.demo.R
 import qk.sdk.mesh.demo.base.BaseMeshActivity
+import qk.sdk.mesh.demo.util.Constants
 import qk.sdk.mesh.meshsdk.MeshHelper
 import qk.sdk.mesh.meshsdk.MeshSDK
 import qk.sdk.mesh.meshsdk.callback.ArrayStringCallback
@@ -93,6 +93,37 @@ class OnOffMeshActivity : BaseMeshActivity() {
                     override fun onResult(boolean: Boolean) {
                         btn3++
                         Utils.printLog(TAG, "setGenericOnOff result:$boolean")
+                    }
+                })
+        }
+
+        btn_publish.setOnClickListener {
+            MeshSDK.setPublication(mUUID, Constants.TEST_GROUP, object : MapCallback {
+                override fun onResult(result: HashMap<String, Any>) {
+                    result.forEach { key, value ->
+                        Utils.printLog(TAG, "key:$key,value:$value")
+                    }
+                }
+            })
+        }
+
+        btn_subscribe.setOnClickListener {
+            MeshSDK.subscribe(mUUID, Constants.TEST_GROUP, object : MapCallback {
+                override fun onResult(result: HashMap<String, Any>) {
+                    result.forEach { key, value ->
+                        Utils.printLog(TAG, "subscribe result key:$key,value:$value")
+                    }
+                }
+            })
+        }
+
+        btn_parse.setOnClickListener {
+            MeshSDK.parseSensor(byteArrayOf(0x00, 0x01, 0x00, 0x00, 0x02, 0x00, 0x00, 0x03, 0x01),
+                object : MapCallback {
+                    override fun onResult(result: HashMap<String, Any>) {
+                        result.forEach { t, u ->
+                            Utils.printLog(TAG, "key:$t,value:$u")
+                        }
                     }
                 })
         }

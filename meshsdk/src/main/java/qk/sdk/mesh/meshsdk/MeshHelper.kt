@@ -806,96 +806,96 @@ object MeshHelper {
         return null
     }
 
-    fun setPublication(groupName: String) {
-        //通过uuid获取group
-        var group = getGroupByName(groupName)
-        if (group == null) {
-            Utils.printLog(TAG, "setPublication group is null")
-            return
-        }
-
-        //获取provisioned节点
-        var node = getProvisionedNodeByUUID(groupName)
-        if (node == null) {
-            Utils.printLog(TAG, "setPublication node is null")
-            return
-        }
-
-        var publishAddress = group.address
-        node.elements.values.elementAt(0).meshModels?.values?.forEach { meshModel ->
-            if (meshModel.boundAppKeyIndexes?.size ?: 0 > 0) {
-                runBlocking {
-                    launch {
-                        delay(1000)
-                        var meshMsg = ConfigModelPublicationSet(
-                            node.elements.values.elementAt(0).elementAddress
-                            ,
-                            publishAddress,
-                            meshModel.boundAppKeyIndexes?.get(0) ?: 0,
-                            false,
-                            MeshParserUtils.USE_DEFAULT_TTL
-                            ,
-                            53,
-                            0,
-                            1,
-                            1,
-                            meshModel.modelId
-                        )
-
-                        try {
-                            MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi
-                                ?.createMeshPdu(node.unicastAddress, meshMsg)
-                        } catch (ex: IllegalArgumentException) {
-                            ex.printStackTrace()
-                        }
-                    }
-                }
-
-            }
-
-        }
-
-    }
-
-    fun subscribe(uuid: String) {
-        var node = getProvisionedNodeByUUID(uuid)
-        if (node == null) {
-            Utils.printLog(TAG, "subscribe node is null")
-            return
-        }
-
-        var group = getGroupByName(uuid)
-        if (group == null) {
-            Utils.printLog(TAG, "subscribe group is null")
-            return
-        }
-        node.elements.values.elementAt(0).meshModels?.values?.forEach { model ->
-            runBlocking {
-                launch {
-                    delay(1000)
-                    val modelIdentifier = model.getModelId()
-                    val configModelSubscriptionAdd: MeshMessage
-                    var elementAddress = node.elements.values.elementAt(0).elementAddress
-                    if (group.addressLabel == null) {
-                        configModelSubscriptionAdd =
-                            ConfigModelSubscriptionAdd(
-                                elementAddress,
-                                group.getAddress(),
-                                modelIdentifier
-                            )
-                    } else {
-                        configModelSubscriptionAdd = ConfigModelSubscriptionVirtualAddressAdd(
-                            elementAddress,
-                            group.getAddressLabel()!!,
-                            modelIdentifier
-                        )
-                    }
-                    sendMessage(node.unicastAddress, configModelSubscriptionAdd)
-
-                }
-            }
-        }
-    }
+//    fun setPublication(groupName: String) {
+//        //通过uuid获取group
+//        var group = getGroupByName(groupName)
+//        if (group == null) {
+//            Utils.printLog(TAG, "setPublication group is null")
+//            return
+//        }
+//
+//        //获取provisioned节点
+//        var node = getProvisionedNodeByUUID(groupName)
+//        if (node == null) {
+//            Utils.printLog(TAG, "setPublication node is null")
+//            return
+//        }
+//
+//        var publishAddress = group.address
+//        node.elements.values.elementAt(0).meshModels?.values?.forEach { meshModel ->
+//            if (meshModel.boundAppKeyIndexes?.size ?: 0 > 0) {
+//                runBlocking {
+//                    launch {
+//                        delay(1000)
+//                        var meshMsg = ConfigModelPublicationSet(
+//                            node.elements.values.elementAt(0).elementAddress
+//                            ,
+//                            publishAddress,
+//                            meshModel.boundAppKeyIndexes?.get(0) ?: 0,
+//                            false,
+//                            MeshParserUtils.USE_DEFAULT_TTL
+//                            ,
+//                            53,
+//                            0,
+//                            1,
+//                            1,
+//                            meshModel.modelId
+//                        )
+//
+//                        try {
+//                            MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi
+//                                ?.createMeshPdu(node.unicastAddress, meshMsg)
+//                        } catch (ex: IllegalArgumentException) {
+//                            ex.printStackTrace()
+//                        }
+//                    }
+//                }
+//
+//            }
+//
+//        }
+//
+//    }
+//
+//    fun subscribe(uuid: String) {
+//        var node = getProvisionedNodeByUUID(uuid)
+//        if (node == null) {
+//            Utils.printLog(TAG, "subscribe node is null")
+//            return
+//        }
+//
+//        var group = getGroupByName(uuid)
+//        if (group == null) {
+//            Utils.printLog(TAG, "subscribe group is null")
+//            return
+//        }
+//        node.elements.values.elementAt(0).meshModels?.values?.forEach { model ->
+//            runBlocking {
+//                launch {
+//                    delay(1000)
+//                    val modelIdentifier = model.getModelId()
+//                    val configModelSubscriptionAdd: MeshMessage
+//                    var elementAddress = node.elements.values.elementAt(0).elementAddress
+//                    if (group.addressLabel == null) {
+//                        configModelSubscriptionAdd =
+//                            ConfigModelSubscriptionAdd(
+//                                elementAddress,
+//                                group.getAddress(),
+//                                modelIdentifier
+//                            )
+//                    } else {
+//                        configModelSubscriptionAdd = ConfigModelSubscriptionVirtualAddressAdd(
+//                            elementAddress,
+//                            group.getAddressLabel()!!,
+//                            modelIdentifier
+//                        )
+//                    }
+//                    sendMessage(node.unicastAddress, configModelSubscriptionAdd)
+//
+//                }
+//            }
+//        }
+//    }
 
     fun subscribeLightStatus(mapCallback: MeshCallback) {
         rx.Observable.create<String> {

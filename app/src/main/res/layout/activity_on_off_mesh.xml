@@ -43,4 +43,28 @@
         app:layout_constraintLeft_toRightOf="@+id/btn_ele_sec"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <Button
+        android:id="@+id/btn_publish"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="publish"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent" />
+
+    <Button
+        android:id="@+id/btn_subscribe"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="subscribe"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toRightOf="@+id/btn_publish" />
+
+    <Button
+        android:id="@+id/btn_parse"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="parse"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toRightOf="@+id/btn_subscribe" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

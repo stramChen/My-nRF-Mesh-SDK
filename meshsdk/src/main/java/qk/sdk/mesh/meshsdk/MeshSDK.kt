@@ -960,46 +960,56 @@ object MeshSDK {
             }
 
             var publishAddress = group.address
+            var modelTotalSize = 0
             var index = 0
-            node.elements.values.elementAt(0).meshModels?.values?.forEach { meshModel ->
-                if (meshModel.boundAppKeyIndexes?.size ?: 0 > 0) {
-                    runBlocking {
-                        launch {
-                            delay(1000)
-                            var meshMsg = ConfigModelPublicationSet(
-                                node.elements.values.elementAt(0).elementAddress
-                                ,
-                                publishAddress,
-                                meshModel.boundAppKeyIndexes!!.get(0),
-                                false,
-                                MeshParserUtils.USE_DEFAULT_TTL
-                                ,
-                                53,
-                                0,
-                                1,
-                                1,
-                                meshModel.modelId
-                            )
+            node.elements.values.forEach { eleValue ->
+                modelTotalSize = modelTotalSize.plus(eleValue.meshModels?.values?.size ?: 0)
+                eleValue.meshModels?.values?.forEach { meshModel ->
+                    if (meshModel.boundAppKeyIndexes?.size ?: 0 > 0) {
+                        runBlocking {
+                            launch {
+                                delay(500)
+                                var meshMsg = ConfigModelPublicationSet(
+                                    eleValue.elementAddress
+                                    ,
+                                    publishAddress,
+                                    meshModel.boundAppKeyIndexes!!.get(0),
+                                    false,
+                                    MeshParserUtils.USE_DEFAULT_TTL
+                                    ,
+                                    53,
+                                    0,
+                                    1,
+                                    1,
+                                    meshModel.modelId
+                                )
 
-                            try {
-                                MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi
-                                    ?.createMeshPdu(node.unicastAddress, meshMsg)
-                                index++
-                            } catch (ex: IllegalArgumentException) {
-                                ex.printStackTrace()
+                                try {
+                                    MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi
+                                        ?.createMeshPdu(node.unicastAddress, meshMsg)
+                                    index++
+                                } catch (ex: IllegalArgumentException) {
+                                    ex.printStackTrace()
+                                }
                             }
                         }
+                    } else {
+                        index++
                     }
-                } else {
-                    index++
                 }
             }
 
-            if (index == node.elements.values.elementAt(0).meshModels?.values?.size) {
+            if (index == modelTotalSize) {
                 doMapCallback(
                     map,
                     callback,
                     CallbackMsg(ConnectState.COMMON_SUCCESS.code, ConnectState.COMMON_SUCCESS.msg)
+                )
+            } else {
+                doMapCallback(
+                    map,
+                    callback,
+                    CallbackMsg(ConnectState.PUBLISH_FAILED.code, ConnectState.PUBLISH_FAILED.msg)
                 )
             }
         }
@@ -1024,34 +1034,39 @@ object MeshSDK {
             var node = MeshHelper.getProvisionedNodeByUUID(uuid)
 
             var index = 0
-            node?.elements?.values?.elementAt(0)?.meshModels?.values?.forEach { model ->
-                runBlocking {
-                    launch {
-                        delay(1000)
-                        val modelIdentifier = model.getModelId()
-                        val configModelSubscriptionAdd: MeshMessage
-                        var elementAddress = node.elements.values.elementAt(0).elementAddress
-                        if (group.addressLabel == null) {
-                            configModelSubscriptionAdd =
-                                ConfigModelSubscriptionAdd(
-                                    elementAddress,
-                                    group.getAddress(),
-                                    modelIdentifier
-                                )
-                        } else {
-                            configModelSubscriptionAdd = ConfigModelSubscriptionVirtualAddressAdd(
-                                elementAddress,
-                                group.getAddressLabel()!!,
-                                modelIdentifier
-                            )
+            var modelTotal = 0
+            node?.elements?.values?.forEach { eleValue ->
+                modelTotal += eleValue.meshModels?.size ?: 0
+                eleValue?.meshModels?.values?.forEach { model ->
+                    runBlocking {
+                        launch {
+                            delay(1000)
+                            val modelIdentifier = model.getModelId()
+                            val configModelSubscriptionAdd: MeshMessage
+                            var elementAddress = eleValue.elementAddress
+                            if (group.addressLabel == null) {
+                                configModelSubscriptionAdd =
+                                    ConfigModelSubscriptionAdd(
+                                        elementAddress,
+                                        group.getAddress(),
+                                        modelIdentifier
+                                    )
+                            } else {
+                                configModelSubscriptionAdd =
+                                    ConfigModelSubscriptionVirtualAddressAdd(
+                                        elementAddress,
+                                        group.getAddressLabel()!!,
+                                        modelIdentifier
+                                    )
+                            }
+                            MeshHelper.sendMessage(node.unicastAddress, configModelSubscriptionAdd)
+                            index++
                         }
-                        MeshHelper.sendMessage(node.unicastAddress, configModelSubscriptionAdd)
-                        index++
                     }
                 }
             }
 
-            if (index == node?.elements?.values?.elementAt(0)?.meshModels?.values?.size) {
+            if (index == modelTotal) {
                 doMapCallback(
                     map,
                     callback,
@@ -1163,18 +1178,17 @@ object MeshSDK {
 
                 var map = HashMap<String, Any>()
                 map["uuid"] = node?.uuid ?: ""
-//                if (msg is GenericOnOffStatus) {
-//                    var param = msg.parameter
-//                    if (param.size == 1) {
-//                        map["isOn"] = if (param[0].toInt() == 0) false else true
-//                        Utils.printLog(
-//                            TAG,
-//                            "onreceive node:${node?.uuid?.toUpperCase()}, isOn:${map["isOn"]}"
-//                        )
-//                        callback.onResult(map)
-//                    }
-//                } else
-                if (msg is VendorModelMessageStatus) {
+                if (msg is GenericOnOffStatus) {
+                    var param = msg.parameter
+                    if (param.size == 1) {
+                        map["isOn"] = if (param[0].toInt() == 0) false else true
+                        Utils.printLog(
+                            TAG,
+                            "onreceive node:${node?.uuid?.toUpperCase()}, isOn:${map["isOn"]}"
+                        )
+                        callback.onResult(map)
+                    }
+                } else if (msg is VendorModelMessageStatus) {
                     if (msg.parameter.size >= 8) {
                         parseLightStatus(msg.parameter, callback, map)
                         Utils.printLog(
@@ -1189,6 +1203,20 @@ object MeshSDK {
 
             }
         })
+    }
+
+    fun parseSensor(params: ByteArray, callback: MapCallback) {
+        var curPos = 0
+        var map = HashMap<String, Any>()
+        while (curPos < params.size) {
+            var propertyId = ByteUtil.byteToShort(byteArrayOf(params[curPos], params[++curPos]))
+            curPos++
+            Utils.printLog(TAG, "propertyId:$propertyId")
+            var rawValue = params[curPos]
+            map.put("${propertyId.toInt()}", rawValue.toInt())
+            curPos++
+        }
+        callback.onResult(map)
     }
 
     fun unSubscribeLightStatus() {

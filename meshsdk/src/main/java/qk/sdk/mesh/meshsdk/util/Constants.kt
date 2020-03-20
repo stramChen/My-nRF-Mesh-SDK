@@ -68,8 +68,9 @@ object Constants {
         DFU_FILE_NOT_EXIST("更新包不存在", 601),
         DFU_PARAM_ERROR("传参错误", 601),
 
-        GROUP_NOT_EXIST("group群组",701),
-        NODE_NOT_EXIST("节点不存在",702)
+        GROUP_NOT_EXIST("group群组", 701),
+        NODE_NOT_EXIST("节点不存在", 702),
+        PUBLISH_FAILED("publish failed", 703)
     }
 
     /**
