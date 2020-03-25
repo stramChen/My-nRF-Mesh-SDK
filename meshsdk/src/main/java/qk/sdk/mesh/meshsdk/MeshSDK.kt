@@ -46,6 +46,7 @@ object MeshSDK {
             MeshHelper.initMesh(mContext!!)
 //            DfuHelper.getInstance(context)
         }
+        LogFileUtil.deleteLog(mContext)
     }
 
     fun checkPermission(callback: StringCallback) {
@@ -302,6 +303,8 @@ object MeshSDK {
         MeshHelper.deleteProvisionNode(MeshHelper.getProvisionedNodeByUUID(uuid))
     }
 
+    const val ADD_APPKEYS = "addAppkeys"
+    const val GET_COMPOSITION_DATA = "getCompositionData"
     fun bindApplicationKeyForNode(uuid: String, appKey: String, callback: MapCallback) {
         Observable.create<String> {}.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
             var map = HashMap<String, Any>()
@@ -324,10 +327,11 @@ object MeshSDK {
                             if (msg is ConfigAppKeyStatus) {
                                 if (msg.isSuccessful) {//添加appkey成功
                                     Utils.printLog(TAG, "add app key success!")
+                                    MeshHandler.removeRunnable(ADD_APPKEYS)
                                     if ((MeshHelper.getSelectedMeshNode()?.elements?.size
                                             ?: 0) <= 0
                                     ) {
-                                        MeshHelper.getCompositionData()
+                                        MeshHelper.getCompositionData(GET_COMPOSITION_DATA, this)
                                     }
                                 } else {
                                     Utils.printLog(
@@ -464,6 +468,7 @@ object MeshSDK {
 
                             } else if (msg is ConfigCompositionDataStatus) {
                                 Utils.printLog(TAG, "get getCompositionData success!")
+                                MeshHandler.removeRunnable(GET_COMPOSITION_DATA)
                                 synchronized(bindedModelIndex) {
                                     if (bindedModelIndex == -1) {
                                         MeshHelper.getSelectedMeshNode()?.let { node ->
@@ -479,12 +484,6 @@ object MeshSDK {
                                                         TAG,
                                                         "get getCompositionData bindAppKey!"
                                                     )
-//                                                    MeshHelper.setSelectedModel(
-//                                                        eleValue,
-//                                                        eleValue.meshModels?.values?.elementAt(1)
-//                                                    )
-//                                                    currentModel =
-//                                                        eleValue.meshModels?.values?.elementAt(1)
                                                     currentModel =
                                                         eleValue.meshModels?.values?.elementAt(
                                                             if (eleValue.meshModels?.size ?: 0 == 1) 0 else 1
@@ -510,7 +509,13 @@ object MeshSDK {
 
                         }
                     }
-                    MeshHelper.addAppkeys(applicationKey.keyIndex, meshCallback)
+                    MeshHelper.addAppkeys(
+                        ADD_APPKEYS,
+                        applicationKey.keyIndex,
+                        meshCallback,
+                        true,
+                        true
+                    )
                 } else {
                     map.clear()
                     map.put(
@@ -680,7 +685,7 @@ object MeshSDK {
                             Integer.valueOf(opcode, 16),
                             ByteUtil.hexStringToBytes(value)
                         )
-                        MeshHelper.sendMessage(
+                        MeshHelper.sendMessage("",
                             element.elementAddress,
                             message,
                             object : MeshCallback {
@@ -845,8 +850,9 @@ object MeshSDK {
 
         val configNodeReset = ConfigNodeReset()
         MeshHelper.sendMessage(
+            "",
             MeshHelper.getSelectedMeshNode()?.unicastAddress ?: 0,
-            configNodeReset
+            configNodeReset, null
         )
     }
 
@@ -1059,7 +1065,12 @@ object MeshSDK {
                                         modelIdentifier
                                     )
                             }
-                            MeshHelper.sendMessage(node.unicastAddress, configModelSubscriptionAdd)
+                            MeshHelper.sendMessage(
+                                "subscribe",
+                                node.unicastAddress,
+                                configModelSubscriptionAdd,
+                                null
+                            )
                             index++
                         }
                     }

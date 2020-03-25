@@ -26,10 +26,10 @@ abstract class BaseMeshActivity : AppCompatActivity() {
         init()
     }
 
-    internal fun sendMessage(address: Int, message: MeshMessage, callback: MeshCallback? = null) {
+    internal fun sendMessage(method:String,address: Int, message: MeshMessage, callback: MeshCallback? = null) {
         try {
             mPingMills = System.currentTimeMillis()
-            MeshHelper.sendMeshPdu(address, message, callback)
+            MeshHelper.sendMeshPdu(method,address, message, callback)
         } catch (ex: IllegalArgumentException) {
             ex.printStackTrace()
             //todo 日志记录

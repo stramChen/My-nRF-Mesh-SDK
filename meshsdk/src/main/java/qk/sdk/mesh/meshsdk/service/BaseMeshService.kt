@@ -13,11 +13,9 @@ import no.nordicsemi.android.meshprovisioner.transport.MeshMessage
 import no.nordicsemi.android.meshprovisioner.transport.MeshModel
 import no.nordicsemi.android.meshprovisioner.transport.ProvisionedMeshNode
 import no.nordicsemi.android.meshprovisioner.utils.AuthenticationOOBMethods
+import qk.sdk.mesh.meshsdk.MeshHandler
 import qk.sdk.mesh.meshsdk.MeshHelper
-import qk.sdk.mesh.meshsdk.bean.CommonErrorMsg
-import qk.sdk.mesh.meshsdk.bean.ERROR_MSG_UNICAST_UNABLED
-import qk.sdk.mesh.meshsdk.bean.CallbackMsg
-import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
+import qk.sdk.mesh.meshsdk.bean.*
 import qk.sdk.mesh.meshsdk.callback.*
 import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
 import qk.sdk.mesh.meshsdk.mesh.NrfMeshManager
@@ -58,7 +56,13 @@ open class BaseMeshService : LifecycleService() {
         })
         // 获取扫描状态结果
         mNrfMeshManager?.getScannerState()?.observe(this, Observer {
-            Log.e("", "scanner state changed")
+            if (!it.isBluetoothEnabled)
+                mScanCallback?.onError(
+                    CallbackMsg(
+                        Constants.ConnectState.BLE_NOT_AVAILABLE.code,
+                        Constants.ConnectState.BLE_NOT_AVAILABLE.msg
+                    )
+                )
         })
 
         var netKey: NetworkKey? = null
@@ -68,7 +72,7 @@ open class BaseMeshService : LifecycleService() {
                     netKey = it
             }
         }
-        mNrfMeshManager?.startScan(filterUuid, scanCallback, netKey)
+        mNrfMeshManager?.startScan(filterUuid, netKey)
     }
 
     //停止扫描
@@ -273,11 +277,16 @@ open class BaseMeshService : LifecycleService() {
         return mNrfMeshManager?.meshNetworkLiveData?.meshNetwork
     }
 
-    internal fun sendMeshPdu(dst: Int, message: MeshMessage, callback: MeshCallback?) {
+    internal fun sendMeshPdu(
+        method: String,
+        dst: Int,
+        message: MeshMessage,
+        callback: MeshCallback?,
+        timeOut: Boolean = false,
+        retry: Boolean = false
+    ) {
         mNrfMeshManager?.meshManagerApi?.createMeshPdu(dst, message)
-        mNrfMeshManager?.meshMessageLiveData?.observe(this, Observer {
-            callback?.onReceive(it)
-        })
+        MeshHandler.addRunnable(MeshMsgSender(method, dst, message, callback, timeOut, retry))
     }
 
     internal fun unRegisterMeshMsg() {
@@ -367,13 +376,46 @@ open class BaseMeshService : LifecycleService() {
         })
     }
 
+    val SUBSCRIBE_VENDOR_MODEL = "subscribeLightStatus"
     internal fun subscribeLightStatus(callback: MeshCallback) {
-        mNrfMeshManager?.meshMessageLiveData?.observe(this, Observer {
-            callback?.onReceive(it)
-        })
+//        MeshHandler.addRunnable(SUBSCRIBE_VENDOR_MODEL, false, false, callback)
+        MeshHandler.addRunnable(
+            MeshMsgSender(
+                SUBSCRIBE_VENDOR_MODEL,
+                null,
+                null,
+                callback,
+                false,
+                false
+            )
+        )
     }
 
     internal fun unSubscribeLightStatus() {
-        mNrfMeshManager?.meshMessageLiveData?.removeObservers(this)
+        MeshHandler.removeRunnable(SUBSCRIBE_VENDOR_MODEL)
+    }
+
+    /**
+     * 1.监听livedata
+     * 2.callback回调
+     * 3.retry + timeout处理
+     */
+    internal fun setObserver() {
+        //接收到的mesh消息
+        mNrfMeshManager?.meshMessageLiveData?.observe(this, Observer { meshMsg ->
+            MeshHandler.getAllCallback().forEach { meshCallback ->
+                meshCallback.onReceive(meshMsg)
+            }
+        })
+
+//        //已配对设备列表
+//        mNrfMeshManager?.nodes?.observe(this, Observer {
+//
+//        })
+//
+//        //已配对设备列表刷新
+//        mNrfMeshManager?.provisionedNodes?.observe(this, Observer {
+//
+//        })
     }
 }

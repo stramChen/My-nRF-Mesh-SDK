@@ -1253,7 +1253,6 @@ class NrfMeshManager(
      */
     fun startScan(
         filterUuid: UUID,
-        callback: qk.sdk.mesh.meshsdk.callback.ScanCallback? = null,
         networkKey: NetworkKey? = null
     ) {
         try {
@@ -1307,7 +1306,7 @@ class NrfMeshManager(
             registerBroadcastReceivers()
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
-            callback?.onError(CallbackMsg(BLE_NOT_AVAILABLE.code, BLE_NOT_AVAILABLE.msg))
+            mScannerStateLiveData.bluetoothDisabled()
         }
     }
 

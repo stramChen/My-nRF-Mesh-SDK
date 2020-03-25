@@ -214,7 +214,6 @@ object MeshHelper {
         MeshProxyService.mMeshProxyService?.setSelectedModel(element, model)
     }
 
-    // 在当前 mesh 网络中创建一个新的 application key，并存储
     fun addAppKeys(meshCallback: MeshCallback?) {
         rx.Observable.create<String> {
         }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
@@ -238,7 +237,14 @@ object MeshHelper {
                         } else {
                             meshMessage = ConfigAppKeyDelete(networkKey, applicationKey)
                         }
-                        sendMessage(node.unicastAddress, meshMessage, meshCallback)
+                        sendMessage(
+                            "addAppKeys",
+                            node.unicastAddress,
+                            meshMessage,
+                            meshCallback,
+                            true,
+                            true
+                        )
                     }
                 }
             } else {
@@ -250,7 +256,13 @@ object MeshHelper {
     }
 
     //给RN用
-    fun addAppkeys(index: Int, meshCallback: MeshCallback?) {
+    fun addAppkeys(
+        method: String,
+        index: Int,
+        meshCallback: MeshCallback?,
+        timeOut: Boolean,
+        retry: Boolean
+    ) {
         val applicationKey = getAppKeys()?.get(index)
         if (applicationKey != null) {
             val networkKey = getNetworkKey(applicationKey.boundNetKeyIndex)
@@ -275,7 +287,14 @@ object MeshHelper {
                     } else {
                         meshMessage = ConfigAppKeyDelete(networkKey, applicationKey)
                     }
-                    sendMessage(node.unicastAddress, meshMessage, meshCallback)
+                    sendMessage(
+                        method,
+                        node.unicastAddress,
+                        meshMessage,
+                        meshCallback,
+                        timeOut,
+                        retry
+                    )
                 }
             }
         } else {
@@ -287,13 +306,20 @@ object MeshHelper {
     /**
      * 在绑定好appkey之后，获取当前节点的元素列表
      */
-    fun getCompositionData() {
+    fun getCompositionData(method: String, callback: MeshCallback) {
         rx.Observable.create<String> {
         }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
             val configCompositionDataGet = ConfigCompositionDataGet()
-            val node = MeshHelper.getSelectedMeshNode()
+            val node = getSelectedMeshNode()
             node?.let {
-                sendMessage(it.unicastAddress, configCompositionDataGet)
+                sendMessage(
+                    method,
+                    it.unicastAddress,
+                    configCompositionDataGet,
+                    callback,
+                    true,
+                    true
+                )
             }
         }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
@@ -309,7 +335,14 @@ object MeshHelper {
                     Utils.printLog(TAG, "getSelectedModel")
                     val configModelAppUnbind =
                         ConfigModelAppBind(element.elementAddress, model.modelId, 0)
-                    sendMessage(it.unicastAddress, configModelAppUnbind, meshCallback)
+                    sendMessage(
+                        "bindAppKey",
+                        it.unicastAddress,
+                        configModelAppUnbind,
+                        meshCallback,
+                        true,
+                        true
+                    )
                 }
             }
         }
@@ -327,7 +360,14 @@ object MeshHelper {
                     )
                     val configModelAppUnbind =
                         ConfigModelAppBind(element.elementAddress, model.modelId, appKeyIndex)
-                    sendMessage(it.unicastAddress, configModelAppUnbind, meshCallback)
+                    sendMessage(
+                        "bindAppKey",
+                        it.unicastAddress,
+                        configModelAppUnbind,
+                        meshCallback,
+                        true,
+                        true
+                    )
                 }
             }
         }
@@ -474,9 +514,16 @@ object MeshHelper {
     }
 
     // 向设备发送指令
-    fun sendMessage(address: Int, message: MeshMessage, callback: MeshCallback? = null) {
+    fun sendMessage(
+        method: String,
+        dst: Int,
+        message: MeshMessage,
+        callback: MeshCallback?,
+        timeOut: Boolean = false,
+        retry: Boolean = false
+    ) {
         try {
-            sendMeshPdu(address, message, callback)
+            sendMeshPdu(method, dst, message, callback, timeOut, retry)
         } catch (ex: IllegalArgumentException) {
             ex.printStackTrace()
             //todo 日志记录
@@ -490,10 +537,24 @@ object MeshHelper {
 
     // 传送 mesh 数据包
     // 传递控制参数给 mesh 设备
-    fun sendMeshPdu(dst: Int, message: MeshMessage, callback: MeshCallback?) {
+    fun sendMeshPdu(
+        method: String,
+        dst: Int,
+        message: MeshMessage,
+        callback: MeshCallback?,
+        timeOut: Boolean = false,
+        retry: Boolean = false
+    ) {
         rx.Observable.create<String> {
         }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
-            MeshProxyService.mMeshProxyService?.sendMeshPdu(dst, message, callback)
+            MeshProxyService.mMeshProxyService?.sendMeshPdu(
+                method,
+                dst,
+                message,
+                callback,
+                timeOut,
+                retry
+            )
         }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
@@ -512,14 +573,14 @@ object MeshHelper {
     }
 
     fun sendGenericOnOffGet(meshCallback: MeshCallback?) {
-        val element = MeshHelper.getSelectedElement()
+        val element = getSelectedElement()
         if (element != null) {
-            val model = MeshHelper.getSelectedModel()
+            val model = getSelectedModel()
             if (model != null) {
                 if (model.boundAppKeyIndexes.isNotEmpty()) {
                     val appKeyIndex = model.boundAppKeyIndexes[0]
                     val appKey =
-                        MeshHelper.getMeshNetwork()?.getAppKey(appKeyIndex)
+                        getMeshNetwork()?.getAppKey(appKeyIndex)
 
                     appKey?.let {
                         val address = element.elementAddress
@@ -532,7 +593,7 @@ object MeshHelper {
                         )
 
                         val genericOnOffSet = GenericOnOffGet(appKey)
-                        sendMessage(address, genericOnOffSet, meshCallback)
+                        sendMessage("sendGenericOnOffGet", address, genericOnOffSet, meshCallback)
                     }
                 } else {
                     //todo 日志记录
@@ -542,7 +603,7 @@ object MeshHelper {
         }
     }
 
-    fun sendGenericOnOff(state: Boolean, delay: Int?) {
+    fun sendGenericOnOff(state: Boolean, delay: Int) {
         getSelectedMeshNode()?.let { node ->
             getSelectedElement()?.let { element ->
                 getSelectedModel()?.let { model ->
@@ -560,7 +621,7 @@ object MeshHelper {
                                 0,
                                 delay
                             )
-                            sendMessage(address, genericOnOffSet)
+                            sendMessage("sendGenericOnOff", address, genericOnOffSet, null)
                         }
                     } else {
                         Utils.printLog(TAG, "boundAppKeyIndexes is null!")
@@ -570,35 +631,35 @@ object MeshHelper {
         }
     }
 
-    fun sendGenericOnOff(state: Boolean, delay: Int?, meshCallback: MeshCallback?) {
-        if (meshCallback == null)
-            Utils.printLog(TAG, "")
-        getSelectedMeshNode()?.let { node ->
-            getSelectedElement()?.let { element ->
-                getSelectedModel()?.let { model ->
-                    if (model.boundAppKeyIndexes.isNotEmpty()) {
-                        val appKeyIndex = model.boundAppKeyIndexes[0]
-                        val appKey =
-                            getMeshNetwork()?.getAppKey(appKeyIndex)
-                        val address = element.elementAddress
-                        if (appKey != null) {
-                            val genericOnOffSet = GenericOnOffSet(
-                                appKey,
-                                state,
-                                node.sequenceNumber,
-                                0,
-                                0,
-                                delay
-                            )
-                            sendMessage(address, genericOnOffSet)
-                        }
-                    } else {
-                        Utils.printLog(TAG, "boundAppKeyIndexes is null!")
-                    }
-                }
-            }
-        }
-    }
+//    fun sendGenericOnOff(state: Boolean, delay: Int?, meshCallback: MeshCallback?) {
+//        if (meshCallback == null)
+//            Utils.printLog(TAG, "")
+//        getSelectedMeshNode()?.let { node ->
+//            getSelectedElement()?.let { element ->
+//                getSelectedModel()?.let { model ->
+//                    if (model.boundAppKeyIndexes.isNotEmpty()) {
+//                        val appKeyIndex = model.boundAppKeyIndexes[0]
+//                        val appKey =
+//                            getMeshNetwork()?.getAppKey(appKeyIndex)
+//                        val address = element.elementAddress
+//                        if (appKey != null) {
+//                            val genericOnOffSet = GenericOnOffSet(
+//                                appKey,
+//                                state,
+//                                node.sequenceNumber,
+//                                0,
+//                                0,
+//                                delay
+//                            )
+//                            sendMessage(address, genericOnOffSet)
+//                        }
+//                    } else {
+//                        Utils.printLog(TAG, "boundAppKeyIndexes is null!")
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     /**
      * Send vendor model acknowledged message
@@ -608,10 +669,13 @@ object MeshHelper {
      */
     // 私有协议 opcode, value
     fun sendVendorModelMessage(
+        method: String,
         opcode: Int,
         parameters: ByteArray?,
         acknowledged: Boolean,
-        callback: MeshCallback? = null
+        callback: MeshCallback? = null,
+        timeout: Boolean,
+        retry: Boolean
     ) {
         val element = getSelectedElement()
         if (element != null) {
@@ -630,7 +694,14 @@ object MeshHelper {
                                 opcode,
                                 parameters!!
                             )
-                            sendMessage(element.elementAddress, message, callback)
+                            sendMessage(
+                                method,
+                                element.elementAddress,
+                                message,
+                                callback,
+                                timeout,
+                                retry
+                            )
                         } else {
                             message = VendorModelMessageUnacked(
                                 appKey,
@@ -639,7 +710,14 @@ object MeshHelper {
                                 opcode,
                                 parameters
                             )
-                            sendMessage(element.elementAddress, message, callback)
+                            sendMessage(
+                                method,
+                                element.elementAddress,
+                                message,
+                                callback,
+                                timeout,
+                                retry
+                            )
                         }
                     }
                 } else {
@@ -749,7 +827,7 @@ object MeshHelper {
         try {
             var group: Group? = getGroupByName(groupName)
             if (group != null) {
-                addPoxyFilter(MeshAddress.formatAddress(group!!.address, false))
+                addPoxyFilter(MeshAddress.formatAddress(group.address, false))
                 return true
             }
 
@@ -788,7 +866,6 @@ object MeshHelper {
             return true
         } catch (ex: IllegalArgumentException) {
             ex.printStackTrace()
-            return false
         }
         return false
     }
@@ -897,10 +974,10 @@ object MeshHelper {
 //        }
 //    }
 
-    fun subscribeLightStatus(mapCallback: MeshCallback) {
+    fun subscribeLightStatus(meshCallback: MeshCallback) {
         rx.Observable.create<String> {
         }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
-            MeshProxyService.mMeshProxyService?.subscribeLightStatus(mapCallback)
+            MeshProxyService.mMeshProxyService?.subscribeLightStatus(meshCallback)
         }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 

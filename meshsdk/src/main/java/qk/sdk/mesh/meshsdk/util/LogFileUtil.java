@@ -81,7 +81,7 @@ public class LogFileUtil {
      *
      * @param context
      */
-    public static void deleteLog(Context context, int appId, String bucketName) {
+    public static void deleteLog(Context context) {
         File file = new File(context.getFilesDir().getAbsolutePath() + File.separator);
         File[] files = file.listFiles();
         if (file != null && files != null && files.length > 0) {

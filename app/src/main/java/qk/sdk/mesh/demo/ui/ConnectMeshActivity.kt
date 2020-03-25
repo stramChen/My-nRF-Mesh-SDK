@@ -88,11 +88,11 @@ class ConnectMeshActivity : BaseMeshActivity() {
                         g
                     )}${ByteUtil.rgbtoHex(b)}"
                 )
-                MeshHelper.sendVendorModelMessage(
-                    Integer.valueOf("05", 16),
-                    ByteUtil.hexStringToBytes(params.toString()),
-                    false
-                )
+//                MeshHelper.sendVendorModelMessage(
+//                    Integer.valueOf("05", 16),
+//                    ByteUtil.hexStringToBytes(params.toString()),
+//                    false
+//                )
             } else if (MeshHelper.getSelectedModel() is VendorModel) {
                 MeshHelper.bindAppKey(meshCallback)
             }
@@ -100,7 +100,7 @@ class ConnectMeshActivity : BaseMeshActivity() {
 
         btn_set_publication.setOnClickListener {
             val configNodeReset = ConfigNodeReset()
-            sendMessage(MeshHelper.getSelectedMeshNode()?.unicastAddress ?: 0, configNodeReset)
+//            sendMessage(MeshHelper.getSelectedMeshNode()?.unicastAddress ?: 0, configNodeReset)
         }
 
         tv_ping.setOnClickListener {
@@ -227,7 +227,7 @@ class ConnectMeshActivity : BaseMeshActivity() {
         val configCompositionDataGet = ConfigCompositionDataGet()
         val node = MeshHelper.getSelectedMeshNode()
         node?.let {
-            sendMessage(it.unicastAddress, configCompositionDataGet)
+//            sendMessage(it.unicastAddress, configCompositionDataGet)
         }
     }
 
