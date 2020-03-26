@@ -1100,10 +1100,13 @@ object MeshSDK {
     fun modifyLightStatus(uuid: String, params: HashMap<String, Any>, callback: BooleanCallback) {
         var hsv = params["HSVColor"]
         var bright = params["Brightness"]
-        var temperature = params["Temperature"]
+        var temperature = params["ColorTemperature"]
         var mode = params["LightMode"]
         var onOff = params["LightSwitch"]
-        Utils.printLog(TAG, "Brightness:$bright,Temperature:$temperature,mode:$mode,onOff:$onOff")
+        Utils.printLog(
+            TAG,
+            "Brightness:$bright,ColorTemperature:$temperature,mode:$mode,onOff:$onOff"
+        )
 
         if (hsv != null) {
             var vendorMap = hsv as HashMap<String, Any>
@@ -1174,6 +1177,8 @@ object MeshSDK {
             var onOffParam =
                 if (onOffType == 1) onOff as Int else if (onOffType == 2) (onOff as Double).toInt() else (onOff as Float).toInt()
             setGenericOnOff(uuid, if (onOffParam == 0) false else true, 0, callback)
+        } else {
+            callback.onResult(false)
         }
     }
 
@@ -1283,7 +1288,7 @@ object MeshSDK {
         var lightStatus = HashMap<String, Any>()
         lightStatus["LightMode"] = mode
         lightStatus["Brightness"] = b
-        lightStatus["Temperature"] = t
+        lightStatus["ColorTemperature"] = t
         lightStatus["LightSwitch"] = isOn
 
         var HSVColor = HashMap<String, Int>()
