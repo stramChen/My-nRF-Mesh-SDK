@@ -305,6 +305,7 @@ object MeshSDK {
 
     const val ADD_APPKEYS = "addAppkeys"
     const val GET_COMPOSITION_DATA = "getCompositionData"
+    const val BIND_APP_KEY = "bindAppKey"
     fun bindApplicationKeyForNode(uuid: String, appKey: String, callback: MapCallback) {
         Observable.create<String> {}.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
             var map = HashMap<String, Any>()
@@ -389,7 +390,9 @@ object MeshSDK {
                                                                 ?.meshModels?.values?.elementAt(
                                                                 bindedModelIndex
                                                             )
+                                                        MeshHandler.removeRunnable(BIND_APP_KEY)
                                                         MeshHelper.bindAppKey(
+                                                            BIND_APP_KEY,
                                                             applicationKey.keyIndex, this
                                                         )
                                                     } else {//绑定全部model成功,继续轮询绑定其他element的model
@@ -411,13 +414,17 @@ object MeshSDK {
                                                                     currentModel
                                                                 )
                                                                 currentElement = eleValue
+
+                                                                MeshHandler.removeRunnable(BIND_APP_KEY)
                                                                 MeshHelper.bindAppKey(
+                                                                    BIND_APP_KEY,
                                                                     applicationKey.keyIndex,
                                                                     this
                                                                 )
 //                                                                }
                                                             }
                                                         } else {
+                                                            MeshHandler.removeRunnable(BIND_APP_KEY)
                                                             Utils.printLog(
                                                                 TAG,
                                                                 "finish bind success"
@@ -493,7 +500,10 @@ object MeshSDK {
                                                         currentModel
                                                     )
                                                     currentElement = eleValue
+
+                                                    MeshHandler.removeRunnable(BIND_APP_KEY)
                                                     MeshHelper.bindAppKey(
+                                                        BIND_APP_KEY,
                                                         applicationKey.keyIndex, this
                                                     )
                                                 }

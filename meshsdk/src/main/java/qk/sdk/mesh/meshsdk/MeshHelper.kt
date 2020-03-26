@@ -149,7 +149,6 @@ object MeshHelper {
     }
 
     // ??? 获取已经配置的网络的节点列表？—— 和上面函数的区别？
-    // Warning!!!!!!!!!!!!!!!!!!!!!!!! 最好 React Native 层不要用这个方法
     fun getProvisionNode(): ArrayList<ProvisionedMeshNode>? {
         return MeshProxyService.mMeshProxyService?.mNrfMeshManager?.nodes?.value
     }
@@ -348,7 +347,7 @@ object MeshHelper {
         }
     }
 
-    fun bindAppKey(appKeyIndex: Int, meshCallback: MeshCallback?) {
+    fun bindAppKey(method: String,appKeyIndex: Int, meshCallback: MeshCallback?) {
         getSelectedMeshNode()?.let {
             val element = getSelectedElement()
             if (element != null) {
@@ -361,7 +360,7 @@ object MeshHelper {
                     val configModelAppUnbind =
                         ConfigModelAppBind(element.elementAddress, model.modelId, appKeyIndex)
                     sendMessage(
-                        "bindAppKey",
+                        method,
                         it.unicastAddress,
                         configModelAppUnbind,
                         meshCallback,

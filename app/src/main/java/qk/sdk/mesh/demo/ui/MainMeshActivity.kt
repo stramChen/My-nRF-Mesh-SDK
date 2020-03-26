@@ -73,7 +73,8 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
         mNodeAdapter?.setOnItemLongClickListener(object :
             OnItemLongClickListener<ProvisionedMeshNode> {
             override fun onItemLongClick(data: ProvisionedMeshNode, position: Int): Boolean {
-                MeshHelper.deleteProvisionNode(data, mNodesCallback)
+//                MeshHelper.deleteProvisionNode(data, mNodesCallback)
+                MeshSDK.removeProvisionedNode(data.uuid)
                 return true
             }
         })

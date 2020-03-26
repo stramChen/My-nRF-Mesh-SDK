@@ -5,12 +5,8 @@ import android.os.HandlerThread
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.bean.CommonErrorMsg
 import qk.sdk.mesh.meshsdk.bean.MeshMsgSender
-import qk.sdk.mesh.meshsdk.callback.BooleanCallback
-import qk.sdk.mesh.meshsdk.callback.MapCallback
 import qk.sdk.mesh.meshsdk.callback.MeshCallback
-import qk.sdk.mesh.meshsdk.util.LogFileUtil
 import qk.sdk.mesh.meshsdk.util.Utils
-import java.util.HashMap
 import java.util.concurrent.ConcurrentHashMap
 
 object MeshHandler {
@@ -21,27 +17,35 @@ object MeshHandler {
 
     private val requestMaps = ConcurrentHashMap<String, MeshCallback>(20)
     private val runnableMaps = ConcurrentHashMap<String, TimeOutRunnable>(20)
+    private val TIME_OUT_MILLS = 5 * 1000L
 
     init {
         handlerThread.start()
         mHandler = Handler(handlerThread.looper)
     }
 
+    @Synchronized
     fun removeRunnable(method: String) {
         requestMaps.remove(method)
-        runnableMaps.remove(method)
+        runnableMaps[method]?.apply {
+            mHandler.removeCallbacks(this)
+            meshMsgSender.retry = false
+            runnableMaps.remove(meshMsgSender.method)
+            Utils.printLog(TAG, "removeRunnable:$method")
+        }
     }
 
+    @Synchronized
     fun addRunnable(meshMsgSender: MeshMsgSender) {
         if (meshMsgSender.callback == null || meshMsgSender.method.isEmpty())
             return
 
         requestMaps[meshMsgSender.method] = meshMsgSender.callback!!
 
-        if (meshMsgSender.timeOut) {
+        if (meshMsgSender.timeout) {
             val runnable = TimeOutRunnable(meshMsgSender)
             runnableMaps[meshMsgSender.method] = runnable
-            mHandler.postDelayed(runnable, 3 * 1000)
+            mHandler.postDelayed(runnable, TIME_OUT_MILLS)
         }
     }
 
@@ -64,6 +68,7 @@ object MeshHandler {
                         CommonErrorMsg.TIME_OUT.msg
                     )
                 )
+                removeRunnable(meshMsgSender.method)
             } else {
                 if (meshMsgSender.message != null)
                     MeshHelper.sendMessage(
@@ -73,6 +78,8 @@ object MeshHandler {
                         null
                     )
                 meshMsgSender.retry = false
+                Utils.printLog(TAG, "retry:${meshMsgSender.method}")
+                mHandler.postDelayed(this, TIME_OUT_MILLS)
             }
         }
     }

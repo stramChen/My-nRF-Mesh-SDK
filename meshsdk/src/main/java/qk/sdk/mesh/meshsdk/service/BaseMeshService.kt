@@ -40,6 +40,7 @@ open class BaseMeshService : LifecycleService() {
     override fun onCreate() {
         super.onCreate()
         mNrfMeshManager = NrfMeshManager(this, MeshManagerApi(this), BleMeshManager(this))
+        setObserver()
     }
 
     val PERMISSION_BLUETOOTH_REQUEST_CODE = 1000
@@ -260,8 +261,10 @@ open class BaseMeshService : LifecycleService() {
     }
 
     internal fun deleteNode(node: ProvisionedMeshNode, callback: ProvisionCallback?) {
+        var deleteResult =
+            mNrfMeshManager?.meshNetworkLiveData?.meshNetwork?.deleteNode(node) ?: false
         callback?.onNodeDeleted(
-            mNrfMeshManager?.meshNetworkLiveData?.meshNetwork?.deleteNode(node) ?: false, node
+            deleteResult, node
         )
     }
 
