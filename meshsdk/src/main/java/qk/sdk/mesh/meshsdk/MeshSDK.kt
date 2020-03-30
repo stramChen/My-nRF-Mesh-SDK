@@ -390,7 +390,6 @@ object MeshSDK {
                                                                 ?.meshModels?.values?.elementAt(
                                                                 bindedModelIndex
                                                             )
-                                                        MeshHandler.removeRunnable(BIND_APP_KEY)
                                                         MeshHelper.bindAppKey(
                                                             BIND_APP_KEY,
                                                             applicationKey.keyIndex, this
@@ -415,7 +414,6 @@ object MeshSDK {
                                                                 )
                                                                 currentElement = eleValue
 
-                                                                MeshHandler.removeRunnable(BIND_APP_KEY)
                                                                 MeshHelper.bindAppKey(
                                                                     BIND_APP_KEY,
                                                                     applicationKey.keyIndex,
@@ -501,7 +499,6 @@ object MeshSDK {
                                                     )
                                                     currentElement = eleValue
 
-                                                    MeshHandler.removeRunnable(BIND_APP_KEY)
                                                     MeshHelper.bindAppKey(
                                                         BIND_APP_KEY,
                                                         applicationKey.keyIndex, this
@@ -650,7 +647,10 @@ object MeshSDK {
         modelId: Int,
         opcode: String,
         value: String,
-        callback: Any
+        callback: Any,
+        method: String = "",
+        timeout: Boolean = false,
+        retry: Boolean = false
     ) {
         if (!MeshHelper.isConnectedToProxy()) {
             doVendorCallback(
@@ -695,7 +695,8 @@ object MeshSDK {
                             Integer.valueOf(opcode, 16),
                             ByteUtil.hexStringToBytes(value)
                         )
-                        MeshHelper.sendMessage("",
+                        MeshHelper.sendMessage(
+                            method,
                             element.elementAddress,
                             message,
                             object : MeshCallback {
@@ -761,8 +762,8 @@ object MeshSDK {
                                                             Log.e(TAG, "key:$t,value:$u")
                                                         }
                                                         callback.onResult(map)
+                                                        MeshHandler.removeRunnable(method)
                                                     }
-                                                    MeshHelper.unRegisterMeshMsg()
                                                     mConnectCallbacks.remove(callback)
                                                     msgIndex = 0
                                                 }
@@ -827,7 +828,8 @@ object MeshSDK {
                                 override fun onError(msg: CallbackMsg) {
                                     doVendorCallback(callback, false, msg)
                                 }
-                            })
+                            }, timeout, retry
+                        )
                     }
                 } else {
                     //todo
@@ -848,7 +850,7 @@ object MeshSDK {
     }
 
     fun getDeviceIdentityKeys(uuid: String, callback: MapCallback) {
-        sendMeshMessage(uuid, 0, 0, "00", "", callback)
+        sendMeshMessage(uuid, 0, 0, "00", "", callback, "getDeviceIdentityKeys", true, true)
     }
 
     fun resetNode(uuid: String) {
@@ -1205,12 +1207,16 @@ object MeshSDK {
                 var map = HashMap<String, Any>()
                 map["uuid"] = node?.uuid ?: ""
                 if (msg is GenericOnOffStatus) {
+                    var switchMap = HashMap<Int, Int>()
                     var param = msg.parameter
                     if (param.size == 1) {
-                        map["isOn"] = if (param[0].toInt() == 0) false else true
+                        var eleIndex =
+                            node?.elements?.values?.indexOf(node?.elements?.get(msg.src)) ?: 0
+                        switchMap[eleIndex] = param[0].toInt()
+                        map["LightSwitch"] = switchMap
                         Utils.printLog(
                             TAG,
-                            "onreceive node:${node?.uuid?.toUpperCase()}, isOn:${map["isOn"]}"
+                            "onreceive node:${node?.uuid?.toUpperCase()}, eleIndex:$eleIndex,isOn:${switchMap[eleIndex]}"
                         )
                         callback.onResult(map)
                     }
@@ -1393,4 +1399,8 @@ object MeshSDK {
             callback.onResult(map)
         }
     }
+
+//    fun setLocalAutoRules(rules: ArrayList<>) {
+//        sendMeshMessage()
+//    }
 }

@@ -268,6 +268,5 @@ class ConnectMeshActivity : BaseMeshActivity() {
         meshCallback = null
         MeshHelper.stopConnect()
         MeshHelper.stopScan()
-        MeshHelper.clearMeshCallback()
     }
 }

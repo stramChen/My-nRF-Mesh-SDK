@@ -6,6 +6,7 @@ import android.view.View
 import kotlinx.android.synthetic.main.activity_connect.*
 import qk.sdk.mesh.demo.R
 import qk.sdk.mesh.demo.base.BaseMeshActivity
+import qk.sdk.mesh.demo.util.Constants
 import qk.sdk.mesh.meshsdk.MeshHelper
 import qk.sdk.mesh.meshsdk.MeshSDK
 import qk.sdk.mesh.meshsdk.callback.ArrayStringCallback
@@ -47,6 +48,16 @@ class ConnectTestActivity : BaseMeshActivity() {
         tv_proxy_address.text = MeshHelper.getConnectedDevice()?.getAddress() ?: ""
         tv_ttl.text = "${MeshHelper.getSelectedMeshNode()?.ttl ?: ""}"
 
+        tv_proxy_address.setOnClickListener {
+            MeshSDK.subscribeLightStatus(mUUID, object : MapCallback {
+                override fun onResult(result: HashMap<String, Any>) {
+                    result.forEach { t, u ->
+                        Utils.printLog(TAG, "subscribeLightStatus,key:$t,value:$u")
+                    }
+                }
+            })
+        }
+
         btn_add_app_key.setOnClickListener {
             if (MeshHelper.isConnectedToProxy()) {
                 Thread(Runnable {
@@ -87,7 +98,7 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
 
         switch_on_off.setOnCheckedChangeListener { buttonView, isChecked ->
-                        MeshSDK.setGenericOnOff(mUUID, isChecked, 0,object :
+            MeshSDK.setGenericOnOff(mUUID, isChecked, 0, object :
                 BooleanCallback {
                 override fun onResult(boolean: Boolean) {
                     Utils.printLog(TAG, "setGenericOnOff result:$boolean")
@@ -138,25 +149,32 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
 
         btn_set_publication.setOnClickListener {
-            MeshSDK.resetNode(mUUID)
-//            MeshSDK.setPublication(mUUID, "",object : MapCallback {
-//                override fun onResult(result: HashMap<String, Any>) {
-//                    result.forEach { t, u ->
-//                        Utils.printLog(TAG, "set publication,key:$t,value:$u")
-//                    }
-//                }
-//            })
+            //            MeshSDK.resetNode(mUUID)
+            MeshSDK.setPublication(mUUID, Constants.TEST_GROUP, object : MapCallback {
+                override fun onResult(result: HashMap<String, Any>) {
+                    result.forEach { t, u ->
+                        Utils.printLog(TAG, "set publication,key:$t,value:$u")
+                    }
+                }
+            })
         }
 
         btn_subscribe.setOnClickListener {
-            if (MeshHelper.getGroupByName("01029012901920") == null)
-                MeshSDK.createGroup("01029012901920", object : BooleanCallback {
+            if (MeshHelper.getGroupByName(Constants.TEST_GROUP) == null)
+                MeshSDK.createGroup(Constants.TEST_GROUP, object : BooleanCallback {
                     override fun onResult(boolean: Boolean) {
                         Utils.printLog(TAG, "createGroup:$boolean")
                     }
                 })
 
-            MeshSDK.setPublication(mUUID, "01029012901920", object : MapCallback {
+//            MeshSDK.setPublication(mUUID, Constants.TEST_GROUP, object : MapCallback {
+//                override fun onResult(result: HashMap<String, Any>) {
+//                    result.forEach { t, u ->
+//                        Utils.printLog(TAG, " setPublication,key:$t,value:$u")
+//                    }
+//                }
+//            })
+            MeshSDK.subscribe(mUUID, Constants.TEST_GROUP, object : MapCallback {
                 override fun onResult(result: HashMap<String, Any>) {
                     result.forEach { t, u ->
                         Utils.printLog(TAG, "set subscribe,key:$t,value:$u")
@@ -177,20 +195,20 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
 
         tv_ping.setOnClickListener {
-//            MeshSDK.getDeviceIdentityKeys(mUUID, object : MapCallback {
-//                override fun onResult(result: HashMap<String, Any>) {
-//                    result.forEach { t, u ->
-//                        Log.e(TAG, "key:$t,value:$u")
-//                    }
-//                }
-//            })
-            MeshSDK.fetchLightCurrentStatus(mUUID, object : MapCallback {
+            MeshSDK.getDeviceIdentityKeys(mUUID, object : MapCallback {
                 override fun onResult(result: HashMap<String, Any>) {
                     result.forEach { t, u ->
-                        Utils.printLog(TAG, "key:$t,value:$u")
+                        Log.e(TAG, "key:$t,value:$u")
                     }
                 }
             })
+//            MeshSDK.fetchLightCurrentStatus(mUUID, object : MapCallback {
+//                override fun onResult(result: HashMap<String, Any>) {
+//                    result.forEach { t, u ->
+//                        Utils.printLog(TAG, "key:$t,value:$u")
+//                    }
+//                }
+//            })
 //            MeshSDK.sendMeshMessage(mUUID,0,0,"05","0016000000",object :BooleanCallback{
 //                override fun onResult(boolean: Boolean) {
 //
@@ -248,7 +266,6 @@ class ConnectTestActivity : BaseMeshActivity() {
 //
     override fun onDestroy() {
         super.onDestroy()
-        MeshHelper.clearMeshCallback()
         MeshSDK.unSubscribeLightStatus()
     }
 }

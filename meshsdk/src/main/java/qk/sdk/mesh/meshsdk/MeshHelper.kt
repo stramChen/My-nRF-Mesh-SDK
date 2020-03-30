@@ -50,14 +50,14 @@ object MeshHelper {
 
     // 扫描蓝牙节点
     fun startScan(filterUuid: UUID, scanCallback: ScanCallback?, networkKey: String = "") {
-        rx.Observable.create<String> {
-        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+//        rx.Observable.create<String> {
+//        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
             MeshProxyService.mMeshProxyService?.startScan(
                 filterUuid,
                 scanCallback,
                 networkKey.toUpperCase()
             )
-        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
+//        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
     // 停止蓝牙扫描
@@ -112,12 +112,12 @@ object MeshHelper {
     }
 
     // 清除 mesh 回调，清除 mesh 业务逻辑中所有设定的 callback
-    fun clearMeshCallback() {
-        rx.Observable.create<String> {
-        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
-            MeshProxyService.mMeshProxyService?.clearMeshCallback()
-        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
-    }
+//    fun clearMeshCallback() {
+//        rx.Observable.create<String> {
+//        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+//            MeshProxyService.mMeshProxyService?.clearMeshCallback()
+//        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
+//    }
 
     // 开启启动网络配置
     fun startProvision(device: ExtendedBluetoothDevice, callback: BaseCallback) {
@@ -727,9 +727,9 @@ object MeshHelper {
         }
     }
 
-    fun unRegisterMeshMsg() {
-        MeshProxyService.mMeshProxyService?.unRegisterMeshMsg()
-    }
+//    fun unRegisterMeshMsg() {
+//        MeshProxyService.mMeshProxyService?.unRegisterMeshMsg()
+//    }
 
     fun unRegisterConnectListener() {
         MeshProxyService.mMeshProxyService?.unRegisterConnectListener()

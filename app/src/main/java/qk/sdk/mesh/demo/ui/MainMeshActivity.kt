@@ -106,7 +106,7 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
                 startActivity(
                     Intent(
                         this@MainMeshActivity,
-                        OnOffMeshActivity::class.java
+                        ConnectTestActivity::class.java
                     ).putExtra("uuid", data.uuid)
                 )
             }

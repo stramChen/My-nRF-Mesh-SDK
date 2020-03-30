@@ -372,7 +372,6 @@ class NrfMeshManager(
     }
 
     internal fun clearProvisioningLiveData() {
-        stopScan()
         mHandler.removeCallbacks(mReconnectRunnable)
         mSetupProvisionedNode = false
         mIsReconnectingFlag = false
@@ -1033,13 +1032,14 @@ class NrfMeshManager(
      * stop scanning for bluetooth devices.
      */
     internal fun stopScan() {
+        Utils.printLog(TAG,"stopScan")
         mHandler.removeCallbacks(mScannerTimeout)
         var scanner = BluetoothLeScannerCompat.getScanner()
         scanner.stopScan(mScanCallbacks)
         mIsScanning = false
         mScannerStateLiveData.scanningStopped()
 
-        unregisterBroadcastReceivers()
+//        unregisterBroadcastReceivers()
     }
 
     private fun onProvisionedDeviceFound(
@@ -1303,7 +1303,7 @@ class NrfMeshManager(
             val scanner = BluetoothLeScannerCompat.getScanner()
             scanner.startScan(filters, settings, mScanCallbacks)
             Utils.printLog(TAG, "start scan")
-            registerBroadcastReceivers()
+//            registerBroadcastReceivers()
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
             mScannerStateLiveData.bluetoothDisabled()

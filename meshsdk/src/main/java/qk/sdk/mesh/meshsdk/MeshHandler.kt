@@ -40,12 +40,14 @@ object MeshHandler {
         if (meshMsgSender.callback == null || meshMsgSender.method.isEmpty())
             return
 
+        removeRunnable(meshMsgSender.method)
         requestMaps[meshMsgSender.method] = meshMsgSender.callback!!
 
         if (meshMsgSender.timeout) {
             val runnable = TimeOutRunnable(meshMsgSender)
             runnableMaps[meshMsgSender.method] = runnable
             mHandler.postDelayed(runnable, TIME_OUT_MILLS)
+            Utils.printLog(TAG, "addRunnable method:${meshMsgSender.method}")
         }
     }
 

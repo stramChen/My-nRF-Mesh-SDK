@@ -16,3 +16,5 @@ data class MeshMsgSender(
         return "method:$method,dst:$dst,message:${ByteUtil.bytesToHexString(message?.parameter)},timeout:$timeout,retry:$retry"
     }
 }
+
+//data class LocalAutoRule(address:Short,)

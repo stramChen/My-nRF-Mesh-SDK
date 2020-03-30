@@ -55,7 +55,7 @@ dependencies {
     api "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.61"
     api project(':meshprovisioner')
 //    if (isaar) {
-    implementation fileTree(dir: 'libs', include: ['*.aar', '*.jar'], exclude: [])
+        implementation fileTree(dir: 'libs', include: ['*.aar', '*.jar'], exclude: [])
 //    } else {
 //        api 'androidx.appcompat:appcompat:1.1.0'
 //        api 'androidx.core:core-ktx:1.1.0'
@@ -97,7 +97,7 @@ uploadArchives {
             repository(url: "file:///Users/wangyue/Documents/mxchip/aar/")
             pom.project {
                 name 'meshsdk'
-                version '0.9.0'
+                version '0.9.6'
                 artifactId 'meshsdk'
                 groupId 'cn.mxchip.mesh.test'
                 packaging 'aar'

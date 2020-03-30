@@ -226,7 +226,7 @@
         android:layout_height="wrap_content"
         android:background="@color/red"
         android:gravity="center"
-        android:text="@string/reset"
+        android:text="publication"
         android:textColor="@color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent" />
@@ -235,7 +235,7 @@
         android:id="@+id/btn_subscribe"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="publish"
+        android:text="subscribe"
         android:layout_marginLeft="10dp"
         app:layout_constraintLeft_toRightOf="@+id/btn_set_publication"
         app:layout_constraintTop_toTopOf="@+id/btn_set_publication" />

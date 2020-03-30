@@ -52,7 +52,7 @@ open class BaseMeshService : LifecycleService() {
         mScanCallback = scanCallback
         //获取扫描结果
         mNrfMeshManager?.getScannerResults()?.observe(this, Observer {
-            Log.e("", "get scanner result:${it.devices.size}")
+            Utils.printLog(TAG, "get scanner result:${it.devices.size}")
             mScanCallback?.onScanResult(it.devices, it.updatedDeviceIndex)
         })
         // 获取扫描状态结果
@@ -149,9 +149,9 @@ open class BaseMeshService : LifecycleService() {
         isProvisioningStarted = false
     }
 
-    internal fun clearMeshCallback() {
-        mNrfMeshManager?.meshMessageLiveData?.removeObservers(this)
-    }
+//    internal fun clearMeshCallback() {
+//        mNrfMeshManager?.meshMessageLiveData?.removeObservers(this)
+//    }
 
     //开始provisioning
     internal fun startProvisioning(device: ExtendedBluetoothDevice, callback: BaseCallback) {
@@ -292,9 +292,9 @@ open class BaseMeshService : LifecycleService() {
         MeshHandler.addRunnable(MeshMsgSender(method, dst, message, callback, timeOut, retry))
     }
 
-    internal fun unRegisterMeshMsg() {
-        mNrfMeshManager?.meshMessageLiveData?.removeObservers(this)
-    }
+//    internal fun unRegisterMeshMsg() {
+//        mNrfMeshManager?.meshMessageLiveData?.removeObservers(this)
+//    }
 
     internal fun unRegisterConnectListener() {
         mNrfMeshManager?.connectionState?.removeObservers(this)
