@@ -34,6 +34,7 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
+
 import no.nordicsemi.android.meshprovisioner.MeshManagerApi;
 import no.nordicsemi.android.meshprovisioner.NetworkKey;
 import no.nordicsemi.android.meshprovisioner.Provisioner;
@@ -93,6 +94,9 @@ abstract class NetworkLayer extends LowerTransportLayer {
     @Override
     public final Message createNetworkLayerPDU(@NonNull final Message message) {
         final SecureUtils.K2Output k2Output = getK2Output(message);
+        if (k2Output == null)
+            return message;
+
         final int nid = k2Output.getNid();
         final byte[] encryptionKey = k2Output.getEncryptionKey();
         Log.v(TAG, "Encryption key: " + MeshParserUtils.bytesToHex(encryptionKey, false));
@@ -488,6 +492,10 @@ abstract class NetworkLayer extends LowerTransportLayer {
             final int netKeyIndex = message.getApplicationKey().getBoundNetKeyIndex();
             networkKey = mNetworkLayerCallbacks.getNetworkKey(netKeyIndex);
         }
+
+        if (networkKey == null)
+            return null;
+
         return SecureUtils.calculateK2(networkKey.getKey(), SecureUtils.K2_MASTER_INPUT);
     }
 

@@ -222,21 +222,25 @@ public class MeshManagerApi implements MeshMngrApi {
 
     @Override
     public final void handleNotifications(final int mtuSize, @NonNull final byte[] data) {
-        byte[] unsegmentedPdu;
-        if (!shouldWaitForMoreData(data)) {
-            unsegmentedPdu = data;
-        } else {
-            final byte[] combinedPdu = appendPdu(mtuSize, data);
-            if (combinedPdu == null) {
-                //Start the timer
-                toggleProxyProtocolSarTimeOut(data);
-                return;
+        try {
+            byte[] unsegmentedPdu;
+            if (!shouldWaitForMoreData(data)) {
+                unsegmentedPdu = data;
             } else {
-                toggleProxyProtocolSarTimeOut(data);
-                unsegmentedPdu = removeSegmentation(mtuSize, combinedPdu);
+                final byte[] combinedPdu = appendPdu(mtuSize, data);
+                if (combinedPdu == null) {
+                    //Start the timer
+                    toggleProxyProtocolSarTimeOut(data);
+                    return;
+                } else {
+                    toggleProxyProtocolSarTimeOut(data);
+                    unsegmentedPdu = removeSegmentation(mtuSize, combinedPdu);
+                }
             }
+            parseNotifications(unsegmentedPdu);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        parseNotifications(unsegmentedPdu);
     }
 
     /**
@@ -552,15 +556,10 @@ public class MeshManagerApi implements MeshMngrApi {
         if (advertisementData == null)
             throw new IllegalArgumentException("Advertisement data cannot be null");
 
-        for (int i = 0; i < advertisementData.length; i++) {
-            final int length = MeshParserUtils.unsignedByteToInt(advertisementData[i]);
-            if (length == 0)
-                break;
-            final int type = MeshParserUtils.unsignedByteToInt(advertisementData[i + 1]);
-            if (type == MeshBeacon.Companion.getMESH_BEACON()) {
+        if (advertisementData.length > 2) {
+            if (advertisementData[1] == MeshBeacon.Companion.getMESH_BEACON()) {
                 return true;
             }
-            i = i + length;
         }
         return false;
     }

@@ -49,11 +49,16 @@ class ConnectTestActivity : BaseMeshActivity() {
         tv_ttl.text = "${MeshHelper.getSelectedMeshNode()?.ttl ?: ""}"
 
         tv_proxy_address.setOnClickListener {
-            MeshSDK.subscribeLightStatus(mUUID, object : MapCallback {
-                override fun onResult(result: HashMap<String, Any>) {
-                    result.forEach { t, u ->
-                        Utils.printLog(TAG, "subscribeLightStatus,key:$t,value:$u")
-                    }
+            //            MeshSDK.subscribeLightStatus(mUUID, object : MapCallback {
+//                override fun onResult(result: HashMap<String, Any>) {
+//                    result.forEach { t, u ->
+//                        Utils.printLog(TAG, "subscribeLightStatus,key:$t,value:$u")
+//                    }
+//                }
+//            })
+            MeshSDK.sendMeshMessage(mUUID, 0, 0, "15", "00", object : BooleanCallback {
+                override fun onResult(boolean: Boolean) {
+                    Log.e(TAG, "reboot :$boolean")
                 }
             })
         }

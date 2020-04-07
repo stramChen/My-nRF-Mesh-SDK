@@ -643,8 +643,8 @@ object MeshSDK {
 
     fun sendMeshMessage(
         uuid: String,
-        elementId: Int,
-        modelId: Int,
+        elementIndex: Int,
+        modelIndex: Int,
         opcode: String,
         value: String,
         callback: Any,
@@ -671,12 +671,18 @@ object MeshSDK {
             }
         }
 
-        MeshHelper.setSelectedModel(
-            MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(elementId),
-            MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(elementId)?.meshModels?.get(
-                if (modelId == 0) VENDOR_MODELID else modelId
-            )
-        )
+        var selElement = MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(elementIndex)
+        selElement?.meshModels?.forEach { key, model ->
+            if (model is VendorModel) {
+                MeshHelper.setSelectedModel(
+                    selElement,
+                    if (modelIndex == 0) model else MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(
+                        elementIndex
+                    )?.meshModels?.get(modelIndex)
+                )
+            }
+        }
+
 
         var msgIndex = -1
         val element = MeshHelper.getSelectedElement()
@@ -766,7 +772,16 @@ object MeshSDK {
                                                     }
                                                     mConnectCallbacks.remove(callback)
                                                     msgIndex = 0
+                                                } else {
+                                                    //todo log
                                                 }
+                                            }
+                                            "02" -> {//重启网关
+                                                if (callback is BooleanCallback) {
+                                                    callback.onResult(true)
+                                                }
+
+                                                mConnectCallbacks.remove(callback)
                                             }
                                             "04" -> {//set cwrgb
                                                 if (callback is MapCallback && msg.parameter.size == 5) {
@@ -789,6 +804,8 @@ object MeshSDK {
                                                     callback.onResult(map)
                                                     mConnectCallbacks.remove(callback)
                                                     msgIndex = 0
+                                                } else {
+                                                    //todo log
                                                 }
                                             }
                                             "05" -> {//get cwrgb
@@ -796,6 +813,8 @@ object MeshSDK {
                                                     callback.onResult(true)
                                                     mConnectCallbacks.remove(callback)
                                                     msgIndex = 0
+                                                } else {
+                                                    //todo log
                                                 }
                                             }
                                             "0C" -> {//获取灯当前状态，会返回所有属性
@@ -809,7 +828,11 @@ object MeshSDK {
 
                                                         mConnectCallbacks.remove(callback)
                                                         msgIndex = 0
+                                                    } else {
+                                                        //todo log
                                                     }
+                                                } else {
+                                                    //todo log
                                                 }
                                             }
                                             "0D", "0E", "0F", "11" -> {//set HSV
@@ -818,7 +841,11 @@ object MeshSDK {
 
                                                     mConnectCallbacks.remove(callback)
                                                     msgIndex = 0
+                                                } else {
+                                                    //todo log
                                                 }
+                                            }
+                                            else -> {
                                             }
                                         }
                                     }
@@ -1207,16 +1234,16 @@ object MeshSDK {
                 var map = HashMap<String, Any>()
                 map["uuid"] = node?.uuid ?: ""
                 if (msg is GenericOnOffStatus) {
-                    var switchMap = HashMap<Int, Int>()
+                    var switchMap = HashMap<String, Int>()
                     var param = msg.parameter
                     if (param.size == 1) {
                         var eleIndex =
                             node?.elements?.values?.indexOf(node?.elements?.get(msg.src)) ?: 0
-                        switchMap[eleIndex] = param[0].toInt()
+                        switchMap["$eleIndex"] = param[0].toInt()
                         map["LightSwitch"] = switchMap
                         Utils.printLog(
                             TAG,
-                            "onreceive node:${node?.uuid?.toUpperCase()}, eleIndex:$eleIndex,isOn:${switchMap[eleIndex]}"
+                            "onreceive node:${node?.uuid?.toUpperCase()}, eleIndex:$eleIndex,isOn:${switchMap["$eleIndex"]}"
                         )
                         callback.onResult(map)
                     }

@@ -6,6 +6,7 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import no.nordicsemi.android.meshprovisioner.InternalTransportCallbacks;
 import no.nordicsemi.android.meshprovisioner.MeshStatusCallbacks;
 import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils;
@@ -91,6 +92,9 @@ abstract class MeshMessageState implements LowerTransportLayerCallbacks {
      * Starts sending the mesh pdu
      */
     public void executeSend() {
+        if (message == null || message.getNetworkLayerPdu() == null)
+            return;
+
         if (message.getNetworkLayerPdu().size() > 0) {
             for (int i = 0; i < message.getNetworkLayerPdu().size(); i++) {
                 mInternalTransportCallbacks.onMeshPduCreated(mDst, message.getNetworkLayerPdu().get(i));

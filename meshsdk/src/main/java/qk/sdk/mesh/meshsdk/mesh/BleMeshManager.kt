@@ -117,7 +117,6 @@ constructor(context: Context) : LoggableBleManager<BleMeshManagerCallbacks>(cont
 
         override fun initialize() {
             requestMtu(MTU_SIZE_MAX).enqueue()
-            Utils.printLog(this@BleMeshManager::class.java.name, "mtu:$mtu")
 
             // This callback will be called each time a notification is received.
             val onDataReceived = DataReceivedCallback { device, data ->

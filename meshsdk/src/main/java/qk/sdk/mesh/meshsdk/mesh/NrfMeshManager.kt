@@ -986,7 +986,7 @@ class NrfMeshManager(
      * We should only update the selected node, since sending messages to group address will notify with nodes that is not on the UI
      */
     private fun updateNode(node: ProvisionedMeshNode): Boolean {
-        if (mProvisionedMeshNode!!.unicastAddress == node.unicastAddress) {
+        if (mProvisionedMeshNode?.unicastAddress == node.unicastAddress) {
             mProvisionedMeshNode = node
             mExtendedMeshNode = node
             return true

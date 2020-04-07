@@ -97,7 +97,7 @@ uploadArchives {
             repository(url: "file:///Users/wangyue/Documents/mxchip/aar/")
             pom.project {
                 name 'meshprovisioner'
-                version '0.1.3'
+                version '0.1.6'
                 artifactId 'meshprovisioner'
                 groupId 'cn.mxchip.meshprovisioner.test'
                 packaging 'aar'
