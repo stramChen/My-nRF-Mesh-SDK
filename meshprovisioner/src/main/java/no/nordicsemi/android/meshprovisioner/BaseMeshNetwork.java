@@ -44,7 +44,7 @@ abstract class BaseMeshNetwork {
     @ColumnInfo(name = "mesh_uuid")
     @SerializedName("meshUUID")
     @Expose
-    final String meshUUID;
+    String meshUUID;
     @Ignore
     protected final Comparator<ApplicationKey> appKeyComparator = (key1, key2) -> Integer.compare(key1.getKeyIndex(), key2.getKeyIndex());
     @Ignore

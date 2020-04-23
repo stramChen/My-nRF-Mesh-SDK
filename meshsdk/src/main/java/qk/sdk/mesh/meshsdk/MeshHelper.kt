@@ -52,12 +52,12 @@ object MeshHelper {
     fun startScan(filterUuid: UUID, scanCallback: ScanCallback?, networkKey: String = "") {
 //        rx.Observable.create<String> {
 //        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
-            MeshProxyService.mMeshProxyService?.startScan(
-                filterUuid,
-                scanCallback,
-                networkKey.toUpperCase()
-            )
-//        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
+        MeshProxyService.mMeshProxyService?.startScan(
+            filterUuid,
+            scanCallback,
+            networkKey.toUpperCase()
+        )
+//        }.subscribeOn(AndroidSchedulers.mainThread()).sendSubscribeMsg()
     }
 
     // 停止蓝牙扫描
@@ -78,7 +78,7 @@ object MeshHelper {
 //        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
         unRegisterConnectListener()
         MeshProxyService.mMeshProxyService?.connect(device, connectToNetwork, callback)
-//        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
+//        }.subscribeOn(AndroidSchedulers.mainThread()).sendSubscribeMsg()
     }
 
     // 添加蓝牙连接回调
@@ -116,7 +116,7 @@ object MeshHelper {
 //        rx.Observable.create<String> {
 //        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
 //            MeshProxyService.mMeshProxyService?.clearMeshCallback()
-//        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
+//        }.subscribeOn(AndroidSchedulers.mainThread()).sendSubscribeMsg()
 //    }
 
     // 开启启动网络配置
@@ -136,7 +136,7 @@ object MeshHelper {
 //        rx.Observable.create<String> {
 //        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
         MeshProxyService.mMeshProxyService?.startProvisioning(device, networkKey, callback)
-//        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
+//        }.subscribeOn(AndroidSchedulers.mainThread()).sendSubscribeMsg()
     }
 
     // ??? 获取已经配置的网络的节点列表？
@@ -145,7 +145,7 @@ object MeshHelper {
 //        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
         mProvisionCallback = callback
         MeshProxyService.mMeshProxyService?.getProvisionedNodes(callback)
-//        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
+//        }.subscribeOn(AndroidSchedulers.mainThread()).sendSubscribeMsg()
     }
 
     // ??? 获取已经配置的网络的节点列表？—— 和上面函数的区别？
@@ -347,7 +347,7 @@ object MeshHelper {
         }
     }
 
-    fun bindAppKey(method: String,appKeyIndex: Int, meshCallback: MeshCallback?) {
+    fun bindAppKey(method: String, appKeyIndex: Int, meshCallback: MeshCallback?) {
         getSelectedMeshNode()?.let {
             val element = getSelectedElement()
             if (element != null) {
@@ -383,7 +383,7 @@ object MeshHelper {
                 netKey
             )
         }
-//        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
+//        }.subscribeOn(AndroidSchedulers.mainThread()).sendSubscribeMsg()
     }
 
     fun removeNetworkKey(key: String, callback: MapCallback) {
@@ -822,7 +822,11 @@ object MeshHelper {
 //    }
 
 
-    fun createGroup(groupName: String): Boolean {
+    fun createGroup(groupName: String, groupAdd: Int = 0): Boolean {
+        if (groupAdd != 0 && groupAdd < 0xC0000) {
+            return false
+        }
+
         try {
             var group: Group? = getGroupByName(groupName)
             if (group != null) {
@@ -831,7 +835,15 @@ object MeshHelper {
             }
 
             val network = MeshProxyService.mMeshProxyService?.getMeshNetwork()
-            group = network?.createGroup(network.getSelectedProvisioner()!!, groupName)
+            group = if (groupAdd == 0) network?.createGroup(
+                network.getSelectedProvisioner()!!,
+                groupName
+            ) else network?.createGroup(
+                network.getSelectedProvisioner()!!,
+                groupName,
+                groupAdd
+            )
+
             if (group != null) {
                 if (network?.addGroup(group) ?: false) {
                     addPoxyFilter(MeshAddress.formatAddress(group.address, false))
@@ -933,16 +945,16 @@ object MeshHelper {
 //
 //    }
 //
-//    fun subscribe(uuid: String) {
+//    fun sendSubscribeMsg(uuid: String) {
 //        var node = getProvisionedNodeByUUID(uuid)
 //        if (node == null) {
-//            Utils.printLog(TAG, "subscribe node is null")
+//            Utils.printLog(TAG, "sendSubscribeMsg node is null")
 //            return
 //        }
 //
 //        var group = getGroupByName(uuid)
 //        if (group == null) {
-//            Utils.printLog(TAG, "subscribe group is null")
+//            Utils.printLog(TAG, "sendSubscribeMsg group is null")
 //            return
 //        }
 //        node.elements.values.elementAt(0).meshModels?.values?.forEach { model ->

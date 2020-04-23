@@ -17,6 +17,7 @@ import no.nordicsemi.android.meshprovisioner.control.TransportControlMessage;
 import no.nordicsemi.android.meshprovisioner.opcodes.ApplicationMessageOpCodes;
 import no.nordicsemi.android.meshprovisioner.opcodes.ConfigMessageOpCodes;
 import no.nordicsemi.android.meshprovisioner.opcodes.ProxyConfigMessageOpCodes;
+import no.nordicsemi.android.meshprovisioner.opcodes.SensorOpCodes;
 import no.nordicsemi.android.meshprovisioner.utils.AddressArray;
 import no.nordicsemi.android.meshprovisioner.utils.ByteUtil;
 import no.nordicsemi.android.meshprovisioner.utils.ExtendedInvalidCipherTextException;
@@ -94,6 +95,10 @@ class DefaultNoOperationMessageState extends MeshMessageState {
                     final SceneStatus sceneStatus = new SceneStatus(message);
                     mInternalTransportCallbacks.updateMeshNetwork(sceneStatus);
                     mMeshStatusCallbacks.onMeshMessageReceived(message.getSrc(), sceneStatus);
+                } else if (message.getOpCode() == SensorOpCodes.INSTANCE.getSENSOR_STATUS()) {//sensor status
+                    final SensorStatus sensorStatus = new SensorStatus(message);
+                    mInternalTransportCallbacks.updateMeshNetwork(sensorStatus);
+                    mMeshStatusCallbacks.onMeshMessageReceived(message.getSrc(), sensorStatus);
                 }
                 break;
             case 2:
@@ -334,6 +339,10 @@ class DefaultNoOperationMessageState extends MeshMessageState {
                     registerStatus.parseStatusParameters();
                     mInternalTransportCallbacks.updateMeshNetwork(registerStatus);
                     mMeshStatusCallbacks.onMeshMessageReceived(message.getSrc(), registerStatus);
+                } else if (message.getOpCode() == SensorOpCodes.INSTANCE.getSENSOR_BATTERY()) {
+                    final SensorBatteryStatus sensorBatteryStatus = new SensorBatteryStatus(message);
+                    mInternalTransportCallbacks.updateMeshNetwork(sensorBatteryStatus);
+                    mMeshStatusCallbacks.onMeshMessageReceived(message.getSrc(), sensorBatteryStatus);
                 } else {
                     Log.v(TAG, "Unknown Access PDU Received: " + MeshParserUtils.bytesToHex(accessPayload, false));
                     mMeshStatusCallbacks.onUnknownPduReceived(message.getSrc(), message.getAccessPdu());

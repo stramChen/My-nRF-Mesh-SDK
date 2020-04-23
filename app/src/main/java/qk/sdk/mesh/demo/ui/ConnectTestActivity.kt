@@ -49,10 +49,10 @@ class ConnectTestActivity : BaseMeshActivity() {
         tv_ttl.text = "${MeshHelper.getSelectedMeshNode()?.ttl ?: ""}"
 
         tv_proxy_address.setOnClickListener {
-            //            MeshSDK.subscribeLightStatus(mUUID, object : MapCallback {
+            //            MeshSDK.subscribeStatus(mUUID, object : MapCallback {
 //                override fun onResult(result: HashMap<String, Any>) {
 //                    result.forEach { t, u ->
-//                        Utils.printLog(TAG, "subscribeLightStatus,key:$t,value:$u")
+//                        Utils.printLog(TAG, "subscribeStatus,key:$t,value:$u")
 //                    }
 //                }
 //            })
@@ -165,7 +165,7 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
 
         btn_subscribe.setOnClickListener {
-            if (MeshHelper.getGroupByName(Constants.TEST_GROUP) == null)
+//            if (MeshHelper.getGroupByName(Constants.TEST_GROUP) == null)
                 MeshSDK.createGroup(Constants.TEST_GROUP, object : BooleanCallback {
                     override fun onResult(boolean: Boolean) {
                         Utils.printLog(TAG, "createGroup:$boolean")
@@ -179,13 +179,20 @@ class ConnectTestActivity : BaseMeshActivity() {
 //                    }
 //                }
 //            })
-            MeshSDK.subscribe(mUUID, Constants.TEST_GROUP, object : MapCallback {
+            MeshSDK.subscribeStatus(mUUID, object : MapCallback {
                 override fun onResult(result: HashMap<String, Any>) {
                     result.forEach { t, u ->
-                        Utils.printLog(TAG, "set subscribe,key:$t,value:$u")
+                        Utils.printLog(TAG, "set sendSubscribeMsg,key:$t,value:$u")
                     }
                 }
             })
+//            MeshSDK.sendSubscribeMsg(mUUID, 0xC002, object : MapCallback {
+//                override fun onResult(result: HashMap<String, Any>) {
+//                    result.forEach { t, u ->
+//                        Utils.printLog(TAG, "set sendSubscribeMsg,key:$t,value:$u")
+//                    }
+//                }
+//            })
 //            var map = HashMap<String, Any>()
 //            var hsvMap = HashMap<String, Int>()
 //            map["HSVColor"] = hsvMap
@@ -207,6 +214,11 @@ class ConnectTestActivity : BaseMeshActivity() {
                     }
                 }
             })
+//            MeshSDK.sendMeshMessage(mUUID,0,0,"16","00",object :BooleanCallback{
+//                override fun onResult(boolean: Boolean) {
+//
+//                }
+//            })
 //            MeshSDK.fetchLightCurrentStatus(mUUID, object : MapCallback {
 //                override fun onResult(result: HashMap<String, Any>) {
 //                    result.forEach { t, u ->

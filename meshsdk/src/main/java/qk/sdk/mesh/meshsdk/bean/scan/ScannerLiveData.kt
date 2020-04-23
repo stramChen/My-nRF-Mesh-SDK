@@ -27,8 +27,10 @@ import androidx.lifecycle.LiveData
 import java.util.ArrayList
 
 import no.nordicsemi.android.meshprovisioner.MeshBeacon
+import no.nordicsemi.android.meshprovisioner.UnprovisionedBeacon
 import no.nordicsemi.android.support.v18.scanner.ScanResult
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
+import qk.sdk.mesh.meshsdk.util.Utils
 
 /**
  * This class keeps the current list of discovered Bluetooth LE devices matching filter.
@@ -85,9 +87,13 @@ class ScannerLiveData internal constructor() : LiveData<ScannerLiveData>() {
     }
 
     internal fun deviceDiscovered(result: ScanResult, beacon: MeshBeacon?) {
-        val device: ExtendedBluetoothDevice
+        var device: ExtendedBluetoothDevice
 
         val index = indexOf(result)
+        Utils.printLog(
+            "ScannerLiveData",
+            "beacon is UnprovisionedBeacon:${beacon is UnprovisionedBeacon}，index：$index"
+        )
         if (index == -1) {
             device = ExtendedBluetoothDevice(result, beacon)
             mDevices.add(device)
@@ -102,6 +108,7 @@ class ScannerLiveData internal constructor() : LiveData<ScannerLiveData>() {
         device.beacon = beacon
 
         postValue(this)
+        Utils.printLog("ScannerLiveData","postValue")
     }
 
     /**

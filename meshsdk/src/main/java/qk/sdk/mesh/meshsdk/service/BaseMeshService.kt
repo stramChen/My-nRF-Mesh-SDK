@@ -379,7 +379,7 @@ open class BaseMeshService : LifecycleService() {
         })
     }
 
-    val SUBSCRIBE_VENDOR_MODEL = "subscribeLightStatus"
+    val SUBSCRIBE_VENDOR_MODEL = "subscribeStatus"
     internal fun subscribeLightStatus(callback: MeshCallback) {
 //        MeshHandler.addRunnable(SUBSCRIBE_VENDOR_MODEL, false, false, callback)
         MeshHandler.addRunnable(

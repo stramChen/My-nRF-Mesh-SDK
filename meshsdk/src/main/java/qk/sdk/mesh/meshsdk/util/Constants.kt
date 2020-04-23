@@ -58,6 +58,7 @@ object Constants {
         PROVISION_SUCCESS("provisioned", 208),//provision 成功
         PROVISION_FAILED("provision failed", -208),//provision 失败
         STOP_CONNECT("stop connect", 209),
+        CONNECT_ENABLED("connect enabled", 210),//无可直连设备（不可直连蓝牙低功耗设备，若当前只有蓝牙低功耗设备时提示）
 
         NET_KEY_DELETE_FAILED("netKey正在使用中，需先删除netKey对应的设备", 401),//netKey正在使用中，需先删除netKey对应的设备
         NET_KEY_NOT_EXIST("netKey不存在", 403),//netKey正在使用中，需先删除netKey对应的设备
@@ -68,7 +69,7 @@ object Constants {
         DFU_FILE_NOT_EXIST("更新包不存在", 601),
         DFU_PARAM_ERROR("传参错误", 601),
 
-        GROUP_NOT_EXIST("group群组", 701),
+        GROUP_NOT_EXIST("group群组不存在", 701),
         NODE_NOT_EXIST("节点不存在", 702),
         PUBLISH_FAILED("publish failed", 703)
     }

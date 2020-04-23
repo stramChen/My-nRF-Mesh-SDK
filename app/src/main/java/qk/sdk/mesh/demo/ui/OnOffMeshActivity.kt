@@ -108,24 +108,24 @@ class OnOffMeshActivity : BaseMeshActivity() {
         }
 
         btn_subscribe.setOnClickListener {
-            MeshSDK.subscribe(mUUID, Constants.TEST_GROUP, object : MapCallback {
+            MeshSDK.sendSubscribeMsg(mUUID, Constants.TEST_GROUP, object : MapCallback {
                 override fun onResult(result: HashMap<String, Any>) {
                     result.forEach { key, value ->
-                        Utils.printLog(TAG, "subscribe result key:$key,value:$value")
+                        Utils.printLog(TAG, "sendSubscribeMsg result key:$key,value:$value")
                     }
                 }
             })
         }
 
         btn_parse.setOnClickListener {
-            MeshSDK.parseSensor(byteArrayOf(0x00, 0x01, 0x00, 0x00, 0x02, 0x00, 0x00, 0x03, 0x01),
-                object : MapCallback {
-                    override fun onResult(result: HashMap<String, Any>) {
-                        result.forEach { t, u ->
-                            Utils.printLog(TAG, "key:$t,value:$u")
-                        }
-                    }
-                })
+//            MeshSDK.parseSensor(byteArrayOf(0x00, 0x01, 0x00, 0x00, 0x02, 0x00, 0x00, 0x03, 0x01),
+//                object : MapCallback {
+//                    override fun onResult(result: HashMap<String, Any>) {
+//                        result.forEach { t, u ->
+//                            Utils.printLog(TAG, "key:$t,value:$u")
+//                        }
+//                    }
+//                })
         }
     }
 }

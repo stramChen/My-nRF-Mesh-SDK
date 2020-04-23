@@ -127,8 +127,8 @@ class ScanTestActivity : BaseMeshActivity(),
                                             "配网失败请重试",
                                             Toast.LENGTH_SHORT
                                         ).show()
-                                        MeshSDK.removeProvisionedNode(data.get("uuid") as String)
-                                        finish()
+//                                        MeshSDK.removeProvisionedNode(data.get("uuid") as String)
+//                                        finish()
                                     }
                                 }
                             }

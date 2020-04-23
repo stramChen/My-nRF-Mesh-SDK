@@ -571,8 +571,8 @@ public class MeshManagerApi implements MeshMngrApi {
         if (advertisementData == null)
             throw new IllegalArgumentException("Advertisement data cannot be null");
 
+        Log.e(TAG, "scanRecord is mesh beacon:" + ByteUtil.bytesToHexString(advertisementData));
         if (isMeshBeacon(advertisementData)) {
-            Log.e(TAG, "scanRecord is mesh beacon:" + ByteUtil.bytesToHexString(advertisementData));
             for (int i = 0; i < advertisementData.length; i++) {
                 final int length = MeshParserUtils.unsignedByteToInt(advertisementData[i]);
                 final int type = MeshParserUtils.unsignedByteToInt(advertisementData[i + 1]);

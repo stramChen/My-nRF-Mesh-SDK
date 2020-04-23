@@ -13,6 +13,7 @@ import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.bean.CommonErrorMsg
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
+import qk.sdk.mesh.meshsdk.bean.auto.AutoLogic
 import qk.sdk.mesh.meshsdk.callback.*
 import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
 import qk.sdk.mesh.meshsdk.mesh.NrfMeshManager
@@ -23,6 +24,7 @@ import qk.sdk.mesh.meshsdk.util.Constants.ConnectState
 import rx.Observable
 import rx.android.schedulers.AndroidSchedulers
 import java.lang.Exception
+import java.util.concurrent.atomic.AtomicBoolean
 
 object MeshSDK {
     private val TAG = "MeshSDK"
@@ -240,7 +242,7 @@ object MeshSDK {
             }
         }
         mConnectCallbacks.clear()
-        disConnect()
+//        disConnect()
         MeshHelper.unRegisterConnectListener()
     }
 
@@ -739,26 +741,74 @@ object MeshSDK {
                                                         msg.parameter
                                                     )}"
                                                 )
-                                                var infos = ByteUtil.bytesToHexString(msg.parameter)
-                                                    .split("00")
+
                                                 if (msgIndex < 0 && msg.parameter.size >= 40) {
+
+                                                    var preIndex = 0
+                                                    var quadrupleIndex = 0
                                                     var map = HashMap<String, Any>()
-                                                    map.put(
-                                                        "pk",
-                                                        String(ByteUtil.hexStringToBytes(infos[0]))
-                                                    )
-                                                    map.put(
-                                                        "ps",
-                                                        String(ByteUtil.hexStringToBytes(infos[1]))
-                                                    )
-                                                    map.put(
-                                                        "dn",
-                                                        String(ByteUtil.hexStringToBytes(infos[2]))
-                                                    )
-                                                    map.put(
-                                                        "ds",
-                                                        String(ByteUtil.hexStringToBytes(infos[3]))
-                                                    )
+                                                    for (index in 0 until msg.parameter.size) {
+                                                        if (msg.parameter[index] == 0x00.toByte()) {
+                                                            when (quadrupleIndex) {
+                                                                0 -> {
+                                                                    var pkBytes =
+                                                                        ByteArray(index - preIndex)
+                                                                    System.arraycopy(
+                                                                        msg.parameter,
+                                                                        preIndex,
+                                                                        pkBytes,
+                                                                        0,
+                                                                        pkBytes.size
+                                                                    )
+                                                                    map.put("pk", String(pkBytes))
+                                                                    quadrupleIndex++
+                                                                    preIndex = index + 1
+                                                                }
+                                                                1 -> {
+                                                                    var psBytes =
+                                                                        ByteArray(index - preIndex)
+                                                                    System.arraycopy(
+                                                                        msg.parameter,
+                                                                        preIndex,
+                                                                        psBytes,
+                                                                        0,
+                                                                        psBytes.size
+                                                                    )
+                                                                    map.put("ps", String(psBytes))
+                                                                    quadrupleIndex++
+                                                                    preIndex = index + 1
+                                                                }
+                                                                2 -> {
+                                                                    var dnBytes =
+                                                                        ByteArray(index - preIndex)
+                                                                    System.arraycopy(
+                                                                        msg.parameter,
+                                                                        preIndex,
+                                                                        dnBytes,
+                                                                        0,
+                                                                        dnBytes.size
+                                                                    )
+                                                                    map.put("dn", String(dnBytes))
+                                                                    quadrupleIndex++
+                                                                    preIndex = index + 1
+                                                                }
+                                                                3 -> {
+                                                                    var dsBytes =
+                                                                        ByteArray(index - preIndex)
+                                                                    System.arraycopy(
+                                                                        msg.parameter,
+                                                                        preIndex,
+                                                                        dsBytes,
+                                                                        0,
+                                                                        dsBytes.size
+                                                                    )
+                                                                    map.put("ds", String(dsBytes))
+                                                                    quadrupleIndex++
+                                                                    preIndex = index + 1
+                                                                }
+                                                            }
+                                                        }
+                                                    }
                                                     map.put(
                                                         "code",
                                                         ConnectState.COMMON_SUCCESS.code
@@ -895,11 +945,17 @@ object MeshSDK {
         )
     }
 
+    var mIsconnecting: AtomicBoolean = AtomicBoolean(false)
+    var isReconnect: AtomicBoolean = AtomicBoolean(false)
+    var needReconnect = true
     fun connect(networkKey: String, callback: MapCallback) {
+        if (mIsconnecting.get())
+            return
+
         var map = HashMap<String, Any>()
         doBaseCheck(null, map, callback)
-        var needReconnect = true
-        if (!MeshHelper.isConnectedToProxy()) {
+        mIsconnecting = AtomicBoolean(true)
+        if (!MeshHelper.isConnectedToProxy() && MeshHelper.getProvisionNode()?.size ?: 0 > 0) {
             Utils.printLog(TAG, "connect start scan")
             MeshHelper.startScan(BleMeshManager.MESH_PROXY_UUID, object :
                 ScanCallback {
@@ -921,13 +977,25 @@ object MeshSDK {
                                         ConnectState.COMMON_SUCCESS.msg
                                     )
                                 )
+                                isReconnect = AtomicBoolean(false)
                             }
 
                             override fun onConnectStateChange(msg: CallbackMsg) {
-                                Utils.printLog(TAG, "connect onConnectStateChange:${msg.msg}")
-                                if (msg.code == ConnectState.DISCONNECTED.code && needReconnect) {//连接断开，自动寻找代理节点重连
-                                    reConnect(callback)
-                                    connect(networkKey, callback)
+                                Utils.printLog(
+                                    TAG,
+                                    "connect onConnectStateChange:${msg.msg},needReconnect:$needReconnect,isReconnect:$isReconnect"
+                                )
+                                if (msg.code == ConnectState.DISCONNECTED.code && needReconnect && !isReconnect.get()) {//连接断开，自动寻找代理节点重连
+                                    Utils.printLog(
+                                        TAG,
+                                        "connect onConnectStateChange start reConnect"
+                                    )
+                                    if (!isReconnect.get()) {
+                                        mIsconnecting = AtomicBoolean(false)
+                                        isReconnect = AtomicBoolean(true)
+                                        reConnect(callback)
+                                        connect(networkKey, callback)
+                                    }
                                 }
                             }
 
@@ -957,11 +1025,15 @@ object MeshSDK {
     fun exportMeshNetwork(callback: StringCallback) {
         MeshHelper.exportMeshNetwork(object : NetworkExportUtils.NetworkExportCallbacks {
             override fun onNetworkExported() {
-                callback.onResultMsg(NrfMeshManager.EXPORT_PATH + "meshJson.json")
+//                callback.onResultMsg(NrfMeshManager.EXPORT_PATH + "meshJson.json")
             }
 
             override fun onNetworkExportFailed(error: String?) {
 
+            }
+
+            override fun onNetworkExported(json: String) {
+                callback.onResultMsg(json)
             }
         })
     }
@@ -974,10 +1046,14 @@ object MeshSDK {
         MeshHelper.importMeshNetwork(json, callback)
     }
 
+    fun createGroup(groupName: String, callback: BooleanCallback, groupAddr: Int = 0) {
+        callback.onResult(MeshHelper.createGroup(groupName, groupAddr))
+    }
+
+
     fun createGroup(groupName: String, callback: BooleanCallback) {
         callback.onResult(MeshHelper.createGroup(groupName))
     }
-
 
     fun setPublication(uuid: String, groupName: String, callback: MapCallback) {
         var map = HashMap<String, Any>()
@@ -1061,7 +1137,53 @@ object MeshSDK {
 
     }
 
-    fun subscribe(uuid: String, groupName: String, callback: MapCallback) {
+    fun sendSubscribeMsg(uuid: String, groupAddr: Int, callback: MapCallback) {
+        var map = HashMap<String, Any>()
+        if (doProxyCheck(uuid, map, callback)) {
+
+            //获取provisioned节点
+            var node = MeshHelper.getProvisionedNodeByUUID(uuid)
+
+            var index = 0
+            var modelTotal = 0
+            node?.elements?.values?.forEach { eleValue ->
+                modelTotal += eleValue.meshModels?.size ?: 0
+                eleValue?.meshModels?.values?.forEach { model ->
+                    runBlocking {
+                        launch {
+                            delay(1000)
+                            val modelIdentifier = model.getModelId()
+                            val configModelSubscriptionAdd: MeshMessage
+                            var elementAddress = eleValue.elementAddress
+                            configModelSubscriptionAdd =
+                                ConfigModelSubscriptionAdd(
+                                    elementAddress,
+                                    groupAddr,
+                                    modelIdentifier
+                                )
+                            MeshHelper.sendMessage(
+                                "sendSubscribeMsg",
+                                node.unicastAddress,
+                                configModelSubscriptionAdd,
+                                null
+                            )
+                            index++
+                        }
+                    }
+                }
+            }
+
+            if (index == modelTotal) {
+                doMapCallback(
+                    map,
+                    callback,
+                    CallbackMsg(ConnectState.COMMON_SUCCESS.code, ConnectState.COMMON_SUCCESS.msg)
+                )
+            }
+        }
+    }
+
+    fun sendSubscribeMsg(uuid: String, groupName: String, callback: MapCallback) {
         var map = HashMap<String, Any>()
         if (doProxyCheck(uuid, map, callback)) {
             //通过uuid获取group
@@ -1093,7 +1215,7 @@ object MeshSDK {
                                 configModelSubscriptionAdd =
                                     ConfigModelSubscriptionAdd(
                                         elementAddress,
-                                        group.getAddress(),
+                                        0xC002,
                                         modelIdentifier
                                     )
                             } else {
@@ -1105,7 +1227,7 @@ object MeshSDK {
                                     )
                             }
                             MeshHelper.sendMessage(
-                                "subscribe",
+                                "sendSubscribeMsg",
                                 node.unicastAddress,
                                 configModelSubscriptionAdd,
                                 null
@@ -1222,11 +1344,11 @@ object MeshSDK {
         sendMeshMessage(uuid, 0, 0, "0C", "", callback)
     }
 
-    fun subscribeLightStatus(uuid: String, callback: MapCallback) {
+    fun subscribeStatus(uuid: String, callback: MapCallback) {
         MeshHelper.subscribeLightStatus(object : MeshCallback {
             override fun onReceive(msg: MeshMessage) {
                 var node = MeshHelper?.getMeshNetwork()?.getNode(msg.src)
-                Utils.printLog(TAG, "receive uuid:${node?.uuid} ,subscribe uuid:$uuid")
+                Utils.printLog(TAG, "receive uuid:${node?.uuid} ,sendSubscribeMsg uuid:$uuid")
                 if (uuid.isNotEmpty() && node?.uuid?.toUpperCase() != uuid.toUpperCase()) {
                     return
                 }
@@ -1240,7 +1362,7 @@ object MeshSDK {
                         var eleIndex =
                             node?.elements?.values?.indexOf(node?.elements?.get(msg.src)) ?: 0
                         switchMap["$eleIndex"] = param[0].toInt()
-                        map["LightSwitch"] = switchMap
+                        map["OnOffSwitch"] = switchMap
                         Utils.printLog(
                             TAG,
                             "onreceive node:${node?.uuid?.toUpperCase()}, eleIndex:$eleIndex,isOn:${switchMap["$eleIndex"]}"
@@ -1255,6 +1377,36 @@ object MeshSDK {
                             "onreceive node:${node?.uuid?.toUpperCase()}, isOn:${map["isOn"]}"
                         )
                     }
+                } else if (msg is SensorStatus) {
+                    msg.msensorData.forEach { sensorData ->
+                        map.put(ByteUtil.bytesToHexString(sensorData.propertyId), sensorData.value)
+
+                        Utils.printLog(
+                            TAG,
+                            "propertyId:${ByteUtil.bytesToHexString(sensorData.propertyId)},value:${ByteUtil.bytesToHexString(
+                                sensorData.value
+                            )}"
+                        )
+                    }
+
+                    doMapCallback(
+                        map,
+                        callback,
+                        CallbackMsg(
+                            ConnectState.COMMON_SUCCESS.code,
+                            ConnectState.COMMON_SUCCESS.msg
+                        )
+                    )
+                } else if (msg is SensorBatteryStatus) {
+                    map.put("battery", msg.battery)
+                    doMapCallback(
+                        map,
+                        callback,
+                        CallbackMsg(
+                            ConnectState.COMMON_SUCCESS.code,
+                            ConnectState.COMMON_SUCCESS.msg
+                        )
+                    )
                 }
             }
 
@@ -1262,20 +1414,6 @@ object MeshSDK {
 
             }
         })
-    }
-
-    fun parseSensor(params: ByteArray, callback: MapCallback) {
-        var curPos = 0
-        var map = HashMap<String, Any>()
-        while (curPos < params.size) {
-            var propertyId = ByteUtil.byteToShort(byteArrayOf(params[curPos], params[++curPos]))
-            curPos++
-            Utils.printLog(TAG, "propertyId:$propertyId")
-            var rawValue = params[curPos]
-            map.put("${propertyId.toInt()}", rawValue.toInt())
-            curPos++
-        }
-        callback.onResult(map)
     }
 
     fun unSubscribeLightStatus() {
@@ -1427,7 +1565,7 @@ object MeshSDK {
         }
     }
 
-//    fun setLocalAutoRules(rules: ArrayList<>) {
-//        sendMeshMessage()
-//    }
+    fun setLocalAutoRules(triggerAddr: Short, logic: AutoLogic) {
+
+    }
 }

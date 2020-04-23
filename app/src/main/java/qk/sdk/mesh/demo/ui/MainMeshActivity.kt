@@ -2,13 +2,11 @@ package qk.sdk.mesh.demo.ui
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.FileUtils
 import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.activity_main.*
 import no.nordicsemi.android.meshprovisioner.models.GenericOnOffServerModel
 import no.nordicsemi.android.meshprovisioner.transport.Element
-import no.nordicsemi.android.meshprovisioner.transport.MeshMessage
 import no.nordicsemi.android.meshprovisioner.transport.MeshModel
 import no.nordicsemi.android.meshprovisioner.transport.ProvisionedMeshNode
 import qk.sdk.mesh.demo.R
@@ -20,15 +18,12 @@ import qk.sdk.mesh.meshsdk.MeshHelper
 import qk.sdk.mesh.meshsdk.MeshSDK
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.callback.MapCallback
-import qk.sdk.mesh.meshsdk.callback.MeshCallback
 import qk.sdk.mesh.meshsdk.callback.ProvisionCallback
 import qk.sdk.mesh.meshsdk.callback.StringCallback
-import qk.sdk.mesh.meshsdk.mesh.NrfMeshManager
 import qk.sdk.mesh.meshsdk.util.ByteUtil
 import qk.sdk.mesh.meshsdk.util.Constants
 import qk.sdk.mesh.meshsdk.util.LogFileUtil
 import qk.sdk.mesh.meshsdk.util.Utils
-import java.io.File
 
 class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
     private val TAG = "MainMeshActivity"
@@ -93,13 +88,13 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
                         override fun onResult(result: HashMap<String, Any>) {
                             Utils.printLog(TAG, "connect result:${result.get("code")}")
                             if (MeshHelper.createGroup("01029012901920")) {
-                                MeshSDK.subscribeLightStatus(data.uuid, object : MapCallback {
-                                    override fun onResult(result: HashMap<String, Any>) {
-                                        result.forEach { key, value ->
-                                            Utils.printLog(TAG, "key:$key,value:$value")
-                                        }
-                                    }
-                                })
+//                                MeshSDK.subscribeStatus(data.uuid, object : MapCallback {
+//                                    override fun onResult(result: HashMap<String, Any>) {
+//                                        result.forEach { key, value ->
+//                                            Utils.printLog(TAG, "key:$key,value:$value")
+//                                        }
+//                                    }
+//                                })
                             }
                         }
                     })
@@ -184,7 +179,7 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
     override fun onResume() {
         super.onResume()
         MeshHelper.getProvisionedNodeByCallback(mNodesCallback)
-//        MeshHelper.subscribeLightStatus(object : MeshCallback {
+//        MeshHelper.subscribeStatus(object : MeshCallback {
 //            override fun onReceive(msg: MeshMessage) {
 //
 //            }

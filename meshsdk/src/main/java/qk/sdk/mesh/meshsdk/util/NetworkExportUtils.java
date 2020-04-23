@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import androidx.annotation.NonNull;
+
 import no.nordicsemi.android.meshprovisioner.MeshManagerApi;
 
 public class NetworkExportUtils {
@@ -17,6 +18,8 @@ public class NetworkExportUtils {
     public interface NetworkExportCallbacks {
 
         void onNetworkExported();
+
+        void onNetworkExported(final String json);
 
         void onNetworkExportFailed(final String error);
     }
@@ -135,6 +138,7 @@ public class NetworkExportUtils {
         @Override
         protected Boolean doInBackground(final Void... voids) {
             final String network = meshManagerApi.exportMeshNetwork();
+            callbacks.onNetworkExported(network);
             if (network == null)
                 return false;
             try {

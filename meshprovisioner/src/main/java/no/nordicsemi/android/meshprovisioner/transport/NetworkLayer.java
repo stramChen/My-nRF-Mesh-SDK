@@ -256,9 +256,9 @@ abstract class NetworkLayer extends LowerTransportLayer {
         final int ctlTtl = networkHeader[0];
         final int ctl = (ctlTtl >> 7) & 0x01;
         final int ttl = ctlTtl & 0x7F;
-        Log.v(TAG, "TTL for received message: " + ttl);
         final byte[] sequenceNumber = ByteBuffer.allocate(3).order(ByteOrder.BIG_ENDIAN).put(networkHeader, 1, 3).array();
         final int src = MeshParserUtils.unsignedBytesToInt(networkHeader[5], networkHeader[4]);
+        Log.v(TAG, "TTL for received message: " + ttl + ",ctl:" + ctl + ",src:" + src);
         if (ctl == 1) {
             return parseControlMessage(provisioner.getProvisionerAddress(), data, networkHeader, decryptedNetworkPayload, src, sequenceNumber);
         } else {

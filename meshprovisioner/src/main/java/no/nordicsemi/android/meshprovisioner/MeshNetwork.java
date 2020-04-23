@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.room.Entity;
+
 import no.nordicsemi.android.meshprovisioner.transport.Element;
 import no.nordicsemi.android.meshprovisioner.transport.MeshModel;
 import no.nordicsemi.android.meshprovisioner.transport.ProvisionedMeshNode;
@@ -328,7 +329,7 @@ public final class MeshNetwork extends BaseMeshNetwork {
 
             for (int address = range.lowAddress; address < range.getHighAddress(); address++) {
                 //if the address is not in use, return it as the next available address to create a group
-                if (!isGroupAddressInUse(address)) {
+                if (!isGroupAddressInUse(address) && address != 0xC002) {//0xC002 专用于pir传感器，其他设备应避免publish到此group
                     return address;
                 }
             }
@@ -363,6 +364,20 @@ public final class MeshNetwork extends BaseMeshNetwork {
             group.setName(name);
             return group;
         }
+        return null;
+    }
+
+    public Group createGroup(@NonNull final Provisioner provisioner, @NonNull final String name, @NonNull final int address) {
+        if (TextUtils.isEmpty(name)) {
+            throw new IllegalArgumentException("Group name cannot be empty");
+        }
+
+        if (!isGroupAddressInUse(address)) {
+            final Group group = new Group(address, meshUUID);
+            group.setName(name);
+            return group;
+        }
+
         return null;
     }
 
@@ -601,7 +616,7 @@ public final class MeshNetwork extends BaseMeshNetwork {
 //        return null;
 //    }
 
-    public NetworkKey getCurrentNetworkKey(){
+    public NetworkKey getCurrentNetworkKey() {
         for (NetworkKey networkKey : netKeys) {
             if (networkKey.getIsCurrent() == 1) {
                 return networkKey;

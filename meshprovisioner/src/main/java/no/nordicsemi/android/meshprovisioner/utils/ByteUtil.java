@@ -1,6 +1,10 @@
 package no.nordicsemi.android.meshprovisioner.utils;
 
+import android.util.Log;
+
 public class ByteUtil {
+    private static String TAG = "ByteUtil";
+
     /**
      * 注释：int到字节数组的转换！
      *
@@ -176,5 +180,40 @@ public class ByteUtil {
             b = (byte) (b >> 1);
         }
         return array;
+    }
+
+    public static byte bitToByte(String bit) {
+        int re, len;
+        if (null == bit) {
+            return 0;
+        }
+        len = bit.length();
+        if (len != 4 && len != 8) {
+            return 0;
+        }
+        if (len == 8) {// 8 bit处理  
+            if (bit.charAt(0) == '0') {// 正数  
+                re = Integer.parseInt(bit, 2);
+            } else {// 负数  
+                re = Integer.parseInt(bit, 2) - 256;
+            }
+        } else {//4 bit处理  
+            re = Integer.parseInt(bit, 2);
+        }
+        return (byte) re;
+    }
+
+    public static String bitArrayToString(byte[] bits) {
+        StringBuffer stringBuffer = new StringBuffer();
+        for (int i = 0; i < 8; i++) {
+            if (i < bits.length) {
+                stringBuffer.append(bits[i] + "");
+                continue;
+            }
+
+            stringBuffer.append("0");
+        }
+
+        return stringBuffer.toString();
     }
 }

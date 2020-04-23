@@ -32,34 +32,12 @@ import no.nordicsemi.android.meshprovisioner.UnprovisionedBeacon
 import no.nordicsemi.android.meshprovisioner.models.SigModelParser
 import no.nordicsemi.android.meshprovisioner.provisionerstates.ProvisioningState
 import no.nordicsemi.android.meshprovisioner.provisionerstates.UnprovisionedMeshNode
-import no.nordicsemi.android.meshprovisioner.transport.ConfigAppKeyAdd
-import no.nordicsemi.android.meshprovisioner.transport.ConfigAppKeyStatus
-import no.nordicsemi.android.meshprovisioner.transport.ConfigCompositionDataGet
-import no.nordicsemi.android.meshprovisioner.transport.ConfigCompositionDataStatus
-import no.nordicsemi.android.meshprovisioner.transport.ConfigDefaultTtlGet
-import no.nordicsemi.android.meshprovisioner.transport.ConfigDefaultTtlStatus
-import no.nordicsemi.android.meshprovisioner.transport.ConfigModelAppStatus
-import no.nordicsemi.android.meshprovisioner.transport.ConfigModelPublicationStatus
-import no.nordicsemi.android.meshprovisioner.transport.ConfigModelSubscriptionStatus
-import no.nordicsemi.android.meshprovisioner.transport.ConfigNetworkTransmitSet
-import no.nordicsemi.android.meshprovisioner.transport.ConfigNetworkTransmitStatus
-import no.nordicsemi.android.meshprovisioner.transport.ConfigNodeResetStatus
-import no.nordicsemi.android.meshprovisioner.transport.ConfigProxyStatus
-import no.nordicsemi.android.meshprovisioner.transport.ConfigRelayStatus
-import no.nordicsemi.android.meshprovisioner.transport.ControlMessage
-import no.nordicsemi.android.meshprovisioner.transport.Element
-import no.nordicsemi.android.meshprovisioner.transport.GenericLevelStatus
-import no.nordicsemi.android.meshprovisioner.transport.GenericOnOffStatus
-import no.nordicsemi.android.meshprovisioner.transport.MeshMessage
-import no.nordicsemi.android.meshprovisioner.transport.MeshModel
-import no.nordicsemi.android.meshprovisioner.transport.ProvisionedMeshNode
-import no.nordicsemi.android.meshprovisioner.transport.ProxyConfigFilterStatus
-import no.nordicsemi.android.meshprovisioner.transport.VendorModelMessageStatus
 import no.nordicsemi.android.meshprovisioner.utils.MeshAddress
 import qk.sdk.mesh.meshsdk.bean.provision.ProvisioningStatusLiveData
 import qk.sdk.mesh.meshsdk.bean.provision.TransactionStatus
 
 import no.nordicsemi.android.meshprovisioner.MeshManagerApi.MESH_PROXY_UUID
+import no.nordicsemi.android.meshprovisioner.transport.*
 import no.nordicsemi.android.meshprovisioner.utils.ByteUtil
 import no.nordicsemi.android.support.v18.scanner.*
 import qk.sdk.mesh.meshsdk.bean.*
@@ -942,6 +920,20 @@ class NrfMeshManager(
                         mSelectedModel = model
                     }
                 }
+            } else if (meshMessage is SensorStatus) {
+                if (updateNode(node)) {
+                    if (node.elements.containsKey(meshMessage.src)) {
+                        val element = node.elements[meshMessage.src]
+                        mSelectedElement = element
+                    }
+                }
+            }else if (meshMessage is SensorBatteryStatus){
+                if (updateNode(node)) {
+                    if (node.elements.containsKey(meshMessage.src)) {
+                        val element = node.elements[meshMessage.src]
+                        mSelectedElement = element
+                    }
+                }
             }
 
         if (mMeshMessageLiveData.hasActiveObservers()) {
@@ -1032,7 +1024,7 @@ class NrfMeshManager(
      * stop scanning for bluetooth devices.
      */
     internal fun stopScan() {
-        Utils.printLog(TAG,"stopScan")
+        Utils.printLog(TAG, "stopScan")
         mHandler.removeCallbacks(mScannerTimeout)
         var scanner = BluetoothLeScannerCompat.getScanner()
         scanner.stopScan(mScanCallbacks)
@@ -1198,12 +1190,16 @@ class NrfMeshManager(
             if (scanRecord.bytes != null) {
                 Utils.printLog(
                     TAG,
-                    "scanRecord have data"
+                    "scanRecord have data,address:${result.device.address}"
                 )
                 if (mFilterUuid == BleMeshManager.MESH_PROXY_UUID) {
                     mScannerLiveData.deviceDiscovered(result)
                 } else {
                     val beaconData = meshManagerApi.getMeshBeaconData(scanRecord.bytes!!)
+                    Utils.printLog(
+                        TAG,
+                        "beaconData:${qk.sdk.mesh.meshsdk.util.ByteUtil.bytesToHexString(beaconData)}"
+                    )
                     if (beaconData != null) {
                         mScannerLiveData.deviceDiscovered(
                             result,
@@ -1332,7 +1328,7 @@ class NrfMeshManager(
         NetworkExportUtils.exportMeshNetwork(
             meshManagerApi,
             EXPORT_PATH,
-            "meshJson",
+            "meshJson.json",
             callback
         )
     }
