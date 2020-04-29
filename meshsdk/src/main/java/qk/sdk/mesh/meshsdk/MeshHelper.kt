@@ -823,7 +823,7 @@ object MeshHelper {
 
 
     fun createGroup(groupName: String, groupAdd: Int = 0): Boolean {
-        if (groupAdd != 0 && groupAdd < 0xC0000) {
+        if (groupAdd != 0 && groupAdd < 0xC000) {
             return false
         }
 
@@ -887,7 +887,7 @@ object MeshHelper {
 
     fun getGroupByName(groupName: String): Group? {
         getGroup().forEach {
-            if (groupName.contains(it.name)) {
+            if (groupName == it.name) {
                 return it
             }
         }

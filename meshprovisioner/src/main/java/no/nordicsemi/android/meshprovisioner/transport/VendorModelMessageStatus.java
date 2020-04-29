@@ -73,7 +73,7 @@ public final class VendorModelMessageStatus extends GenericStatusMessage impleme
     }
 
     @Override
-    int getOpCode() {
+    public int getOpCode() {
         return mMessage.getOpCode();
     }
 

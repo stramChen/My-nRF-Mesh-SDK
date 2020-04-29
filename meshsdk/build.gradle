@@ -97,7 +97,7 @@ uploadArchives {
             repository(url: "file:///Users/wangyue/Documents/mxchip/aar/")
             pom.project {
                 name 'meshsdk'
-                version '0.2.6'
+                version '0.3.7'
                 artifactId 'meshsdk'
                 groupId 'cn.mxchip.mesh.test'
                 packaging 'aar'

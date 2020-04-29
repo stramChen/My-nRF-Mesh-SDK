@@ -47,7 +47,7 @@ abstract class Message implements Parcelable {
     private int akf;                                // Use device key for encryption if akf = 0 or application key otherwise
     private int aid;                                // Used to identify the application key generated using k4 function
     private int aszmic;                             // if aszmic = 0 the transmic is 32-bits, if aszmic = 1 transmic 64-bits this is usually for a segmented message
-    private int opCode;                             // Opcode of message
+    public int opCode;                             // Opcode of message
     private byte[] parameters;                      // Parameters of the message
     private int companyIdentifier;                  // Company identifier for vendor model messages
     private byte[] ivIndex;                         // IV Index of the network

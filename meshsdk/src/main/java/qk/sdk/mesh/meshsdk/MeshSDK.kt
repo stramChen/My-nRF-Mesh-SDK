@@ -1151,7 +1151,7 @@ object MeshSDK {
                 eleValue?.meshModels?.values?.forEach { model ->
                     runBlocking {
                         launch {
-                            delay(1000)
+                            delay(100)
                             val modelIdentifier = model.getModelId()
                             val configModelSubscriptionAdd: MeshMessage
                             var elementAddress = eleValue.elementAddress
@@ -1215,7 +1215,7 @@ object MeshSDK {
                                 configModelSubscriptionAdd =
                                     ConfigModelSubscriptionAdd(
                                         elementAddress,
-                                        0xC002,
+                                        group.address,
                                         modelIdentifier
                                     )
                             } else {
@@ -1377,6 +1377,25 @@ object MeshSDK {
                             "onreceive node:${node?.uuid?.toUpperCase()}, isOn:${map["isOn"]}"
                         )
                     }
+                    when (msg.opCode) {
+                        0x5D -> {//透传数据
+                            var switchMap = HashMap<String, Int>()
+                            for (index in 0 until msg.parameter.size) {
+                                switchMap["$index"] = msg.parameter[index].toInt()
+                            }
+
+                            map["OnOffSwitch"] = switchMap
+
+                            doMapCallback(
+                                map,
+                                callback,
+                                CallbackMsg(
+                                    ConnectState.COMMON_SUCCESS.code,
+                                    ConnectState.COMMON_SUCCESS.msg
+                                )
+                            )
+                        }
+                    }
                 } else if (msg is SensorStatus) {
                     msg.msensorData.forEach { sensorData ->
                         map.put(ByteUtil.bytesToHexString(sensorData.propertyId), sensorData.value)
@@ -1435,7 +1454,7 @@ object MeshSDK {
             )}"
         )
         var mode = ByteUtil.byteToShort(byteArrayOf(modeBits[6], modeBits[5])).toInt()
-        var isOn = modeBits[7].toShort()
+        var isOn = modeBits[7].toInt()
 
         var h = ByteUtil.byteToShort(
             byteArrayOf(
@@ -1457,10 +1476,14 @@ object MeshSDK {
         Utils.printLog(TAG, "h:$h,s:$s,v:$v,b:$b,t:$t")
         map["code"] = 200
         var lightStatus = HashMap<String, Any>()
+
+        var switchMap = HashMap<String, Int>()
+        switchMap["0"] = isOn
+
         lightStatus["LightMode"] = mode
         lightStatus["Brightness"] = b
         lightStatus["ColorTemperature"] = t
-        lightStatus["LightSwitch"] = isOn
+        lightStatus["OnOffSwitch"] = switchMap
 
         var HSVColor = HashMap<String, Int>()
         HSVColor["Hue"] = h.toInt()

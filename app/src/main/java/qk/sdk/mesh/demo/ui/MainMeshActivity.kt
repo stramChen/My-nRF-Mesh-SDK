@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.gson.JsonObject
 import kotlinx.android.synthetic.main.activity_main.*
 import no.nordicsemi.android.meshprovisioner.models.GenericOnOffServerModel
 import no.nordicsemi.android.meshprovisioner.transport.Element
@@ -17,6 +18,9 @@ import qk.sdk.mesh.demo.widget.base.OnItemLongClickListener
 import qk.sdk.mesh.meshsdk.MeshHelper
 import qk.sdk.mesh.meshsdk.MeshSDK
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
+import qk.sdk.mesh.meshsdk.bean.auto.AutoAction
+import qk.sdk.mesh.meshsdk.bean.auto.AutoLogic
+import qk.sdk.mesh.meshsdk.bean.auto.AutoOperation
 import qk.sdk.mesh.meshsdk.callback.MapCallback
 import qk.sdk.mesh.meshsdk.callback.ProvisionCallback
 import qk.sdk.mesh.meshsdk.callback.StringCallback
