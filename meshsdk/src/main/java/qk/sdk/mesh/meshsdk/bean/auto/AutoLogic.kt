@@ -4,6 +4,24 @@ import qk.sdk.mesh.meshsdk.util.ByteUtil
 
 const val TAG = "AutoRule"
 
+data class Rules(var rules: ArrayList<Rule>) {
+    fun getBytes(): ByteArray {
+        var rulesLen = 0
+        rules.forEach {
+            rulesLen += it.len
+        }
+
+        var ruleBytes = ByteArray(rulesLen)
+        var index = 0
+        rules.forEach {
+            System.arraycopy(it, 0, ruleBytes, index, it.len)
+            index += it.len
+        }
+
+        return ruleBytes
+    }
+}
+
 data class Rule(var triggerAddress: String, var len: Int, var logic: ArrayList<AutoLogic>) {
     fun getBytes(): ByteArray {
         var logicTotalLen = 0
@@ -43,7 +61,13 @@ data class AutoLogic(
 
         var triggerOpcodeBytes = ByteUtil.hexStringToBytes(triggerOpcode)
         var logic = ByteArray(triggerOpcodeBytes.size + 1 + actionTotalLen)
-        System.arraycopy(ByteUtil.hexStringToBytes(triggerOpcode), 0, logic, 0, triggerOpcodeBytes.size)
+        System.arraycopy(
+            ByteUtil.hexStringToBytes(triggerOpcode),
+            0,
+            logic,
+            0,
+            triggerOpcodeBytes.size
+        )
         System.arraycopy(byteArrayOf(len.toByte()), 0, logic, triggerOpcodeBytes.size, 1)
         var startIndex = triggerOpcodeBytes.size + 1
         for (index in 0 until action.size) {
@@ -106,7 +130,13 @@ data class AutoOperation(
     fun getBytes(): ByteArray {
         len = ByteUtil.hexStringToBytes(value).size
         var operation = ByteArray(2 + ByteUtil.hexStringToBytes(excutorOpcode).size + 1 + len)
-        System.arraycopy(ByteUtil.hexStringToBytes(excutorAddr), 0, operation, 0, ByteUtil.hexStringToBytes(excutorAddr).size)
+        System.arraycopy(
+            ByteUtil.hexStringToBytes(excutorAddr),
+            0,
+            operation,
+            0,
+            ByteUtil.hexStringToBytes(excutorAddr).size
+        )
         System.arraycopy(
             ByteUtil.hexStringToBytes(excutorOpcode),
             0,

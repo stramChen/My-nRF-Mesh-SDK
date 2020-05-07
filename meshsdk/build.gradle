@@ -91,13 +91,14 @@ dependencies {
 //    androidTestImplementation 'androidx.room:room-testing:2.2.2'
 }
 
+//
 uploadArchives {
     repositories {
         mavenDeployer {
             repository(url: "file:///Users/wangyue/Documents/mxchip/aar/")
             pom.project {
                 name 'meshsdk'
-                version '0.3.7'
+                version '0.4.4'
                 artifactId 'meshsdk'
                 groupId 'cn.mxchip.mesh.test'
                 packaging 'aar'

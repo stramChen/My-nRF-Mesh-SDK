@@ -8,13 +8,11 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import no.nordicsemi.android.meshprovisioner.*
-import no.nordicsemi.android.meshprovisioner.transport.Element
-import no.nordicsemi.android.meshprovisioner.transport.MeshMessage
-import no.nordicsemi.android.meshprovisioner.transport.MeshModel
-import no.nordicsemi.android.meshprovisioner.transport.ProvisionedMeshNode
+import no.nordicsemi.android.meshprovisioner.transport.*
 import no.nordicsemi.android.meshprovisioner.utils.AuthenticationOOBMethods
 import qk.sdk.mesh.meshsdk.MeshHandler
 import qk.sdk.mesh.meshsdk.MeshHelper
+import qk.sdk.mesh.meshsdk.MeshSDK
 import qk.sdk.mesh.meshsdk.bean.*
 import qk.sdk.mesh.meshsdk.callback.*
 import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
@@ -22,6 +20,7 @@ import qk.sdk.mesh.meshsdk.mesh.NrfMeshManager
 import qk.sdk.mesh.meshsdk.util.*
 import java.lang.Exception
 import java.util.*
+import kotlin.collections.HashMap
 
 open class BaseMeshService : LifecycleService() {
     private val TAG = "BaseMeshService"
@@ -80,9 +79,9 @@ open class BaseMeshService : LifecycleService() {
     internal fun stopScan() {
         mScanCallback = null
         mNrfMeshManager?.stopScan()
-        mNrfMeshManager?.getScannerResults()?.removeObservers(this)
+//        mNrfMeshManager?.getScannerResults()?.removeObservers(this)
         // 获取扫描状态结果
-        mNrfMeshManager?.getScannerState()?.removeObservers(this)
+//        mNrfMeshManager?.getScannerState()?.removeObservers(this)
     }
 
     internal fun stopConnect() {
@@ -406,10 +405,27 @@ open class BaseMeshService : LifecycleService() {
     internal fun setObserver() {
         //接收到的mesh消息
         mNrfMeshManager?.meshMessageLiveData?.observe(this, Observer { meshMsg ->
+            Utils.printLog(TAG, "mesh msg:${ByteUtil.bytesToHexString(meshMsg.parameter)}")
             MeshHandler.getAllCallback().forEach { meshCallback ->
                 meshCallback.onReceive(meshMsg)
             }
+
+            MeshSDK.mConnectCallbacks.forEach {
+                if (it is MapCallback && meshMsg is VendorModelMessageStatus) {
+                    var map = HashMap<String, Any>()
+                    map["params"] = ByteUtil.bytesToHexString(meshMsg.parameter)
+                    map["opcode"] = "${meshMsg.opCode}"
+                    meshMsg.mMessage.apply {
+                        if (meshMsg.mMessage is AccessMessage) {
+                            var pdus = (meshMsg.mMessage as AccessMessage).accessPdu
+                            map["accessPDU"] = ByteUtil.bytesToHexString(pdus)
+                        }
+                    }
+                    it.onResult(map)
+                }
+            }
         })
+
 
 //        //已配对设备列表
 //        mNrfMeshManager?.nodes?.observe(this, Observer {
