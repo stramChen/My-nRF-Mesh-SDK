@@ -861,6 +861,11 @@ public class MeshManagerApi implements MeshMngrApi {
         NetworkImportExportUtils.importMeshNetworkFromJson(mContext, networkJson, networkLoadCallbacks);
     }
 
+
+    public void importMeshNetworkJson(@NonNull MeshNetwork meshNetwork,@NonNull String networkJson) {
+        NetworkImportExportUtils.importMeshNetworkFromJson(mContext, networkJson, meshNetwork,networkLoadCallbacks);
+    }
+
     @SuppressWarnings("FieldCanBeLocal")
     private final InternalTransportCallbacks internalTransportCallbacks = new InternalTransportCallbacks() {
 

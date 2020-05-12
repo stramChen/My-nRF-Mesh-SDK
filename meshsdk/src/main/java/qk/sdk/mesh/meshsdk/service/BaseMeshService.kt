@@ -38,7 +38,8 @@ open class BaseMeshService : LifecycleService() {
 
     override fun onCreate() {
         super.onCreate()
-        mNrfMeshManager = NrfMeshManager(this, MeshManagerApi(this), BleMeshManager(this))
+        if (mNrfMeshManager == null)
+            mNrfMeshManager = NrfMeshManager(this, MeshManagerApi(this), BleMeshManager(this))
         setObserver()
     }
 
@@ -48,12 +49,12 @@ open class BaseMeshService : LifecycleService() {
 
     //开始扫描
     internal fun startScan(filterUuid: UUID, scanCallback: ScanCallback?, networkKey: String = "") {
-        mScanCallback = scanCallback
+//        mScanCallback = scanCallback
         //获取扫描结果
-        mNrfMeshManager?.getScannerResults()?.observe(this, Observer {
-            Utils.printLog(TAG, "get scanner result:${it.devices.size}")
-            mScanCallback?.onScanResult(it.devices, it.updatedDeviceIndex)
-        })
+//        mNrfMeshManager?.getScannerResults()?.observe(this, Observer {
+//            Utils.printLog(TAG, "get scanner result:${it.devices.size}")
+//            mScanCallback?.onScanResult(it.devices, it.updatedDeviceIndex)
+//        })
         // 获取扫描状态结果
         mNrfMeshManager?.getScannerState()?.observe(this, Observer {
             if (!it.isBluetoothEnabled)
@@ -72,7 +73,10 @@ open class BaseMeshService : LifecycleService() {
                     netKey = it
             }
         }
-        mNrfMeshManager?.startScan(filterUuid, netKey)
+
+        scanCallback?.apply {
+            mNrfMeshManager?.startScan(filterUuid, this, netKey)
+        }
     }
 
     //停止扫描

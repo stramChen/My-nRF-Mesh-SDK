@@ -199,6 +199,7 @@ abstract class UpperTransportLayer extends AccessLayer {
                     break;
             }
         } catch (InvalidCipherTextException ex) {
+            ex.printStackTrace();
             throw new ExtendedInvalidCipherTextException(ex.getMessage(), ex.getCause(), TAG);
         }
     }

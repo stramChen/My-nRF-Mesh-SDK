@@ -165,7 +165,7 @@ object MeshHelper {
 
     fun getProvisionedNodeByUUID(uuid: String): ProvisionedMeshNode? {
         for (node: ProvisionedMeshNode in getProvisionNode() ?: ArrayList()) {
-            if (node.uuid == uuid) {
+            if (node.uuid.toUpperCase() == uuid.toUpperCase()) {
                 return node
             }
         }
@@ -1004,9 +1004,12 @@ object MeshHelper {
 
         override fun onCreate() {
             super.onCreate()
-            mMeshProxyService = this
-            if (mProvisionCallback != null)
-                getProvisionedNodes(mProvisionCallback!!)
+            if (mMeshProxyService == null)
+                mMeshProxyService = this
+
+            mProvisionCallback?.apply {
+                getProvisionedNodes(this)
+            }
         }
     }
 }

@@ -31,6 +31,7 @@ import java.util.UUID;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
+
 import no.nordicsemi.android.meshprovisioner.ApplicationKey;
 import no.nordicsemi.android.meshprovisioner.MeshManagerApi;
 import no.nordicsemi.android.meshprovisioner.Provisioner;
@@ -100,7 +101,8 @@ final class MeshTransport extends NetworkLayer {
     protected final int incrementSequenceNumber(final Provisioner provisioner) {
         final int seqNumber = provisioner.incrementSequenceNumber();
         final ProvisionedMeshNode node = mNetworkLayerCallbacks.getNode(provisioner.getProvisionerAddress());
-        node.setSequenceNumber(seqNumber);
+        if (node != null)
+            node.setSequenceNumber(seqNumber);
         return seqNumber;
     }
 

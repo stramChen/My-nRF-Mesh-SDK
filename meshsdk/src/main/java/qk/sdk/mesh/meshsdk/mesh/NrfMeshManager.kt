@@ -85,10 +85,13 @@ class NrfMeshManager(
 
     // Holds the selected mesh model to configure
     internal var mSelectedModel: MeshModel? = null
+
     // Holds the selected app key to configure
     private val mSelectedNetKey = MutableLiveData<NetworkKey>()
+
     // Holds the selected app key to configure
     private val mSelectedAppKey = MutableLiveData<ApplicationKey>()
+
     // Holds the selected provisioner when adding/editing
     private val mSelectedProvisioner = MutableLiveData<Provisioner>()
 
@@ -146,6 +149,7 @@ class NrfMeshManager(
      */
 
     private var mNetworkId: String? = null
+
     /**
      * MutableLiveData containing the scanner state to notify MainActivity.
      */
@@ -694,16 +698,18 @@ class NrfMeshManager(
      */
     private fun loadNodes() {
         val nodes = ArrayList<ProvisionedMeshNode>()
-        for (node in mMeshNetwork!!.nodes) {
-            if (!node.uuid.equals(
-                    mMeshNetwork!!.selectedProvisioner!!.provisionerUuid,
-                    ignoreCase = true
-                )
-            ) {
-                nodes.add(node)
+        mMeshNetwork?.nodes?.apply {
+            for (node in this) {
+                if (!node.uuid.equals(
+                        mMeshNetwork?.selectedProvisioner?.provisionerUuid,
+                        ignoreCase = true
+                    )
+                ) {
+                    nodes.add(node)
+                }
             }
+            mProvisionedNodes.postValue(nodes)
         }
-        mProvisionedNodes.postValue(nodes)
     }
 
     override fun onTransactionFailed(dst: Int, hasIncompleteTimerExpired: Boolean) {
@@ -720,7 +726,7 @@ class NrfMeshManager(
     }
 
     override fun onBlockAcknowledgementProcessed(dst: Int, message: ControlMessage) {
-        val node = mMeshNetwork!!.getNode(dst)
+        val node = mMeshNetwork?.getNode(dst)
         if (node != null) {
             mProvisionedMeshNode = node
             if (mSetupProvisionedNode) {
@@ -845,7 +851,7 @@ class NrfMeshManager(
                     val element = node.elements[meshMessage.elementAddress]
                     if (node.elements.containsKey(meshMessage.elementAddress)) {
                         mSelectedElement = element
-                        val model = element!!.meshModels[meshMessage.modelIdentifier]
+                        val model = element?.meshModels?.get(meshMessage.modelIdentifier)
                         mSelectedModel = model
                     }
                 }
@@ -856,7 +862,7 @@ class NrfMeshManager(
                     if (node.elements.containsKey(meshMessage.elementAddress)) {
                         val element = node.elements[meshMessage.elementAddress]
                         mSelectedElement = element
-                        val model = element!!.meshModels[meshMessage.modelIdentifier]
+                        val model = element?.meshModels?.get(meshMessage.modelIdentifier)
                         mSelectedModel = model
                     }
                 }
@@ -867,13 +873,13 @@ class NrfMeshManager(
                     if (node.elements.containsKey(meshMessage.elementAddress)) {
                         val element = node.elements[meshMessage.elementAddress]
                         mSelectedElement = element
-                        val model = element!!.meshModels[meshMessage.modelIdentifier]
+                        val model = element?.meshModels?.get(meshMessage.modelIdentifier)
                         mSelectedModel = model
                     }
                 }
 
             } else if (meshMessage is ConfigNodeResetStatus) {
-                bleMeshManager!!.setClearCacheRequired()
+                bleMeshManager?.setClearCacheRequired()
                 mExtendedMeshNode = null
                 loadNodes()
                 mMeshMessageLiveData.postValue(meshMessage)
@@ -894,7 +900,7 @@ class NrfMeshManager(
                         val element = node.elements[meshMessage.srcAddress]
                         mSelectedElement = element
                         val model =
-                            element!!.meshModels[SigModelParser.GENERIC_ON_OFF_SERVER.toInt()]
+                            element?.meshModels?.get(SigModelParser.GENERIC_ON_OFF_SERVER.toInt())
                         mSelectedModel = model
                     }
                 }
@@ -905,7 +911,7 @@ class NrfMeshManager(
                         val element = node.elements[meshMessage.srcAddress]
                         mSelectedElement = element
                         val model =
-                            element!!.meshModels[SigModelParser.GENERIC_LEVEL_SERVER.toInt()]
+                            element?.meshModels?.get(SigModelParser.GENERIC_LEVEL_SERVER.toInt())
                         mSelectedModel = model
                     }
                 }
@@ -916,7 +922,7 @@ class NrfMeshManager(
                     if (node.elements.containsKey(meshMessage.srcAddress)) {
                         val element = node.elements[meshMessage.srcAddress]
                         mSelectedElement = element
-                        val model = element!!.meshModels[meshMessage.modelIdentifier]
+                        val model = element?.meshModels?.get(meshMessage.modelIdentifier)
                         mSelectedModel = model
                     }
                 }
@@ -927,7 +933,7 @@ class NrfMeshManager(
                         mSelectedElement = element
                     }
                 }
-            }else if (meshMessage is SensorBatteryStatus){
+            } else if (meshMessage is SensorBatteryStatus) {
                 if (updateNode(node)) {
                     if (node.elements.containsKey(meshMessage.src)) {
                         val element = node.elements[meshMessage.src]
@@ -941,7 +947,9 @@ class NrfMeshManager(
         }
 
         //Refresh mesh network live data
-        meshNetworkLiveData.refresh(meshManagerApi.meshNetwork!!)
+        meshManagerApi.meshNetwork?.apply {
+            meshNetworkLiveData.refresh(this)
+        }
     }
 
     override fun onMessageDecryptionFailed(meshLayer: String, errorMessage: String) {
@@ -955,12 +963,15 @@ class NrfMeshManager(
      */
     private fun loadNetwork(meshNetwork: MeshNetwork) {
         mMeshNetwork = meshNetwork
-        if (mMeshNetwork != null) {
-
-            if (!mMeshNetwork!!.isProvisionerSelected) {
-                val provisioner = meshNetwork.provisioners[0]
-                provisioner.isLastSelected = true
-                mMeshNetwork!!.selectProvisioner(provisioner)
+        mMeshNetwork?.apply {
+            if (!this.isProvisionerSelected) {
+                meshNetwork.provisioners?.apply {
+                    if (this.size > 0) {
+                        val provisioner = this[0]
+                        provisioner.isLastSelected = true
+                        mMeshNetwork!!.selectProvisioner(provisioner)
+                    }
+                }
             }
             //Load live data with mesh network
             meshNetworkLiveData.loadNetworkInformation(meshNetwork)
@@ -969,7 +980,7 @@ class NrfMeshManager(
 
 //            val node = mExtendedMeshNode.value
 //            if (node != null) {
-            mExtendedMeshNode = mMeshNetwork!!.getNode(mExtendedMeshNode?.uuid)
+            mExtendedMeshNode = this.getNode(mExtendedMeshNode?.uuid)
 //            }
         }
     }
@@ -1088,6 +1099,9 @@ class NrfMeshManager(
                     TAG,
                     "onScanResult:$mFilterUuid"
                 )
+                if (!mIsScanning)
+                    return
+
                 if (mFilterUuid == BleMeshManager.MESH_PROVISIONING_UUID) {
                     // If the packet has been obtained while Location was disabled, mark Location as not required
                     if (Utils.isLocationRequired(mContext) && !Utils.isLocationEnabled(mContext))
@@ -1155,6 +1169,7 @@ class NrfMeshManager(
             mScannerStateLiveData.isLocationEnabled = enabled
         }
     }
+
     /**
      * Broadcast receiver to monitor the changes in the bluetooth adapter
      */
@@ -1193,18 +1208,35 @@ class NrfMeshManager(
                     "scanRecord have data,address:${result.device.address}"
                 )
                 if (mFilterUuid == BleMeshManager.MESH_PROXY_UUID) {
-                    mScannerLiveData.deviceDiscovered(result)
-                } else {
-                    val beaconData = meshManagerApi.getMeshBeaconData(scanRecord.bytes!!)
-                    Utils.printLog(
-                        TAG,
-                        "beaconData:${qk.sdk.mesh.meshsdk.util.ByteUtil.bytesToHexString(beaconData)}"
-                    )
-                    if (beaconData != null) {
-                        mScannerLiveData.deviceDiscovered(
-                            result,
-                            meshManagerApi.getMeshBeacon(beaconData)
+                    mScanDataCallback?.apply {
+                        var scannerData = mScannerLiveData.deviceDiscovered(result)
+                        this.onScanResult(
+                            scannerData.devices,
+                            scannerData.updatedDeviceIndex
                         )
+                    }
+                } else {
+                    scanRecord.bytes?.apply {
+                        val beaconData = meshManagerApi.getMeshBeaconData(this)
+                        if (beaconData != null) {
+                            mScanDataCallback?.apply {
+                                Utils.printLog(
+                                    TAG,
+                                    "beaconData:${qk.sdk.mesh.meshsdk.util.ByteUtil.bytesToHexString(
+                                        beaconData
+                                    )}"
+                                )
+
+                                var scannerData = mScannerLiveData.deviceDiscovered(
+                                    result,
+                                    meshManagerApi.getMeshBeacon(beaconData)
+                                )
+                                this.onScanResult(
+                                    scannerData.devices,
+                                    scannerData.updatedDeviceIndex
+                                )
+                            }
+                        }
                     }
                 }
                 mScannerStateLiveData.deviceFound()
@@ -1252,6 +1284,11 @@ class NrfMeshManager(
         networkKey: NetworkKey? = null
     ) {
         try {
+            if (mIsScanning)
+                return
+
+            mIsScanning = true
+
             mFilterUuid = filterUuid
 
             if (mScannerStateLiveData.isScanning) {
@@ -1307,6 +1344,79 @@ class NrfMeshManager(
     }
 
     /**
+     * Start scanning for Bluetooth devices.
+     *
+     * @param filterUuid UUID to filter scan results with
+     */
+    var mScanDataCallback: qk.sdk.mesh.meshsdk.callback.ScanCallback? = null
+
+    fun startScan(
+        filterUuid: UUID,
+        scanCallback: qk.sdk.mesh.meshsdk.callback.ScanCallback,
+        networkKey: NetworkKey? = null
+    ) {
+        try {
+            if (mIsScanning)
+                return
+
+            mIsScanning = true
+
+            mFilterUuid = filterUuid
+
+            if (mScannerStateLiveData.isScanning) {
+                return
+            }
+            mScannerLiveData.startScanning()
+
+            if (mFilterUuid == BleMeshManager.MESH_PROXY_UUID) {
+                if (networkKey != null) {
+                    mNetworkId = meshManagerApi.generateNetworkId(networkKey.key)
+                }
+            }
+
+            mScannerStateLiveData.scanningStarted()
+            //Scanning settings
+            val settings = ScanSettings.Builder()
+                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                // Refresh the devices list every second
+                .setReportDelay(0)
+                // Hardware filtering has some issues on selected devices
+                .setUseHardwareFilteringIfSupported(false)
+                // Samsung S6 and S6 Edge report equal value of RSSI for all devices. In this app we ignore the RSSI.
+                /*.setUseHardwareBatchingIfSupported(false)*/
+                .build()
+
+            //Let's use the filter to scan only for unprovisioned mesh nodes.
+            val filters = ArrayList<ScanFilter>()
+
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {//若版本号小于26，统一都用BluetoothLeScannerImplJB，否则解析不到beacon包
+                //反射修改BluetoothLeScannerCompat.getScanner()
+                var clazz =
+                    Class.forName("no.nordicsemi.android.support.v18.scanner.BluetoothLeScannerCompat")
+                Utils.printLog(TAG, "clazz.name:${clazz.simpleName}")
+                var instance = clazz.getDeclaredField("instance")
+                instance.isAccessible = true
+                //反射获取BluetoothLeScannerImplJB实例
+                var JBClazz =
+                    Class.forName("no.nordicsemi.android.support.v18.scanner.BluetoothLeScannerImplJB")
+                var JBConstructor = JBClazz.getDeclaredConstructor()
+                JBConstructor.isAccessible = true
+                instance.set(BluetoothLeScannerCompat.getScanner(), JBConstructor.newInstance())
+            }
+
+            filters.add(ScanFilter.Builder().setServiceUuid(ParcelUuid(filterUuid)).build())
+            val scanner = BluetoothLeScannerCompat.getScanner()
+            mScanDataCallback = scanCallback
+            scanner.startScan(filters, settings, mScanCallbacks)
+            Utils.printLog(TAG, "start scan mScanDataCallback：${mScanDataCallback == null}")
+//            registerBroadcastReceivers()
+        } catch (e: java.lang.Exception) {
+            e.printStackTrace()
+            mScannerStateLiveData.bluetoothDisabled()
+        }
+    }
+
+    /**
      * Check if node identity matches
      *
      * @param serviceData service data received from the advertising data
@@ -1334,6 +1444,8 @@ class NrfMeshManager(
     }
 
     internal fun importMeshNetworkJson(json: String) {
-        meshManagerApi.importMeshNetworkJson(json)
+        mMeshNetwork?.apply {
+            meshManagerApi.importMeshNetworkJson(this, json)
+        }
     }
 }

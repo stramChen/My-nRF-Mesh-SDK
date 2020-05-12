@@ -62,6 +62,13 @@ class NetworkImportExportUtils {
         new NetworkImportAsyncTask(context, networkJson, callbacks).execute();
     }
 
+    static void importMeshNetworkFromJson(@NonNull final Context context,
+                                          @NonNull final String networkJson,
+                                          @NonNull final MeshNetwork meshNetwork,
+                                          @NonNull final LoadNetworkCallbacks callbacks) {
+        new NetworkImportAsyncTask(context, networkJson, meshNetwork, callbacks).execute();
+    }
+
     /**
      * AsyncTask that reads and import a mesh network from the Mesh Provisioning/Configuration Database Json file
      */
@@ -104,6 +111,16 @@ class NetworkImportExportUtils {
             this.callbacks = callbacks;
         }
 
+        NetworkImportAsyncTask(@NonNull final Context context,
+                               @NonNull final String networkJson,
+                               @NonNull final MeshNetwork meshNetwork,
+                               @NonNull final LoadNetworkCallbacks callbacks) {
+            this.context = new WeakReference<>(context);
+            this.networkJson = networkJson;
+            network = meshNetwork;
+            this.callbacks = callbacks;
+        }
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -136,7 +153,6 @@ class NetworkImportExportUtils {
          */
         private void importNetwork() throws JsonSyntaxException {
             try {
-
                 Type netKeyList = new TypeToken<List<NetworkKey>>() {
                 }.getType();
                 Type appKeyList = new TypeToken<List<ApplicationKey>>() {
@@ -166,7 +182,7 @@ class NetworkImportExportUtils {
                 gsonBuilder.registerTypeAdapter(meshModelList, new MeshModelListDeserializer());
                 final Gson gson = gsonBuilder.serializeNulls().create();
 
-                final String json = networkJson;
+                final String json = this.networkJson;
                 final MeshNetwork network = gson.fromJson(json, MeshNetwork.class);
                 if (network != null) {
                     if (network.appKeys != null) {
@@ -179,6 +195,8 @@ class NetworkImportExportUtils {
                         }
                     }
 
+                    network.appKeys.addAll(this.network.appKeys);
+
                     if (network.netKeys != null) {
                         Iterator<NetworkKey> networkKeyIterator = network.netKeys.iterator();
                         while (networkKeyIterator.hasNext()) {
@@ -188,21 +206,9 @@ class NetworkImportExportUtils {
                             }
                         }
                     }
+                    network.netKeys.addAll(this.network.netKeys);
 
-                    if (network.nodes != null) {
-                        Iterator<ProvisionedMeshNode> nodeIterator = network.nodes.iterator();
-                        while (nodeIterator.hasNext()) {
-                            ProvisionedMeshNode provisionedMeshNode = nodeIterator.next();
-                            if (provisionedMeshNode.getUnicastAddress() == 0x0001) {
-                                 nodeIterator.remove();
-                            }
-                        }
-                    }
-
-                    this.network.nodes.addAll(network.nodes);
-                    this.network.netKeys.addAll(network.netKeys);
-                    this.network.appKeys.addAll(network.appKeys);
-                    this.network.groups.addAll(network.groups);
+                    this.network = network;
                 }
             } catch (final com.google.gson.JsonSyntaxException ex) {
                 error = ex.getMessage();

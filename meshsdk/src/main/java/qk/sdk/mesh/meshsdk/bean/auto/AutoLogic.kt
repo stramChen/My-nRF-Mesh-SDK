@@ -8,13 +8,13 @@ data class Rules(var rules: ArrayList<Rule>) {
     fun getBytes(): ByteArray {
         var rulesLen = 0
         rules.forEach {
-            rulesLen += it.len
+            rulesLen += it.getBytes().size
         }
 
         var ruleBytes = ByteArray(rulesLen)
         var index = 0
         rules.forEach {
-            System.arraycopy(it, 0, ruleBytes, index, it.len)
+            System.arraycopy(it.getBytes(), 0, ruleBytes, index, it.len)
             index += it.len
         }
 

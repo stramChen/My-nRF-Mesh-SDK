@@ -67,7 +67,7 @@ class ScannerLiveData internal constructor() : LiveData<ScannerLiveData>() {
     val isEmpty: Boolean
         get() = mDevices.isEmpty()
 
-    internal fun deviceDiscovered(result: ScanResult) {
+    internal fun deviceDiscovered(result: ScanResult):ScannerLiveData {
         val device: ExtendedBluetoothDevice
 
         val index = indexOf(result)
@@ -84,9 +84,10 @@ class ScannerLiveData internal constructor() : LiveData<ScannerLiveData>() {
         device.name = result.scanRecord!!.deviceName
 
         postValue(this)
+        return this
     }
 
-    internal fun deviceDiscovered(result: ScanResult, beacon: MeshBeacon?) {
+    internal fun deviceDiscovered(result: ScanResult, beacon: MeshBeacon?): ScannerLiveData {
         var device: ExtendedBluetoothDevice
 
         val index = indexOf(result)
@@ -104,11 +105,12 @@ class ScannerLiveData internal constructor() : LiveData<ScannerLiveData>() {
         }
         // Update RSSI and name
         device.rssi = result.rssi
-        device.name = result.scanRecord!!.deviceName
+        device.name = result.scanRecord?.deviceName
         device.beacon = beacon
 
         postValue(this)
-        Utils.printLog("ScannerLiveData","postValue")
+        Utils.printLog("ScannerLiveData", "postValue")
+        return this
     }
 
     /**

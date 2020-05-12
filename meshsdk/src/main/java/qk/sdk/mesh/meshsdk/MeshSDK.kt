@@ -39,14 +39,13 @@ object MeshSDK {
 
     var mMeshCallbacks = ArrayList<ConnectCallback?>(5)
 
-    var mConnectCallbacks = ArrayList<Any>(20)
+    var mConnectCallbacks = HashMap<String, Any>(20)
 
     // 初始化 mesh
     fun init(context: Context) {
         mContext = context
-        if (mContext != null) {
-            MeshHelper.initMesh(mContext!!)
-//            DfuHelper.getInstance(context)
+        mContext?.apply {
+            MeshHelper.initMesh(this)
         }
         LogFileUtil.deleteLog(mContext)
     }
@@ -88,8 +87,8 @@ object MeshSDK {
             override fun onScanResult(devices: List<ExtendedBluetoothDevice>, updatedIndex: Int?) {
                 var resultArray = ArrayList<HashMap<String, Any>>()
                 devices.forEach {
+                    Utils.printLog(TAG, "scan result:${it.getAddress()}")
                     if (it.beacon != null) {
-                        Utils.printLog(TAG, "scan result:${it.getAddress()}")
                         val unprovisionedBeacon = UnprovisionedBeacon(it.beacon!!.getBeaconData())
                         var map = HashMap<String, Any>()
                         map.put("mac", it.getAddress())
@@ -390,8 +389,8 @@ object MeshSDK {
                                                         currentModel =
                                                             MeshHelper.getSelectedElement()
                                                                 ?.meshModels?.values?.elementAt(
-                                                                bindedModelIndex
-                                                            )
+                                                                    bindedModelIndex
+                                                                )
                                                         MeshHelper.bindAppKey(
                                                             BIND_APP_KEY,
                                                             applicationKey.keyIndex, this
@@ -603,7 +602,7 @@ object MeshSDK {
             return
         }
 
-        mConnectCallbacks.add(callback)
+        mConnectCallbacks["setGenericOnOff"] = callback
         try {
             if (MeshHelper.getSelectedMeshNode()?.uuid != uuid) {
                 MeshHelper.getProvisionNode()?.forEach { node ->
@@ -619,7 +618,7 @@ object MeshSDK {
             )
             MeshHelper.sendGenericOnOff(onOff, 0)
 
-            mConnectCallbacks.remove(callback)
+            mConnectCallbacks.remove("setGenericOnOff")
             callback.onResult(true)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -663,7 +662,7 @@ object MeshSDK {
             return
         }
 
-        mConnectCallbacks.add(callback)
+        mConnectCallbacks["sendMeshMessage"] = callback
 
         if (MeshHelper.getSelectedMeshNode()?.uuid != uuid) {
             MeshHelper.getProvisionNode()?.forEach { node ->
@@ -820,7 +819,7 @@ object MeshSDK {
                                                         callback.onResult(map)
                                                         MeshHandler.removeRunnable(method)
                                                     }
-                                                    mConnectCallbacks.remove(callback)
+                                                    mConnectCallbacks.remove("sendMeshMessage")
                                                     msgIndex = 0
                                                 } else {
                                                     //todo log
@@ -831,7 +830,7 @@ object MeshSDK {
                                                     callback.onResult(true)
                                                 }
 
-                                                mConnectCallbacks.remove(callback)
+                                                mConnectCallbacks.remove("sendMeshMessage")
                                             }
                                             "04" -> {//set cwrgb
                                                 if (callback is MapCallback && msg.parameter.size == 5) {
@@ -852,7 +851,7 @@ object MeshSDK {
                                                         if (c == 0 && w == 0 && r == 0 && g == 0 && b == 0) false else true
                                                     )
                                                     callback.onResult(map)
-                                                    mConnectCallbacks.remove(callback)
+                                                    mConnectCallbacks.remove("sendMeshMessage")
                                                     msgIndex = 0
                                                 } else {
                                                     //todo log
@@ -861,7 +860,7 @@ object MeshSDK {
                                             "05" -> {//get cwrgb
                                                 if (msgIndex < 0 && callback is BooleanCallback) {
                                                     callback.onResult(true)
-                                                    mConnectCallbacks.remove(callback)
+                                                    mConnectCallbacks.remove("sendMeshMessage")
                                                     msgIndex = 0
                                                 } else {
                                                     //todo log
@@ -876,7 +875,7 @@ object MeshSDK {
                                                             HashMap<String, Any>()
                                                         )
 
-                                                        mConnectCallbacks.remove(callback)
+                                                        mConnectCallbacks.remove("sendMeshMessage")
                                                         msgIndex = 0
                                                     } else {
                                                         //todo log
@@ -889,7 +888,7 @@ object MeshSDK {
                                                 if (msgIndex < 0 && callback is BooleanCallback) {
                                                     callback.onResult(true)
 
-                                                    mConnectCallbacks.remove(callback)
+                                                    mConnectCallbacks.remove("sendMeshMessage")
                                                     msgIndex = 0
                                                 } else {
                                                     //todo log
@@ -946,16 +945,15 @@ object MeshSDK {
         )
     }
 
-    var mIsconnecting: AtomicBoolean = AtomicBoolean(false)
     var isReconnect: AtomicBoolean = AtomicBoolean(false)
     var needReconnect = true
     fun connect(networkKey: String, callback: MapCallback) {
-        if (mIsconnecting.get())
+        if (MeshHelper.isConnectedToProxy()) {
             return
+        }
 
         var map = HashMap<String, Any>()
         doBaseCheck(null, map, callback)
-        mIsconnecting = AtomicBoolean(true)
         if (!MeshHelper.isConnectedToProxy() && MeshHelper.getProvisionNode()?.size ?: 0 > 0) {
             Utils.printLog(TAG, "connect start scan")
             MeshHelper.startScan(BleMeshManager.MESH_PROXY_UUID, object :
@@ -992,7 +990,6 @@ object MeshSDK {
                                         "connect onConnectStateChange start reConnect"
                                     )
                                     if (!isReconnect.get()) {
-                                        mIsconnecting = AtomicBoolean(false)
                                         isReconnect = AtomicBoolean(true)
                                         reConnect(callback)
                                         connect(networkKey, callback)
@@ -1346,7 +1343,7 @@ object MeshSDK {
     }
 
     fun subscribeStatus(uuid: String, callback: MapCallback) {
-        MeshHelper.subscribeLightStatus(object : MeshCallback {
+        var meshCallback = object : MeshCallback {
             override fun onReceive(msg: MeshMessage) {
                 var node = MeshHelper?.getMeshNetwork()?.getNode(msg.src)
                 Utils.printLog(TAG, "receive uuid:${node?.uuid} ,sendSubscribeMsg uuid:$uuid")
@@ -1433,10 +1430,13 @@ object MeshSDK {
             override fun onError(msg: CallbackMsg) {
 
             }
-        })
+        }
+        mConnectCallbacks["subscribeStatus"] = meshCallback
+        MeshHelper.subscribeLightStatus(meshCallback)
     }
 
     fun unSubscribeLightStatus() {
+        mConnectCallbacks.remove("subscribeStatus")
         MeshHelper.unSubscribeLightStatus()
     }
 
@@ -1540,14 +1540,14 @@ object MeshSDK {
         return true
     }
 
-    private fun addConnectStateListner(callback: Any) {
-        if (callback is MapCallback || callback is BooleanCallback)
-            mConnectCallbacks.add(callback)
-    }
+//    private fun addConnectStateListner(callback: Any) {
+//        if (callback is MapCallback || callback is BooleanCallback)
+//            mConnectCallbacks.add(callback)
+//    }
 
-    private fun deleteConnectStateKListener(callback: Any) {
-        mConnectCallbacks.remove(callback)
-    }
+//    private fun deleteConnectStateKListener(callback: Any) {
+//        mConnectCallbacks.remove(callback)
+//    }
 
     fun setCurrentNode(uuid: String) {
         MeshHelper.setSelectedMeshNode(MeshHelper.getProvisionedNodeByUUID(uuid))
