@@ -86,7 +86,7 @@ class ScanTestActivity : BaseMeshActivity(),
     override fun onItemClick(data: HashMap<String, Any>, position: Int) {
         MeshSDK.stopScan()
 
-        var netKey = "${System.currentTimeMillis()}0000011111111010101"
+        var netKey = "525E52D87A4511EABF8D0242AC48000A"
 
         MeshSDK.getCurrentNetworkKey(object : StringCallback {
             override fun onResultMsg(msg: String) {
@@ -98,10 +98,10 @@ class ScanTestActivity : BaseMeshActivity(),
             }
         })
 
-        MeshSDK.getCurrentNetworkKey(object : StringCallback {
-            override fun onResultMsg(msg: String) {
+//        MeshSDK.getCurrentNetworkKey(object : StringCallback {
+//            override fun onResultMsg(msg: String) {
                 MeshSDK.provision(
-                    data.get("uuid") as String, msg,
+                    data.get("uuid") as String, netKey,
                     object : MapCallback {
                         override fun onResult(msg: HashMap<String, Any>) {
                             tv_status.visibility = View.VISIBLE
@@ -134,8 +134,8 @@ class ScanTestActivity : BaseMeshActivity(),
                             }
                         }
                     })
-            }
-        })
+//            }
+//        })
 
     }
 

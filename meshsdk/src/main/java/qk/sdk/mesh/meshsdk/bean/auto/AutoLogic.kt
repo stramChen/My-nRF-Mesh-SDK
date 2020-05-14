@@ -14,7 +14,7 @@ data class Rules(var rules: ArrayList<Rule>) {
         var ruleBytes = ByteArray(rulesLen)
         var index = 0
         rules.forEach {
-            System.arraycopy(it.getBytes(), 0, ruleBytes, index, it.len)
+            System.arraycopy(it.getBytes(), 0, ruleBytes, index, it.getBytes().size)
             index += it.len
         }
 

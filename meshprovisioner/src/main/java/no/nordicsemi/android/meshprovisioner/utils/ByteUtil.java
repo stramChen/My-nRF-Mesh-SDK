@@ -1,6 +1,9 @@
 package no.nordicsemi.android.meshprovisioner.utils;
 
+import android.os.Build;
 import android.util.Log;
+
+import no.nordicsemi.android.log.BuildConfig;
 
 public class ByteUtil {
     private static String TAG = "ByteUtil";
@@ -215,5 +218,11 @@ public class ByteUtil {
         }
 
         return stringBuffer.toString();
+    }
+
+    public static void printLog(String tag, String msg) {
+//        if (BuildConfig.DEBUG){
+        Log.e(tag, "mesh:" + msg);
+//        }
     }
 }

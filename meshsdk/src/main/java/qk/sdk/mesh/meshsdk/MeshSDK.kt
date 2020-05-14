@@ -126,6 +126,7 @@ object MeshSDK {
     fun provision(uuid: String, networkKey: String, callback: MapCallback) {
         var map = HashMap<String, Any>()
         doBaseCheck(uuid, map, callback)
+        var getAllNetworkKey = getAllNetworkKey()
         if (networkKey.isEmpty() || getAllNetworkKey().size <= 0 || !getAllNetworkKey().contains(
                 networkKey.toUpperCase()
             )
@@ -662,7 +663,7 @@ object MeshSDK {
             return
         }
 
-        mConnectCallbacks["sendMeshMessage"] = callback
+        mConnectCallbacks[if (method.isEmpty()) "sendMeshMessage" else method] = callback
 
         if (MeshHelper.getSelectedMeshNode()?.uuid != uuid) {
             MeshHelper.getProvisionNode()?.forEach { node ->

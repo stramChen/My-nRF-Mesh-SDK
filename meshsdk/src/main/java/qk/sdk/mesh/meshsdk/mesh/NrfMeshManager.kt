@@ -441,7 +441,7 @@ class NrfMeshManager(
 
     override fun onDataReceived(bluetoothDevice: BluetoothDevice, mtu: Int, pdu: ByteArray) {
         meshManagerApi.handleNotifications(mtu, pdu)
-//        Utils.printLog(TAG, "onDataReceived:${ByteUtil.bytesToHexString(pdu)}")
+        Utils.printLog(TAG, "onDataReceived:${ByteUtil.bytesToHexString(pdu)}")
     }
 
     override fun onDataSent(device: BluetoothDevice, mtu: Int, pdu: ByteArray) {
