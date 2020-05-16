@@ -185,17 +185,23 @@ class NetworkImportExportUtils {
                 final String json = this.networkJson;
                 final MeshNetwork network = gson.fromJson(json, MeshNetwork.class);
                 if (network != null) {
-                    if (network.appKeys != null) {
-                        Iterator<ApplicationKey> appKeyIterator = network.appKeys.iterator();
-                        while (appKeyIterator.hasNext()) {
-                            ApplicationKey applicationKey = appKeyIterator.next();
-                            if (applicationKey.getBoundNetKeyIndex() == 0) {
-                                appKeyIterator.remove();
-                            }
-                        }
-                    }
-
-                    network.appKeys.addAll(this.network.appKeys);
+//                    if (network.appKeys != null) {
+//                        Iterator<ApplicationKey> appKeyIterator = network.appKeys.iterator();
+//                        while (appKeyIterator.hasNext()) {
+//                            ApplicationKey applicationKey = appKeyIterator.next();
+//                            if (applicationKey.getBoundNetKeyIndex() == 0) {
+//                                appKeyIterator.remove();
+//                            }
+//                        }
+//
+//                        for (ApplicationKey applicationKey : this.network.appKeys) {
+//                            if (applicationKey.keyIndex == 0) {
+//                                network.appKeys.add(applicationKey);
+//                            }
+//                        }
+//                    } else {
+//                        network.appKeys = this.network.appKeys;
+//                    }
 
                     if (network.netKeys != null) {
                         Iterator<NetworkKey> networkKeyIterator = network.netKeys.iterator();
@@ -205,8 +211,15 @@ class NetworkImportExportUtils {
                                 networkKeyIterator.remove();
                             }
                         }
+
+                        for (NetworkKey networkKey : this.network.netKeys) {
+                            if (networkKey.keyIndex == 0) {
+                                network.netKeys.add(networkKey);
+                            }
+                        }
+                    } else {
+                        network.netKeys = this.network.netKeys;
                     }
-                    network.netKeys.addAll(this.network.netKeys);
 
                     this.network = network;
                 }

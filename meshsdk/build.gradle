@@ -94,11 +94,11 @@ dependencies {
 //
 uploadArchives {
     repositories {
-        mavenDeployer {
+        mavenDeployer {''
             repository(url: "file:///Users/wangyue/Documents/mxchip/aar/")
             pom.project {
                 name 'meshsdk'
-                version '0.6.3-snapshot'
+                version '0.7.0-snapshot'
                 artifactId 'meshsdk'
                 groupId 'cn.mxchip.mesh.test'
                 packaging 'aar'

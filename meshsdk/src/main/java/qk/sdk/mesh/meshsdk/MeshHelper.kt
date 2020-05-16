@@ -262,14 +262,26 @@ object MeshHelper {
         timeOut: Boolean,
         retry: Boolean
     ) {
-        val applicationKey = getAppKeys()?.get(index)
-        if (applicationKey != null) {
-            val networkKey = getNetworkKey(applicationKey.boundNetKeyIndex)
+        var applicationKey: ApplicationKey? = null
+        getAppKeys()?.forEach {
+            if (it.keyIndex == index) {
+                applicationKey = it
+            }
+        }
+//        val applicationKey = getAppKeys()?.get(index)
+
+        if (applicationKey == null) {
+            //todo 日志记录
+            Utils.printLog(TAG, "addAppKeys() applicationKey is null!")
+        }
+
+        applicationKey?.apply {
+            val networkKey = getNetworkKey(this.boundNetKeyIndex)
             Utils.printLog(
                 TAG,
-                "networkKey.keyIndex:${networkKey?.keyIndex},applicationKey.boundNetKeyIndex:${applicationKey.boundNetKeyIndex}"
+                "networkKey.keyIndex:${networkKey?.keyIndex},applicationKey.boundNetKeyIndex:${this.boundNetKeyIndex}"
             )
-            if (networkKey == null || networkKey.keyIndex != applicationKey.boundNetKeyIndex) {
+            if (networkKey == null || networkKey.keyIndex != this.boundNetKeyIndex) {
                 //todo 日志记录
                 Utils.printLog(TAG, "addAppKeys() networkKey is null!")
             } else {
@@ -278,13 +290,13 @@ object MeshHelper {
                 if (node != null) {
                     isNodeKeyAdd = MeshParserUtils.isNodeKeyExists(
                         node.addedAppKeys,
-                        applicationKey.keyIndex
+                        this.keyIndex
                     )
                     val meshMessage: MeshMessage
                     if (!isNodeKeyAdd) {
-                        meshMessage = ConfigAppKeyAdd(networkKey, applicationKey)
+                        meshMessage = ConfigAppKeyAdd(networkKey, this)
                     } else {
-                        meshMessage = ConfigAppKeyDelete(networkKey, applicationKey)
+                        meshMessage = ConfigAppKeyDelete(networkKey, this)
                     }
                     sendMessage(
                         method,
@@ -296,10 +308,8 @@ object MeshHelper {
                     )
                 }
             }
-        } else {
-            //todo 日志记录
-            Utils.printLog(TAG, "addAppKeys() applicationKey is null!")
         }
+
     }
 
     /**
@@ -531,7 +541,12 @@ object MeshHelper {
 
     // 获取当前 mesh 网络的 network key
     fun getNetworkKey(index: Int): NetworkKey? {
-        return MeshProxyService.mMeshProxyService?.getMeshNetwork()?.netKeys?.get(index)
+        MeshProxyService.mMeshProxyService?.getMeshNetwork()?.netKeys?.forEach {
+            if (it.keyIndex == index) {
+                return it
+            }
+        }
+        return null
     }
 
     // 传送 mesh 数据包
@@ -823,6 +838,7 @@ object MeshHelper {
 
 
     fun createGroup(groupName: String, groupAdd: Int = 0): Boolean {
+        Utils.printLog(TAG, "groupName:$groupName,groupAdd:$groupAdd")
         if (groupAdd != 0 && groupAdd < 0xC000) {
             return false
         }
@@ -836,10 +852,10 @@ object MeshHelper {
 
             val network = MeshProxyService.mMeshProxyService?.getMeshNetwork()
             group = if (groupAdd == 0) network?.createGroup(
-                network.getSelectedProvisioner()!!,
+                network.getSelectedProvisioner(),
                 groupName
             ) else network?.createGroup(
-                network.getSelectedProvisioner()!!,
+                network.getSelectedProvisioner(),
                 groupName,
                 groupAdd
             )
@@ -854,6 +870,14 @@ object MeshHelper {
             ex.printStackTrace()
         }
         return false
+    }
+
+    fun removeGroup(groupName: String) {
+        getGroupByName(groupName)?.apply {
+            MeshProxyService.mMeshProxyService?.getMeshNetwork()?.let {
+                it.removeGroup(this)
+            }
+        }
     }
 
     private fun addPoxyFilter(groupAdd: String): Boolean {
@@ -888,6 +912,15 @@ object MeshHelper {
     fun getGroupByName(groupName: String): Group? {
         getGroup().forEach {
             if (groupName == it.name) {
+                return it
+            }
+        }
+        return null
+    }
+
+    fun getGroupByAddress(groupAddr: Int): Group? {
+        getGroup().forEach {
+            if (groupAddr == it.address) {
                 return it
             }
         }
@@ -994,6 +1027,25 @@ object MeshHelper {
 
     fun unSubscribeLightStatus() {
         MeshProxyService.mMeshProxyService?.unSubscribeLightStatus()
+    }
+
+    fun clear() {
+        getMeshNetwork()?.apply {
+            this.nodes?.clear()
+            this.appKeys?.forEach { applicationKey ->
+                if (applicationKey.boundNetKeyIndex == 0)
+                    this.appKeys.remove(applicationKey)
+            }
+            this.netKeys?.forEach { netKey ->
+                if (netKey.keyIndex != 0) {
+                    this.netKeys.remove(netKey)
+                }
+            }
+            this.groups?.forEach { group ->
+                this.removeGroup(group)
+            }
+
+        }
     }
 
     internal class MeshProxyService : BaseMeshService() {

@@ -410,29 +410,31 @@ open class BaseMeshService : LifecycleService() {
         //接收到的mesh消息
         mNrfMeshManager?.meshMessageLiveData?.observe(this, Observer { meshMsg ->
             meshMsg.parameter?.apply {
-                Utils.printLog(TAG, "mesh msg:${ByteUtil.bytesToHexString(this)}")
-                MeshHandler.getAllCallback().forEach { meshCallback ->
-                    meshCallback.onReceive(meshMsg)
-                }
+                if (this.isNotEmpty()) {
+                    Utils.printLog(TAG, "mesh msg:${ByteUtil.bytesToHexString(this)}")
+                    MeshHandler.getAllCallback().forEach { meshCallback ->
+                        meshCallback.onReceive(meshMsg)
+                    }
 
-                MeshSDK.mConnectCallbacks.forEach { key, value ->
-                    if (value is MapCallback && meshMsg is VendorModelMessageStatus) {
-                        var map = HashMap<String, Any>()
-                        map["params"] = ByteUtil.bytesToHexString(this)
-                        map["opcode"] = "${meshMsg.opCode}"
-                        meshMsg.mMessage.apply {
-                            if (meshMsg.mMessage is AccessMessage) {
-                                var pdus = (meshMsg.mMessage as AccessMessage).accessPdu
-                                Utils.printLog(
-                                    TAG,
-                                    "mesh msg opcode:${meshMsg.opCode},pus:${ByteUtil.bytesToHexString(
-                                        pdus
-                                    )}"
-                                )
-                                map["accessPDU"] = ByteUtil.bytesToHexString(pdus)
+                    MeshSDK.mConnectCallbacks.forEach { key, value ->
+                        if (value is MapCallback && meshMsg is VendorModelMessageStatus) {
+                            var map = HashMap<String, Any>()
+                            map["params"] = ByteUtil.bytesToHexString(this)
+                            map["opcode"] = "${meshMsg.opCode}"
+                            meshMsg.mMessage.apply {
+                                if (meshMsg.mMessage is AccessMessage) {
+                                    var pdus = (meshMsg.mMessage as AccessMessage).accessPdu
+                                    Utils.printLog(
+                                        TAG,
+                                        "mesh msg opcode:${meshMsg.opCode},pus:${ByteUtil.bytesToHexString(
+                                            pdus
+                                        )}"
+                                    )
+                                    map["accessPDU"] = ByteUtil.bytesToHexString(pdus)
+                                }
                             }
+                            value.onResult(map)
                         }
-                        value.onResult(map)
                     }
                 }
             }

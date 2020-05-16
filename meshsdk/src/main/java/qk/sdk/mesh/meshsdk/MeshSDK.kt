@@ -1136,6 +1136,81 @@ object MeshSDK {
 
     }
 
+    fun setPublication(uuid: String, groupName: String, groupAddr: Int, callback: MapCallback) {
+        var map = HashMap<String, Any>()
+        if (doProxyCheck(uuid, map, callback)) {
+            if (MeshHelper.getGroupByAddress(groupAddr) == null) {
+                MeshHelper.createGroup(groupName, groupAddr)
+            }
+
+            //获取provisioned节点
+            var node = MeshHelper.getProvisionedNodeByUUID(uuid)
+            if (node == null) {
+                doMapCallback(
+                    map,
+                    callback,
+                    CallbackMsg(ConnectState.NODE_NOT_EXIST.code, ConnectState.NODE_NOT_EXIST.msg)
+                )
+                return
+            }
+
+            var publishAddress = groupAddr
+            var modelTotalSize = 0
+            var index = 0
+            node.elements.values.forEach { eleValue ->
+                modelTotalSize = modelTotalSize.plus(eleValue.meshModels?.values?.size ?: 0)
+                eleValue.meshModels?.values?.forEach { meshModel ->
+                    if (meshModel.boundAppKeyIndexes?.size ?: 0 > 0) {
+                        runBlocking {
+                            launch {
+                                delay(500)
+                                var meshMsg = ConfigModelPublicationSet(
+                                    eleValue.elementAddress
+                                    ,
+                                    publishAddress,
+                                    meshModel.boundAppKeyIndexes!!.get(0),
+                                    false,
+                                    MeshParserUtils.USE_DEFAULT_TTL
+                                    ,
+                                    53,
+                                    0,
+                                    1,
+                                    1,
+                                    meshModel.modelId
+                                )
+
+                                try {
+                                    MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi
+                                        ?.createMeshPdu(node.unicastAddress, meshMsg)
+                                    index++
+                                } catch (ex: IllegalArgumentException) {
+                                    ex.printStackTrace()
+                                }
+                            }
+                        }
+                    } else {
+                        index++
+                    }
+                }
+            }
+
+            if (index == modelTotalSize) {
+                doMapCallback(
+                    map,
+                    callback,
+                    CallbackMsg(ConnectState.COMMON_SUCCESS.code, ConnectState.COMMON_SUCCESS.msg)
+                )
+            } else {
+                doMapCallback(
+                    map,
+                    callback,
+                    CallbackMsg(ConnectState.PUBLISH_FAILED.code, ConnectState.PUBLISH_FAILED.msg)
+                )
+            }
+        }
+
+    }
+
     fun sendSubscribeMsg(uuid: String, groupAddr: Int, callback: MapCallback) {
         var map = HashMap<String, Any>()
         if (doProxyCheck(uuid, map, callback)) {
