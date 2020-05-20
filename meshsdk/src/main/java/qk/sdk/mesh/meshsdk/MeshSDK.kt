@@ -95,7 +95,7 @@ object MeshSDK {
                         map.put("uuid", unprovisionedBeacon.uuid.toString())
                         map.put("rssi", it.rssi ?: 0)
                         map.put("name", it.name ?: "")
-                        map.put("productId", ByteUtil.getPIdFromUUID(it.beacon!!.getBeaconData()))
+//                        map.put("productId", ByteUtil.getPIdFromUUID(it.beacon!!.getBeaconData()))
                         resultArray.add(map)
                         mExtendedBluetoothDeviceMap.put(unprovisionedBeacon.uuid.toString(), it)
                     }

@@ -30,6 +30,7 @@ import java.util.UUID;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import no.nordicsemi.android.meshprovisioner.provisionerstates.ProvisioningCapabilities;
 import no.nordicsemi.android.meshprovisioner.provisionerstates.ProvisioningCapabilitiesState;
 import no.nordicsemi.android.meshprovisioner.provisionerstates.ProvisioningCompleteState;
@@ -203,11 +204,11 @@ class MeshProvisioningHandler implements InternalProvisioningCallbacks {
     /**
      * Initializes a mesh node object to be provisioned
      *
-     * @param uuid               Device UUID of unprovisioned node
-     * @param networkKey         Network key
-     * @param flags              Flag containing the key refresh or the iv update operations
-     * @param ivIndex            32-bit value shared across the network
-     * @param globalTtl          Global ttl which is also the number of hops to be used for a message
+     * @param uuid       Device UUID of unprovisioned node
+     * @param networkKey Network key
+     * @param flags      Flag containing the key refresh or the iv update operations
+     * @param ivIndex    32-bit value shared across the network
+     * @param globalTtl  Global ttl which is also the number of hops to be used for a message
      * @return {@link MeshModel} to be provisioned
      */
     private UnprovisionedMeshNode initializeMeshNode(@NonNull final UUID uuid,
@@ -269,12 +270,12 @@ class MeshProvisioningHandler implements InternalProvisioningCallbacks {
      * This method must be invoked before calling {@link #startProvisioningNoOOB(UnprovisionedMeshNode)}
      * </p
      *
-     * @param uuid               Device UUID of unprovisioned node
-     * @param networkKey         Network key
-     * @param flags              Flag containing the key refresh or the iv update operations
-     * @param ivIndex            32-bit value shared across the network
-     * @param globalTtl          Global ttl which is also the number of hops to be used for a message
-     * @param attentionTimer     Attention timer
+     * @param uuid           Device UUID of unprovisioned node
+     * @param networkKey     Network key
+     * @param flags          Flag containing the key refresh or the iv update operations
+     * @param ivIndex        32-bit value shared across the network
+     * @param globalTtl      Global ttl which is also the number of hops to be used for a message
+     * @param attentionTimer Attention timer
      */
     void identify(@NonNull final UUID uuid,
                   @NonNull final NetworkKey networkKey,
@@ -360,19 +361,24 @@ class MeshProvisioningHandler implements InternalProvisioningCallbacks {
     }
 
     private void sendProvisioningStart(final UnprovisionedMeshNode unprovisionedMeshNode) {
-        final ProvisioningCapabilitiesState capabilitiesState = (ProvisioningCapabilitiesState) provisioningState;
-        final ProvisioningCapabilities capabilities = capabilitiesState.getCapabilities();
-        final ProvisioningStartState startProvisioning = new ProvisioningStartState(unprovisionedMeshNode, mInternalTransportCallbacks, mStatusCallbacks);
-        startProvisioning.setProvisioningCapabilities(capabilities.getNumberOfElements(),
-                capabilities.getRawAlgorithm(),
-                capabilities.getRawPublicKeyType(),
-                capabilities.getRawStaticOOBType(),
-                capabilities.getOutputOOBSize(),
-                capabilities.getRawOutputOOBAction(),
-                capabilities.getInputOOBSize(),
-                capabilities.getRawInputOOBAction());
-        provisioningState = startProvisioning;
-        startProvisioning.executeSend();
+        if (provisioningState instanceof ProvisioningCapabilitiesState) {
+            final ProvisioningCapabilitiesState capabilitiesState = (ProvisioningCapabilitiesState) provisioningState;
+            final ProvisioningCapabilities capabilities = capabilitiesState.getCapabilities();
+            final ProvisioningStartState startProvisioning = new ProvisioningStartState(unprovisionedMeshNode, mInternalTransportCallbacks, mStatusCallbacks);
+            startProvisioning.setProvisioningCapabilities(capabilities.getNumberOfElements(),
+                    capabilities.getRawAlgorithm(),
+                    capabilities.getRawPublicKeyType(),
+                    capabilities.getRawStaticOOBType(),
+                    capabilities.getOutputOOBSize(),
+                    capabilities.getRawOutputOOBAction(),
+                    capabilities.getInputOOBSize(),
+                    capabilities.getRawInputOOBAction());
+            provisioningState = startProvisioning;
+            startProvisioning.executeSend();
+        } else {
+            //todo mxchip ProvisioningFailedState
+            Log.e("MeshProvisioningHandler", "sendProvisioningStart failed");
+        }
     }
 
     private void sendProvisioningStartWithStaticOOB(final UnprovisionedMeshNode unprovisionedMeshNode) {

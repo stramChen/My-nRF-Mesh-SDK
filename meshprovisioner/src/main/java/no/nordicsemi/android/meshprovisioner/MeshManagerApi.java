@@ -495,7 +495,7 @@ public class MeshManagerApi implements MeshMngrApi {
     public void identifyNode(@NonNull UUID deviceUUID, int attentionTimer, NetworkKey networkKey) throws IllegalArgumentException {
         Log.e("MeshManagerApi", "identifyNode networkKey:" + networkKey.keyIndex);
 //        final NetworkKey netKey = mMeshNetwork.getPrimaryNetworkKey();
-        if (networkKey != null) {
+        if (networkKey != null && mMeshNetwork != null) {
             mMeshProvisioningHandler.identify(deviceUUID, networkKey, mMeshNetwork.getProvisioningFlags(),
                     mMeshNetwork.getIvIndex(), mMeshNetwork.getGlobalTtl(), attentionTimer);
         }
@@ -862,8 +862,8 @@ public class MeshManagerApi implements MeshMngrApi {
     }
 
 
-    public void importMeshNetworkJson(@NonNull MeshNetwork meshNetwork,@NonNull String networkJson) {
-        NetworkImportExportUtils.importMeshNetworkFromJson(mContext, networkJson, meshNetwork,networkLoadCallbacks);
+    public void importMeshNetworkJson(@NonNull MeshNetwork meshNetwork, @NonNull String networkJson) {
+        NetworkImportExportUtils.importMeshNetworkFromJson(mContext, networkJson, meshNetwork, networkLoadCallbacks);
     }
 
     @SuppressWarnings("FieldCanBeLocal")

@@ -114,14 +114,14 @@ public class ByteUtil {
         return builder.toString().toUpperCase();
     }
 
-    public static int getPIdFromUUID(byte[] uuid) {
-        if (uuid.length < 5) {
-            return 0;
-        }
-        byte[] pid = new byte[4];
-        System.arraycopy(uuid, 1, pid, 0, 4);
-        return byteArrayToInt(pid);
-    }
+//    public static int getPIdFromUUID(byte[] uuid) {
+//        if (uuid.length < 5) {
+//            return 0;
+//        }
+//        byte[] pid = new byte[4];
+//        System.arraycopy(uuid, 1, pid, 0, 4);
+//        return byteArrayToInt(pid);
+//    }
 
     public static int byteArrayToInt(byte[] bytes) {
         int value = 0;
