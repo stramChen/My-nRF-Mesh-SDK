@@ -47,7 +47,6 @@ import androidx.room.TypeConverters;
 import no.nordicsemi.android.meshprovisioner.Features;
 import no.nordicsemi.android.meshprovisioner.MeshTypeConverters;
 import no.nordicsemi.android.meshprovisioner.NodeKey;
-import no.nordicsemi.android.meshprovisioner.SecureNetworkBeacon;
 import no.nordicsemi.android.meshprovisioner.utils.NetworkTransmitSettings;
 import no.nordicsemi.android.meshprovisioner.utils.RelaySettings;
 import no.nordicsemi.android.meshprovisioner.utils.SparseIntArrayParcelable;

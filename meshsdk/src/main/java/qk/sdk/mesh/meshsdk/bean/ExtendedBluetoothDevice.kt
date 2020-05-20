@@ -25,8 +25,8 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.os.Parcel
 import android.os.Parcelable
-
 import no.nordicsemi.android.meshprovisioner.MeshBeacon
+
 import no.nordicsemi.android.support.v18.scanner.ScanResult
 
 @SuppressLint("ParcelCreator")

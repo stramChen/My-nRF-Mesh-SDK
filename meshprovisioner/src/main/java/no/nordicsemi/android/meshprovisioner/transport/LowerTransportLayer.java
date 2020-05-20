@@ -31,7 +31,6 @@ import java.nio.ByteOrder;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 import no.nordicsemi.android.meshprovisioner.MeshManagerApi;
-import no.nordicsemi.android.meshprovisioner.Provisioner;
 import no.nordicsemi.android.meshprovisioner.control.BlockAcknowledgementMessage;
 import no.nordicsemi.android.meshprovisioner.opcodes.TransportLayerOpCodes;
 import no.nordicsemi.android.meshprovisioner.utils.ExtendedInvalidCipherTextException;
@@ -85,31 +84,6 @@ abstract class LowerTransportLayer extends UpperTransportLayer {
      * @param callbacks {@link LowerTransportLayerCallbacks} callbacks
      */
     abstract void setLowerTransportLayerCallbacks(@NonNull final LowerTransportLayerCallbacks callbacks);
-
-    /**
-     * Increments the sequence number and returns the new sequence number.
-     *
-     * @param src source address, which is the address of the provisioner
-     * @return Incremented sequence number.
-     */
-    protected abstract int incrementSequenceNumber(final int src);
-
-    /**
-     * Increments the sequence number and returns the new sequence number.
-     *
-     * @param provisioner provisioner
-     * @return Incremented sequence number.
-     */
-    protected abstract int incrementSequenceNumber(final Provisioner provisioner);
-
-    /**
-     * Increments the given sequence number.
-     *
-     * @param provisioner    provisioner
-     * @param sequenceNumber Sequence number to be incremented.
-     * @return Incremented sequence number.
-     */
-    protected abstract int incrementSequenceNumber(final Provisioner provisioner, @NonNull final byte[] sequenceNumber);
 
     /**
      * Creates the network layer pdu
@@ -397,16 +371,32 @@ abstract class LowerTransportLayer extends UpperTransportLayer {
     /**
      * Parses a unsegmented lower transport access pdu
      *
-     * @param pdu The complete pdu was received from the node. This is already de-obfuscated and decrypted at network layer.
+     * @param pdu            The complete pdu was received from the node. This is already de-obfuscated
+     *                       and decrypted at network layer.
+     * @param ivIndex        IV Index of the received pdu
+     * @param sequenceNumber Sequence number of the message.
      */
     /*package*/
-    final void parseUnsegmentedAccessLowerTransportPDU(@NonNull final AccessMessage message, @NonNull final byte[] pdu) {
-
+    final AccessMessage parseUnsegmentedAccessLowerTransportPDU(@NonNull final byte[] pdu,
+                                                                final int ivIndex,
+                                                                @NonNull final byte[] sequenceNumber) {
+        AccessMessage message = null;
         final byte header = pdu[10]; //Lower transport pdu starts here
         final int seg = (header >> 7) & 0x01;
         final int akf = (header >> 6) & 0x01;
         final int aid = header & 0x3F;
         if (seg == 0) { //Unsegmented message
+            Log.d(TAG, "IV Index of received message: " + ivIndex);
+            final int seqAuth = (ivIndex << 24) | MeshParserUtils.getSequenceNumber(sequenceNumber);
+            final byte[] src = MeshParserUtils.getSrcAddress(pdu);
+            final int srcAdd = MeshParserUtils.unsignedBytesToInt(src[1], src[0]);
+            Log.d(TAG, "SeqAuth: " + seqAuth);
+            if (!isValidSeqAuth(seqAuth, srcAdd)) {
+                return null;
+            }
+            mMeshNode.setSeqAuth(srcAdd, seqAuth);
+            mMeshNode.setSequenceNumber(MeshParserUtils.getSequenceNumber(sequenceNumber));
+            message = new AccessMessage();
             if (akf == 0) {// device key was used to encrypt
                 final int lowerTransportPduLength = pdu.length - 10;
                 final ByteBuffer lowerTransportBuffer = ByteBuffer.allocate(lowerTransportPduLength).order(ByteOrder.BIG_ENDIAN);
@@ -433,6 +423,7 @@ abstract class LowerTransportLayer extends UpperTransportLayer {
                 message.setLowerTransportAccessPdu(messages);
             }
         }
+        return message;
     }
 
     /**
@@ -441,7 +432,9 @@ abstract class LowerTransportLayer extends UpperTransportLayer {
      * @param pdu The complete pdu was received from the node. This is already de-obfuscated and decrypted at network layer.
      */
     /*package*/
-    final AccessMessage parseSegmentedAccessLowerTransportPDU(@NonNull final byte[] pdu) {
+    final AccessMessage parseSegmentedAccessLowerTransportPDU(@NonNull final byte[] pdu,
+                                                              final int ivIndex,
+                                                              @NonNull final byte[] sequenceNumber) {
 
         final byte header = pdu[10]; //Lower transport pdu starts here
         final int akf = (header >> 6) & 0x01;
@@ -462,8 +455,8 @@ abstract class LowerTransportLayer extends UpperTransportLayer {
         Log.v(TAG, "SEG O: " + segO);
         Log.v(TAG, "SEG N: " + segN);
 
-        final int ivIndex = ByteBuffer.wrap(mUpperTransportLayerCallbacks.getIvIndex()).order(ByteOrder.BIG_ENDIAN).getInt();
-        final int seqAuth = ivIndex | getTransportLayerSequenceNumber(MeshParserUtils.getSequenceNumberFromPDU(pdu), seqZero);
+        final int seqNumber = getTransportLayerSequenceNumber(MeshParserUtils.getSequenceNumber(sequenceNumber), seqZero);
+        final int seqAuth = ivIndex << 24 | seqNumber;
         final Integer lastSeqAuth = mMeshNode.getSeqAuth(blockAckDst);
         if (lastSeqAuth != null)
             Log.v(TAG, "Last SeqAuth value " + lastSeqAuth);
@@ -476,6 +469,7 @@ abstract class LowerTransportLayer extends UpperTransportLayer {
 
         //Check if the current SeqAuth value is greater than the last and if the incomplete timer has not started, start it!
         if ((lastSeqAuth == null || lastSeqAuth < seqAuth)) {
+            mMeshNode.setSequenceNumber(seqNumber);
             segmentedAccessMessageMap.clear();
             segmentedAccessMessageMap.put(segO, payloadBuffer.array());
             mMeshNode.setSeqAuth(blockAckDst, seqAuth);
@@ -517,11 +511,9 @@ abstract class LowerTransportLayer extends UpperTransportLayer {
                         Log.v(TAG, "SEG O BLOCK ACK VAL: " + mSegmentedAccessBlockAck);
                         handleImmediateBlockAcks(seqZero, ttl, blockAckSrc, blockAckDst, segN);
 
-                        final int upperTransportSequenceNumber = getTransportLayerSequenceNumber(MeshParserUtils.getSequenceNumberFromPDU(pdu), seqZero);
-                        final byte[] sequenceNumber = MeshParserUtils.getSequenceNumberBytes(upperTransportSequenceNumber);
                         final AccessMessage accessMessage = new AccessMessage();
                         accessMessage.setAszmic(szmic);
-                        accessMessage.setSequenceNumber(sequenceNumber);
+                        accessMessage.setSequenceNumber(MeshParserUtils.getSequenceNumberBytes(seqNumber));
                         accessMessage.setAkf(akf);
                         accessMessage.setAid(aid);
                         accessMessage.setSegmented(true);
@@ -749,7 +741,7 @@ abstract class LowerTransportLayer extends UpperTransportLayer {
         controlMessage.setSrc(src);
         controlMessage.setDst(dst);
         controlMessage.setIvIndex(mUpperTransportLayerCallbacks.getIvIndex());
-        final int sequenceNumber = incrementSequenceNumber(controlMessage.getSrc());
+        final int sequenceNumber = mUpperTransportLayerCallbacks.getNode(controlMessage.getSrc()).incrementSequenceNumber();//mMeshNode.incrementSequenceNumber();//(controlMessage.getSrc());
         final byte[] sequenceNum = MeshParserUtils.getSequenceNumberBytes(sequenceNumber);
         controlMessage.setSequenceNumber(sequenceNum);
         mBlockAckSent = true;
@@ -790,5 +782,17 @@ abstract class LowerTransportLayer extends UpperTransportLayer {
             controlMessage.setTransportControlMessage(acknowledgement);
         }
 
+    }
+
+    /**
+     * Validates Sequence authentication value.
+     *
+     * @param seqAuth Sequence authentication.
+     * @param src     Source address.
+     */
+    private boolean isValidSeqAuth(final int seqAuth,
+                                   final int src) {
+        final Integer lastSeqAuth = mMeshNode.getSeqAuth(src);
+        return lastSeqAuth == null || lastSeqAuth < seqAuth;
     }
 }

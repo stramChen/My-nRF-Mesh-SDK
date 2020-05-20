@@ -26,7 +26,6 @@ import androidx.lifecycle.LiveData
 
 import java.util.ArrayList
 
-import no.nordicsemi.android.meshprovisioner.MeshBeacon
 import no.nordicsemi.android.meshprovisioner.UnprovisionedBeacon
 import no.nordicsemi.android.support.v18.scanner.ScanResult
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice

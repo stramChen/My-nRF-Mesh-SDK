@@ -32,6 +32,13 @@ import androidx.annotation.Nullable;
 public interface UpperTransportLayerCallbacks {
 
     /**
+     * Callback to get the mesh node from the list of provisioned mesh node.
+     *
+     * @param unicastAddress unicast address of the mesh node
+     */
+    ProvisionedMeshNode getNode(final int unicastAddress);
+
+    /**
      * Returns the IV Index of the mesh network
      */
     byte[] getIvIndex();

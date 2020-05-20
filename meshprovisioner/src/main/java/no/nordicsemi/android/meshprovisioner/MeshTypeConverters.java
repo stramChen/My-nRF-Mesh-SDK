@@ -138,4 +138,16 @@ public class MeshTypeConverters {
         }.getType();
         return new Gson().fromJson(nodeKeys, keys);
     }
+
+    @TypeConverter
+    public static String ivIndexToJson(@NonNull final IvIndex ivIndex) {
+        return new Gson().toJson(ivIndex);
+    }
+
+    @TypeConverter
+    public static IvIndex fromJsonToIvIndex(final String ivIndex){
+        final Type newIvIndex = new TypeToken<IvIndex>(){
+        }.getType();
+        return new Gson().fromJson(ivIndex, newIvIndex);
+    }
 }

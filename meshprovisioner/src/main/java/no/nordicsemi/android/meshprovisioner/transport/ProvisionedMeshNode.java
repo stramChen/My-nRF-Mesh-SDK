@@ -127,7 +127,7 @@ public final class ProvisionedMeshNode extends ProvisionedBaseMeshNode {
         }
         if (provisioner.getProvisionerAddress() != null)
             unicastAddress = provisioner.getProvisionerAddress();
-        sequenceNumber = provisioner.getSequenceNumber();
+        sequenceNumber = 0;
         deviceKey = SecureUtils.generateRandomNumber();
         ttl = provisioner.getGlobalTtl();
         mTimeStampInMillis = System.currentTimeMillis();
@@ -254,7 +254,7 @@ public final class ProvisionedMeshNode extends ProvisionedBaseMeshNode {
         return companyIdentifier;
     }
 
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
+//    @RestrictTo(RestrictTo.Scope.LIBRARY)
     public final void setCompanyIdentifier(final Integer companyIdentifier) {
         this.companyIdentifier = companyIdentifier;
     }
@@ -573,5 +573,12 @@ public final class ProvisionedMeshNode extends ProvisionedBaseMeshNode {
             }
         }
         return false;
+    }
+
+    /**
+     * Increments the sequence number
+     */
+    public int incrementSequenceNumber(){
+        return sequenceNumber = sequenceNumber + 1;
     }
 }
