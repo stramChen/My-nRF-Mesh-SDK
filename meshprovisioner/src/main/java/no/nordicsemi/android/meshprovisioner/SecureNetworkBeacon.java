@@ -53,8 +53,8 @@ public class SecureNetworkBeacon extends MeshBeacon {
     }
 
     @Override
-    public int getBeaconType() {
-        return beaconType;
+    public int getMeshBeaconType() {
+        return getBeaconType();
     }
 
     /**
@@ -99,7 +99,7 @@ public class SecureNetworkBeacon extends MeshBeacon {
 
     @Override
     public void writeToParcel(final Parcel dest, final int flags) {
-        dest.writeByteArray(beaconData);
+        dest.writeByteArray(getBeaconData());
     }
 
     public static final Creator<SecureNetworkBeacon> CREATOR = new Creator<SecureNetworkBeacon>() {

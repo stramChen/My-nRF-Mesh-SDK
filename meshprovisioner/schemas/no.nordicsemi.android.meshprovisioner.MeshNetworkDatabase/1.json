@@ -56,7 +56,7 @@
       },
       {
         "tableName": "network_key",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uuid` TEXT, `index` INTEGER NOT NULL, `name` TEXT, `key` BLOB, `phase` INTEGER NOT NULL, `security` INTEGER NOT NULL, `old_key` BLOB, `timestamp` INTEGER NOT NULL, `isCurrent` INTEGER NOT NULL, PRIMARY KEY(`index`), FOREIGN KEY(`uuid`) REFERENCES `mesh_network`(`mesh_uuid`) ON UPDATE CASCADE ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uuid` TEXT, `index` INTEGER NOT NULL, `name` TEXT, `key` BLOB, `phase` INTEGER NOT NULL, `security` INTEGER NOT NULL, `old_key` BLOB, `timestamp` INTEGER NOT NULL, `isCurrent` INTEGER NOT NULL,PRIMARY KEY(`index`), FOREIGN KEY(`uuid`) REFERENCES `mesh_network`(`mesh_uuid`) ON UPDATE CASCADE ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "uuid",

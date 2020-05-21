@@ -111,7 +111,8 @@
             "columnName": "security",
             "affinity": "INTEGER",
             "notNull": true
-          },{
+          },
+          {
             "fieldPath": "isCurrent",
             "columnName": "isCurrent",
             "affinity": "INTEGER",

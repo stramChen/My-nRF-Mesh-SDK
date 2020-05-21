@@ -1060,7 +1060,11 @@ class NrfMeshManager(
      * Generates the groups based on the addresses each models have subscribed to
      */
     private fun loadGroups() {
-        mGroups.postValue(mMeshNetwork!!.groups)
+        mMeshNetwork?.groups?.apply {
+            if (this is ArrayList) {
+                mGroups.postValue(this)
+            }
+        }
     }
 
     private fun updateSelectedGroup() {

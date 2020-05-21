@@ -8,14 +8,6 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.util.SparseIntArray;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.UUID;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.room.Database;
@@ -23,6 +15,14 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
 
 import no.nordicsemi.android.meshprovisioner.data.ApplicationKeyDao;
 import no.nordicsemi.android.meshprovisioner.data.ApplicationKeysDao;
@@ -359,7 +359,7 @@ abstract class MeshNetworkDb extends RoomDatabase {
                 meshNetwork.appKeys = appKeysDao.loadApplicationKeys(meshNetwork.getMeshUUID());
                 meshNetwork.nodes = nodesDao.getNodes(meshNetwork.getMeshUUID());
                 meshNetwork.provisioners = provisionersDao.getProvisioners(meshNetwork.getMeshUUID());
-                meshNetwork.groups = (ArrayList<Group>) groupsDao.loadGroups(meshNetwork.getMeshUUID());
+                meshNetwork.groups = groupsDao.loadGroups(meshNetwork.getMeshUUID());
             }
             return meshNetwork;
         }
@@ -1213,7 +1213,8 @@ abstract class MeshNetworkDb extends RoomDatabase {
         return keys;
     }
 
-    private static void addProvisionerNodes(@NonNull final SupportSQLiteDatabase database, @NonNull List<Provisioner> provisioners) {
+    private static void addProvisionerNodes(@NonNull final SupportSQLiteDatabase database,
+                                            @NonNull List<Provisioner> provisioners) {
         if (!provisioners.isEmpty()) {
             final List<NetworkKey> netKeys = getNetKeys(database);
             final List<ApplicationKey> appKeys = getAppKeys(database);

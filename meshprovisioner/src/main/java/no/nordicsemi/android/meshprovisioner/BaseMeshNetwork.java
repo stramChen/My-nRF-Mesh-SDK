@@ -95,7 +95,7 @@ abstract class BaseMeshNetwork {
     @Ignore
     @SerializedName("groups")
     @Expose
-    ArrayList<Group> groups = new ArrayList<>();
+    List<Group> groups = new ArrayList<>();
     @Ignore
     @SerializedName("scenes")
     @Expose

@@ -88,8 +88,8 @@ object MeshSDK {
                 var resultArray = ArrayList<HashMap<String, Any>>()
                 devices.forEach {
                     Utils.printLog(TAG, "scan result:${it.getAddress()}")
-                    if (it.beacon != null) {
-                        val unprovisionedBeacon = UnprovisionedBeacon(it.beacon!!.getBeaconData())
+                    it.beacon?.apply {
+                        val unprovisionedBeacon = UnprovisionedBeacon(this.beaconData)
                         var map = HashMap<String, Any>()
                         map.put("mac", it.getAddress())
                         map.put("uuid", unprovisionedBeacon.uuid.toString())
@@ -957,6 +957,7 @@ object MeshSDK {
         doBaseCheck(null, map, callback)
         if (!MeshHelper.isConnectedToProxy() && MeshHelper.getProvisionNode()?.size ?: 0 > 0) {
             Utils.printLog(TAG, "connect start scan")
+            setCurrentNetworkKey(networkKey)
             MeshHelper.startScan(BleMeshManager.MESH_PROXY_UUID, object :
                 ScanCallback {
                 override fun onScanResult(

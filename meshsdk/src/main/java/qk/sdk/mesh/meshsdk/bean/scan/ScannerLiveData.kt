@@ -23,6 +23,7 @@
 package qk.sdk.mesh.meshsdk.bean.scan
 
 import androidx.lifecycle.LiveData
+import no.nordicsemi.android.meshprovisioner.MeshBeacon
 
 import java.util.ArrayList
 

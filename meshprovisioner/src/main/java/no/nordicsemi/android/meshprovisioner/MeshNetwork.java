@@ -103,7 +103,7 @@ public final class MeshNetwork extends BaseMeshNetwork {
     }
 
 
-    public ArrayList<Group> getGroups() {
+    public List<Group> getGroups() {
         return groups;
     }
 

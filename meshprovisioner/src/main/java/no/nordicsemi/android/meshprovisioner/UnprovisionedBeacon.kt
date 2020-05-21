@@ -45,8 +45,8 @@ class UnprovisionedBeacon
 
     }
 
-    override fun getBeaconType(): Int {
-        return getBeaconType()
+    override fun getMeshBeaconType(): Int {
+        return getMeshBeaconType()
     }
 
     override fun describeContents(): Int {

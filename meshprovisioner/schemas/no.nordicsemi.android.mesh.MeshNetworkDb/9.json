@@ -1,12 +1,12 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 5,
-    "identityHash": "a62620dfe9fd5366499fb48fcc489be0",
+    "version": 9,
+    "identityHash": "dc74c1727a65404e3d1795816f05be43",
     "entities": [
       {
         "tableName": "mesh_network",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`mesh_uuid` TEXT NOT NULL, `mesh_name` TEXT, `timestamp` INTEGER NOT NULL, `iv_index` INTEGER NOT NULL, `iv_update_state` INTEGER NOT NULL, `last_selected` INTEGER NOT NULL, `sequence_numbers` TEXT, PRIMARY KEY(`mesh_uuid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`mesh_uuid` TEXT NOT NULL, `mesh_name` TEXT, `timestamp` INTEGER NOT NULL, `iv_index` TEXT NOT NULL, `last_selected` INTEGER NOT NULL, `sequence_numbers` TEXT NOT NULL, PRIMARY KEY(`mesh_uuid`))",
         "fields": [
           {
             "fieldPath": "meshUUID",
@@ -29,13 +29,7 @@
           {
             "fieldPath": "ivIndex",
             "columnName": "iv_index",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "ivUpdateState",
-            "columnName": "iv_update_state",
-            "affinity": "INTEGER",
+            "affinity": "TEXT",
             "notNull": true
           },
           {
@@ -48,7 +42,7 @@
             "fieldPath": "sequenceNumbers",
             "columnName": "sequence_numbers",
             "affinity": "TEXT",
-            "notNull": false
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -62,7 +56,7 @@
       },
       {
         "tableName": "network_key",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `mesh_uuid` TEXT, `index` INTEGER NOT NULL, `name` TEXT, `key` BLOB, `old_key` BLOB, `phase` INTEGER NOT NULL, `security` INTEGER NOT NULL, `timestamp` INTEGER NOT NULL, `isCurrent` INTEGER NOT NULL, FOREIGN KEY(`mesh_uuid`) REFERENCES `mesh_network`(`mesh_uuid`) ON UPDATE CASCADE ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `mesh_uuid` TEXT, `index` INTEGER NOT NULL, `name` TEXT, `key` BLOB, `old_key` BLOB, `phase` INTEGER NOT NULL, `security` INTEGER NOT NULL, `timestamp` INTEGER NOT NULL,`isCurrent` INTEGER NOT NULL,  FOREIGN KEY(`mesh_uuid`) REFERENCES `mesh_network`(`mesh_uuid`) ON UPDATE CASCADE ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -138,7 +132,7 @@
             "columnNames": [
               "mesh_uuid"
             ],
-            "createSql": "CREATE  INDEX `index_network_key_mesh_uuid` ON `${TABLE_NAME}` (`mesh_uuid`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_network_key_mesh_uuid` ON `${TABLE_NAME}` (`mesh_uuid`)"
           }
         ],
         "foreignKeys": [
@@ -215,7 +209,7 @@
             "columnNames": [
               "mesh_uuid"
             ],
-            "createSql": "CREATE  INDEX `index_application_key_mesh_uuid` ON `${TABLE_NAME}` (`mesh_uuid`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_application_key_mesh_uuid` ON `${TABLE_NAME}` (`mesh_uuid`)"
           }
         ],
         "foreignKeys": [
@@ -234,7 +228,7 @@
       },
       {
         "tableName": "provisioner",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`mesh_uuid` TEXT NOT NULL, `provisioner_uuid` TEXT NOT NULL, `name` TEXT, `allocated_unicast_ranges` TEXT NOT NULL, `allocated_group_ranges` TEXT NOT NULL, `allocated_scene_ranges` TEXT NOT NULL, `sequence_number` INTEGER NOT NULL, `provisioner_address` INTEGER, `global_ttl` INTEGER NOT NULL, `last_selected` INTEGER NOT NULL, PRIMARY KEY(`provisioner_uuid`), FOREIGN KEY(`mesh_uuid`) REFERENCES `mesh_network`(`mesh_uuid`) ON UPDATE CASCADE ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`mesh_uuid` TEXT NOT NULL, `provisioner_uuid` TEXT NOT NULL, `name` TEXT, `allocated_unicast_ranges` TEXT NOT NULL, `allocated_group_ranges` TEXT NOT NULL, `allocated_scene_ranges` TEXT NOT NULL, `provisioner_address` INTEGER, `global_ttl` INTEGER NOT NULL, `last_selected` INTEGER NOT NULL, PRIMARY KEY(`provisioner_uuid`), FOREIGN KEY(`mesh_uuid`) REFERENCES `mesh_network`(`mesh_uuid`) ON UPDATE CASCADE ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "meshUuid",
@@ -273,12 +267,6 @@
             "notNull": true
           },
           {
-            "fieldPath": "sequenceNumber",
-            "columnName": "sequence_number",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
             "fieldPath": "provisionerAddress",
             "columnName": "provisioner_address",
             "affinity": "INTEGER",
@@ -310,7 +298,7 @@
             "columnNames": [
               "mesh_uuid"
             ],
-            "createSql": "CREATE  INDEX `index_provisioner_mesh_uuid` ON `${TABLE_NAME}` (`mesh_uuid`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_provisioner_mesh_uuid` ON `${TABLE_NAME}` (`mesh_uuid`)"
           }
         ],
         "foreignKeys": [
@@ -428,13 +416,13 @@
             "notNull": false
           },
           {
-            "fieldPath": "mAddedNetKeyIndexes",
+            "fieldPath": "mAddedNetKeys",
             "columnName": "netKeys",
             "affinity": "TEXT",
             "notNull": false
           },
           {
-            "fieldPath": "mAddedAppKeyIndexes",
+            "fieldPath": "mAddedAppKeys",
             "columnName": "appKeys",
             "affinity": "TEXT",
             "notNull": false
@@ -507,7 +495,7 @@
             "columnNames": [
               "mesh_uuid"
             ],
-            "createSql": "CREATE  INDEX `index_nodes_mesh_uuid` ON `${TABLE_NAME}` (`mesh_uuid`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_nodes_mesh_uuid` ON `${TABLE_NAME}` (`mesh_uuid`)"
           }
         ],
         "foreignKeys": [
@@ -584,7 +572,7 @@
             "columnNames": [
               "mesh_uuid"
             ],
-            "createSql": "CREATE  INDEX `index_groups_mesh_uuid` ON `${TABLE_NAME}` (`mesh_uuid`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_groups_mesh_uuid` ON `${TABLE_NAME}` (`mesh_uuid`)"
           }
         ],
         "foreignKeys": [
@@ -643,7 +631,7 @@
             "columnNames": [
               "mesh_uuid"
             ],
-            "createSql": "CREATE  INDEX `index_scene_mesh_uuid` ON `${TABLE_NAME}` (`mesh_uuid`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_scene_mesh_uuid` ON `${TABLE_NAME}` (`mesh_uuid`)"
           }
         ],
         "foreignKeys": [
@@ -664,7 +652,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a62620dfe9fd5366499fb48fcc489be0')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'dc74c1727a65404e3d1795816f05be43')"
     ]
   }
 }

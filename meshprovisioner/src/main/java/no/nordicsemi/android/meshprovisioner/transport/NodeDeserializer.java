@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import androidx.annotation.RestrictTo;
+
 import no.nordicsemi.android.meshprovisioner.Features;
 import no.nordicsemi.android.meshprovisioner.NodeKey;
 import no.nordicsemi.android.meshprovisioner.utils.CompositionDataParser;
@@ -107,6 +108,10 @@ public final class NodeDeserializer implements JsonSerializer<List<ProvisionedMe
 
             if (jsonObject.has("name"))
                 node.nodeName = jsonObject.get("name").getAsString();
+
+            if (jsonObject.has("sequenceNumber"))
+                node.sequenceNumber = jsonObject.get("sequenceNumber").getAsInt() + 100;//导入时，默认给sequenceNumber加100，避免导出到导入期间设备被控制，导致数据不一致
+
             nodes.add(node);
         }
 
@@ -124,6 +129,7 @@ public final class NodeDeserializer implements JsonSerializer<List<ProvisionedMe
             nodeJson.addProperty("unicastAddress", MeshParserUtils.bytesToHex(MeshAddress.addressIntToBytes(node.getUnicastAddress()), false));
             nodeJson.addProperty("security", (node.getSecurity() == ProvisionedBaseMeshNode.HIGH) ? "high" : "low");
             nodeJson.addProperty("configComplete", node.isConfigured());
+            nodeJson.addProperty("sequenceNumber", node.sequenceNumber);
 
             if (node.getCompanyIdentifier() != null)
                 nodeJson.addProperty("cid", CompositionDataParser.formatCompanyIdentifier(node.getCompanyIdentifier(), false));
