@@ -109,14 +109,14 @@ class ConnectTestActivity : BaseMeshActivity() {
                     Utils.printLog(TAG, "setGenericOnOff result:$boolean")
                 }
             })
-            var map = HashMap<String, Any>()
-            map["LightSwitch"] = if (isChecked) 1 else 0
-            MeshSDK.modifyLightStatus(mUUID, map, object :
-                BooleanCallback {
-                override fun onResult(boolean: Boolean) {
-                    Utils.printLog(TAG, "setGenericOnOff result:$boolean")
-                }
-            })
+//            var map = HashMap<String, Any>()
+//            map["LightSwitch"] = if (isChecked) 1 else 0
+//            MeshSDK.modifyLightStatus(mUUID, map, object :
+//                BooleanCallback {
+//                override fun onResult(boolean: Boolean) {
+//                    Utils.printLog(TAG, "setGenericOnOff result:$boolean")
+//                }
+//            })
         }
 
         btn_send_vendor.setOnClickListener {

@@ -392,10 +392,14 @@ public class MeshParserUtils {
      * @return length of opcodes
      */
     public static byte[] createVendorOpCode(final int opCode, final int companyIdentifier) {
-        final byte[] opCodes = getOpCode(opCode);
-        opCodes[1] = (byte) (companyIdentifier & 0xFF);
-        opCodes[2] = (byte) ((companyIdentifier >> 8) & 0xFF);
-        return opCodes;
+//        final byte[] opCodes = getOpCode(opCode);
+//        opCodes[1] = (byte) (companyIdentifier & 0xFF);
+//        opCodes[2] = (byte) ((companyIdentifier >> 8) & 0xFF);
+//        return opCodes;
+        if (companyIdentifier != 0xFFFF) {
+            return new byte[]{(byte) (0xC0 | (opCode & 0x3F)), (byte) (companyIdentifier & 0xFF), (byte) ((companyIdentifier >> 8) & 0xFF)};
+        }
+        return null;
     }
 
     /**

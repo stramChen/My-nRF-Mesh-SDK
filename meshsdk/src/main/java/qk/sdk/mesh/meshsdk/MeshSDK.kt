@@ -7,6 +7,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import me.weyye.hipermission.PermissionCallback
 import no.nordicsemi.android.meshprovisioner.UnprovisionedBeacon
+import no.nordicsemi.android.meshprovisioner.models.GenericOnOffServerModel
 import no.nordicsemi.android.meshprovisioner.models.VendorModel
 import no.nordicsemi.android.meshprovisioner.transport.*
 import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils
@@ -607,7 +608,7 @@ object MeshSDK {
         try {
             if (MeshHelper.getSelectedMeshNode()?.uuid != uuid) {
                 MeshHelper.getProvisionNode()?.forEach { node ->
-                    if (node.uuid == uuid) {
+                    if (node.uuid.toUpperCase() == uuid.toUpperCase()) {
                         MeshHelper.setSelectedMeshNode(node)
                     }
                 }
@@ -1086,7 +1087,7 @@ object MeshSDK {
             node.elements.values.forEach { eleValue ->
                 modelTotalSize = modelTotalSize.plus(eleValue.meshModels?.values?.size ?: 0)
                 eleValue.meshModels?.values?.forEach { meshModel ->
-                    if (meshModel.boundAppKeyIndexes?.size ?: 0 > 0) {
+                    if (meshModel.boundAppKeyIndexes?.size ?: 0 > 0 && (meshModel is GenericOnOffServerModel || meshModel is VendorModel)) {
                         runBlocking {
                             launch {
                                 delay(500)
@@ -1094,14 +1095,14 @@ object MeshSDK {
                                     eleValue.elementAddress
                                     ,
                                     publishAddress,
-                                    meshModel.boundAppKeyIndexes!!.get(0),
+                                    meshModel.boundAppKeyIndexes[0],
                                     false,
                                     MeshParserUtils.USE_DEFAULT_TTL
                                     ,
                                     53,
                                     0,
-                                    1,
-                                    1,
+                                    0,
+                                    0,
                                     meshModel.modelId
                                 )
 
@@ -1161,7 +1162,7 @@ object MeshSDK {
             node.elements.values.forEach { eleValue ->
                 modelTotalSize = modelTotalSize.plus(eleValue.meshModels?.values?.size ?: 0)
                 eleValue.meshModels?.values?.forEach { meshModel ->
-                    if (meshModel.boundAppKeyIndexes?.size ?: 0 > 0) {
+                    if (meshModel.boundAppKeyIndexes?.size ?: 0 > 0 && (meshModel is GenericOnOffServerModel || meshModel is VendorModel)) {
                         runBlocking {
                             launch {
                                 delay(500)
@@ -1169,14 +1170,14 @@ object MeshSDK {
                                     eleValue.elementAddress
                                     ,
                                     publishAddress,
-                                    meshModel.boundAppKeyIndexes!!.get(0),
+                                    meshModel.boundAppKeyIndexes[0],
                                     false,
                                     MeshParserUtils.USE_DEFAULT_TTL
                                     ,
                                     53,
                                     0,
-                                    1,
-                                    1,
+                                    0,
+                                    0,
                                     meshModel.modelId
                                 )
 
@@ -1224,25 +1225,27 @@ object MeshSDK {
             node?.elements?.values?.forEach { eleValue ->
                 modelTotal += eleValue.meshModels?.size ?: 0
                 eleValue?.meshModels?.values?.forEach { model ->
-                    runBlocking {
-                        launch {
-                            delay(100)
-                            val modelIdentifier = model.getModelId()
-                            val configModelSubscriptionAdd: MeshMessage
-                            var elementAddress = eleValue.elementAddress
-                            configModelSubscriptionAdd =
-                                ConfigModelSubscriptionAdd(
-                                    elementAddress,
-                                    groupAddr,
-                                    modelIdentifier
+                    if (model is VendorModel || model is GenericOnOffServerModel) {
+                        runBlocking {
+                            launch {
+                                delay(100)
+                                val modelIdentifier = model.getModelId()
+                                val configModelSubscriptionAdd: MeshMessage
+                                var elementAddress = eleValue.elementAddress
+                                configModelSubscriptionAdd =
+                                    ConfigModelSubscriptionAdd(
+                                        elementAddress,
+                                        groupAddr,
+                                        modelIdentifier
+                                    )
+                                MeshHelper.sendMessage(
+                                    "sendSubscribeMsg",
+                                    node.unicastAddress,
+                                    configModelSubscriptionAdd,
+                                    null
                                 )
-                            MeshHelper.sendMessage(
-                                "sendSubscribeMsg",
-                                node.unicastAddress,
-                                configModelSubscriptionAdd,
-                                null
-                            )
-                            index++
+                                index++
+                            }
                         }
                     }
                 }
