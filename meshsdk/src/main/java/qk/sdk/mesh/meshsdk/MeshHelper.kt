@@ -559,17 +559,17 @@ object MeshHelper {
         timeOut: Boolean = false,
         retry: Boolean = false
     ) {
-        rx.Observable.create<String> {
-        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
-            MeshProxyService.mMeshProxyService?.sendMeshPdu(
-                method,
-                dst,
-                message,
-                callback,
-                timeOut,
-                retry
-            )
-        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
+//        rx.Observable.create<String> {
+//        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+        MeshProxyService.mMeshProxyService?.sendMeshPdu(
+            method,
+            dst,
+            message,
+            callback,
+            timeOut,
+            retry
+        )
+//        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
     // 获取选中的 model

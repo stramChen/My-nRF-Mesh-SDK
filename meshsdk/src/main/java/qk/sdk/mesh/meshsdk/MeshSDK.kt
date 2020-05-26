@@ -655,6 +655,11 @@ object MeshSDK {
         timeout: Boolean = false,
         retry: Boolean = false
     ) {
+        runBlocking {
+            launch {
+                delay(50)
+            }
+        }
         if (!MeshHelper.isConnectedToProxy()) {
             doVendorCallback(
                 callback,
