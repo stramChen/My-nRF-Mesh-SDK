@@ -86,7 +86,8 @@ class ScanTestActivity : BaseMeshActivity(),
     override fun onItemClick(data: HashMap<String, Any>, position: Int) {
         MeshSDK.stopScan()
 
-        var netKey = "525E52D87A4511EABF8D0242AC48000A"
+//        var netKey = "525E52D87A4511EABF8D0242AC48000A"
+        var netKey = "123452D87A4511EABF8D0242AC48000A"
 
         MeshSDK.getCurrentNetworkKey(object : StringCallback {
             override fun onResultMsg(msg: String) {

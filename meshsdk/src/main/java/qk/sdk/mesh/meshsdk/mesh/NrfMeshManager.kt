@@ -624,7 +624,7 @@ class NrfMeshManager(
     }
 
     override fun onMeshPduCreated(pdu: ByteArray) {
-        Utils.printLog(TAG,"onMeshPduCreated")
+        Utils.printLog(TAG, "onMeshPduCreated")
         bleMeshManager?.sendPdu(pdu)
     }
 
@@ -1361,8 +1361,13 @@ class NrfMeshManager(
         networkKey: NetworkKey? = null
     ) {
         try {
-            if (mIsScanning)
-                return
+            if (mIsScanning) {
+                if (filterUuid.compareTo(mFilterUuid) == 0) {
+                    return
+                } else {
+                    stopScan()
+                }
+            }
 
             mIsScanning = true
 

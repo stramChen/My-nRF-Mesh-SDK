@@ -113,6 +113,24 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
             }
         })
 
+        MeshSDK.connect(ByteUtil.bytesToHexString(
+            MeshHelper.getAllNetworkKey()?.get(1)?.key
+        ),
+//                MeshSDK.connect("758DB07ED6CE6FEE180DFE199EC65BCF",
+            object : MapCallback {
+                override fun onResult(result: HashMap<String, Any>) {
+                    Utils.printLog(TAG, "connect result:${result.get("code")}")
+                    if (MeshHelper.createGroup("01029012901920")) {
+//                                MeshSDK.subscribeStatus(data.uuid, object : MapCallback {
+//                                    override fun onResult(result: HashMap<String, Any>) {
+//                                        result.forEach { key, value ->
+//                                            Utils.printLog(TAG, "key:$key,value:$value")
+//                                        }
+//                                    }
+//                                })
+                    }
+                }
+            })
     }
 
     private fun bindModel(node: ProvisionedMeshNode) {
