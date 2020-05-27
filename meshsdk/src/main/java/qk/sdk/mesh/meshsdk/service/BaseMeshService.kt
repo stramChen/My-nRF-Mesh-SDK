@@ -291,6 +291,7 @@ open class BaseMeshService : LifecycleService() {
         timeOut: Boolean = false,
         retry: Boolean = false
     ) {
+        Utils.printLog(TAG,"sendMeshPdu")
         mNrfMeshManager?.meshManagerApi?.createMeshPdu(dst, message)
         MeshHandler.addRunnable(MeshMsgSender(method, dst, message, callback, timeOut, retry))
     }

@@ -561,6 +561,7 @@ object MeshHelper {
     ) {
 //        rx.Observable.create<String> {
 //        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
+        Utils.printLog(TAG,"sendMeshPdu")
         MeshProxyService.mMeshProxyService?.sendMeshPdu(
             method,
             dst,

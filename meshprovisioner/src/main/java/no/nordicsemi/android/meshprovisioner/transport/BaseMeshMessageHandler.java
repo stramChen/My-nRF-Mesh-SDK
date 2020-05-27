@@ -41,6 +41,7 @@ import no.nordicsemi.android.meshprovisioner.MeshManagerApi;
 import no.nordicsemi.android.meshprovisioner.MeshNetwork;
 import no.nordicsemi.android.meshprovisioner.MeshStatusCallbacks;
 import no.nordicsemi.android.meshprovisioner.NetworkKey;
+import no.nordicsemi.android.meshprovisioner.utils.CommonUtil;
 import no.nordicsemi.android.meshprovisioner.utils.ExtendedInvalidCipherTextException;
 import no.nordicsemi.android.meshprovisioner.utils.MeshAddress;
 import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils;
@@ -246,6 +247,7 @@ public abstract class BaseMeshMessageHandler implements MeshMessageHandlerApi, I
         currentState.setStatusCallbacks(mStatusCallbacks);
         stateSparseArray.put(dst, toggleState(currentState.getMeshTransport(), configurationMessage));
         currentState.executeSend();
+        CommonUtil.INSTANCE.printLog(TAG," createProxyConfigMeshMessage executeSend");
     }
 
     /**

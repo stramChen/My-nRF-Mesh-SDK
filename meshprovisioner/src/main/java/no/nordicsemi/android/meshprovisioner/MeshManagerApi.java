@@ -62,6 +62,7 @@ import no.nordicsemi.android.meshprovisioner.transport.NetworkLayerCallbacks;
 import no.nordicsemi.android.meshprovisioner.transport.ProvisionedMeshNode;
 import no.nordicsemi.android.meshprovisioner.transport.UpperTransportLayerCallbacks;
 import no.nordicsemi.android.meshprovisioner.utils.ByteUtil;
+import no.nordicsemi.android.meshprovisioner.utils.CommonUtil;
 import no.nordicsemi.android.meshprovisioner.utils.ExtendedInvalidCipherTextException;
 import no.nordicsemi.android.meshprovisioner.utils.InputOOBAction;
 import no.nordicsemi.android.meshprovisioner.utils.MeshAddress;
@@ -214,7 +215,6 @@ public class MeshManagerApi implements MeshMngrApi {
     }
 
     /**
-     *
      * Allow Iv Index recovery over 42.
      * According to Bluetooth Mesh Profile 1.0.1, section 3.10.5, if the IV Index of the mesh
      * network increased by more than 42 since the last connection (which can take at least
@@ -935,6 +935,7 @@ public class MeshManagerApi implements MeshMngrApi {
                     throw new IllegalArgumentException("Label UUID unavailable for the virtual address provided");
                 }
             }
+            CommonUtil.INSTANCE.printLog(TAG, "createMeshPdu");
             mMeshMessageHandler.createMeshMessage(provisioner.getProvisionerAddress(), dst, label, meshMessage);
         } else {
             throw new IllegalArgumentException("Provisioner address not set, please assign an address to the provisioner.");

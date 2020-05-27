@@ -624,6 +624,7 @@ class NrfMeshManager(
     }
 
     override fun onMeshPduCreated(pdu: ByteArray) {
+        Utils.printLog(TAG,"onMeshPduCreated")
         bleMeshManager?.sendPdu(pdu)
     }
 
