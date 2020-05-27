@@ -38,6 +38,7 @@ import qk.sdk.mesh.meshsdk.util.Utils
 //class BleMeshManager @Inject
 class BleMeshManager
 constructor(context: Context) : LoggableBleManager<BleMeshManagerCallbacks>(context) {
+    private val TAG = "BleMeshManager"
 
     companion object {
         private val MTU_SIZE_DEFAULT = 23
@@ -47,11 +48,13 @@ constructor(context: Context) : LoggableBleManager<BleMeshManagerCallbacks>(cont
          * Mesh provisioning service UUID
          */
         val MESH_PROVISIONING_UUID = UUID.fromString("00001827-0000-1000-8000-00805F9B34FB")
+
         /**
          * Mesh provisioning data in characteristic UUID
          */
         private val MESH_PROVISIONING_DATA_IN =
             UUID.fromString("00002ADB-0000-1000-8000-00805F9B34FB")
+
         /**
          * Mesh provisioning data out characteristic UUID
          */
@@ -83,6 +86,7 @@ constructor(context: Context) : LoggableBleManager<BleMeshManagerCallbacks>(cont
     var isDeviceReady: Boolean = false
     var mNodeReset: Boolean = false
     private var mBluetoothGatt: BluetoothGatt? = null
+
     /**
      * BluetoothGatt callbacks for connection/disconnection, service discovery, receiving notifications, etc.
      */
@@ -205,6 +209,7 @@ constructor(context: Context) : LoggableBleManager<BleMeshManagerCallbacks>(cont
      * @param pdu mesh pdu.
      */
     fun sendPdu(pdu: ByteArray) {
+        Utils.printLog(TAG, "sendPdu isDeviceReady:$isDeviceReady")
         if (!isDeviceReady)
             return
 

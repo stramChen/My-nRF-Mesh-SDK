@@ -655,11 +655,6 @@ object MeshSDK {
         timeout: Boolean = false,
         retry: Boolean = false
     ) {
-        runBlocking {
-            launch {
-                delay(50)
-            }
-        }
         if (!MeshHelper.isConnectedToProxy()) {
             doVendorCallback(
                 callback,
@@ -1222,6 +1217,14 @@ object MeshSDK {
         var map = HashMap<String, Any>()
         if (doProxyCheck(uuid, map, callback)) {
 
+            if (MeshHelper.getGroupByAddress(groupAddr) == null) {
+                doMapCallback(
+                    map,
+                    callback,
+                    CallbackMsg(ConnectState.GROUP_NOT_EXIST.code, ConnectState.GROUP_NOT_EXIST.msg)
+                )
+            }
+
             //获取provisioned节点
             var node = MeshHelper.getProvisionedNodeByUUID(uuid)
 
@@ -1233,7 +1236,7 @@ object MeshSDK {
                     if (model is VendorModel || model is GenericOnOffServerModel) {
                         runBlocking {
                             launch {
-                                delay(100)
+                                delay(1000)
                                 val modelIdentifier = model.getModelId()
                                 val configModelSubscriptionAdd: MeshMessage
                                 var elementAddress = eleValue.elementAddress

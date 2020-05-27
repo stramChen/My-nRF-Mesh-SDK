@@ -445,6 +445,7 @@ class NrfMeshManager(
     }
 
     override fun onDataSent(device: BluetoothDevice, mtu: Int, pdu: ByteArray) {
+        Utils.printLog(TAG, "onDataSent")
         meshManagerApi.handleWriteCallbacks(mtu, pdu)
     }
 
