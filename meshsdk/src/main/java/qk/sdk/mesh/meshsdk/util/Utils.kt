@@ -73,6 +73,7 @@ object Utils {
 
     //Message timeout in case the message fails to lost/received
     val MESSAGE_TIME_OUT = 10000
+
     //Manage ranges
     val UNICAST_RANGE = 0
     val GROUP_RANGE = 1
@@ -101,6 +102,12 @@ object Utils {
             key1.getKeyIndex(),
             key2.getKeyIndex()
         )
+    }
+
+    var mContext: Context? = null
+
+    fun setContext(context: Context) {
+        mContext = context
     }
 
     /**
@@ -282,8 +289,13 @@ object Utils {
 
     fun printLog(tag: String, msg: String) {
 //        if (BuildConfig.DEBUG) {
-            Log.e(tag, msg)
+        Log.e(tag, msg)
 //        }
+        LogFileUtil.writeLogToInnerFile(
+            mContext,
+            "$tag-$msg",
+            LogFileUtil.getInnerFileName(Constants.MESH_LOG_FILE_NAME)
+        )
     }
 
     fun getMacFromUUID(uuid: String): String {

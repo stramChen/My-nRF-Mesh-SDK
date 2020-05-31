@@ -561,7 +561,7 @@ object MeshHelper {
     ) {
 //        rx.Observable.create<String> {
 //        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
-        Utils.printLog(TAG,"sendMeshPdu")
+        Utils.printLog(TAG, "sendMeshPdu")
         MeshProxyService.mMeshProxyService?.sendMeshPdu(
             method,
             dst,
@@ -620,6 +620,7 @@ object MeshHelper {
 
     fun sendGenericOnOff(state: Boolean, delay: Int) {
         getSelectedMeshNode()?.let { node ->
+            node.ttl = 16
             getSelectedElement()?.let { element ->
                 getSelectedModel()?.let { model ->
                     if (model.boundAppKeyIndexes.isNotEmpty()) {
@@ -629,6 +630,34 @@ object MeshHelper {
                         val address = element.elementAddress
                         if (appKey != null) {
                             val genericOnOffSet = GenericOnOffSet(
+                                appKey,
+                                state,
+                                node.sequenceNumber,
+                                0,
+                                0,
+                                delay
+                            )
+                            sendMessage("sendGenericOnOff", address, genericOnOffSet, null)
+                        }
+                    } else {
+                        Utils.printLog(TAG, "boundAppKeyIndexes is null!")
+                    }
+                }
+            }
+        }
+    }
+
+    fun sendUnacknowledgedGenericOnOff(state: Boolean, delay: Int) {
+        getSelectedMeshNode()?.let { node ->
+            getSelectedElement()?.let { element ->
+                getSelectedModel()?.let { model ->
+                    if (model.boundAppKeyIndexes.isNotEmpty()) {
+                        val appKeyIndex = model.boundAppKeyIndexes[0]
+                        val appKey =
+                            getMeshNetwork()?.getAppKey(appKeyIndex)
+                        val address = element.elementAddress
+                        if (appKey != null) {
+                            val genericOnOffSet = GenericOnOffSetUnacknowledged(
                                 appKey,
                                 state,
                                 node.sequenceNumber,

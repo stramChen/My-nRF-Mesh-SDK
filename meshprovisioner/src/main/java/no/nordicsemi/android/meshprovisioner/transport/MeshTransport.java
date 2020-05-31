@@ -129,6 +129,7 @@ final class MeshTransport extends NetworkLayer {
         final byte[] sequenceNum = MeshParserUtils.getSequenceNumberBytes(sequenceNumber);
 
         Log.v(TAG, "Src address: " + MeshAddress.formatAddress(src, false));
+        Log.v(TAG, "ttl: " + node.getTtl());
         Log.v(TAG, "Dst address: " + MeshAddress.formatAddress(dst, false));
         Log.v(TAG, "Key: " + MeshParserUtils.bytesToHex(key, false));
         Log.v(TAG, "akf: " + akf);
@@ -190,6 +191,7 @@ final class MeshTransport extends NetworkLayer {
         Log.v(TAG, "Dst address: " + MeshAddress.formatAddress(dst, false));
         Log.v(TAG, "Key: " + MeshParserUtils.bytesToHex(key.getKey(), false));
         Log.v(TAG, "akf: " + akf);
+        Log.v(TAG, "ttl: " + node.ttl);
         Log.v(TAG, "aid: " + aid);
         Log.v(TAG, "aszmic: " + aszmic);
         Log.v(TAG, "Sequence number: " + sequenceNumber);
@@ -252,6 +254,7 @@ final class MeshTransport extends NetworkLayer {
         Log.v(TAG, "Dst address: " + MeshAddress.formatAddress(dst, false));
         Log.v(TAG, "Key: " + MeshParserUtils.bytesToHex(key.getKey(), false));
         Log.v(TAG, "akf: " + akf);
+        Log.v(TAG, "ttl: " + node.ttl);
         Log.v(TAG, "aid: " + aid);
         Log.v(TAG, "aszmic: " + aszmic);
         Log.v(TAG, "Sequence number: " + sequenceNumber);
@@ -299,6 +302,7 @@ final class MeshTransport extends NetworkLayer {
         Log.v(TAG, "Src address: " + MeshAddress.formatAddress(src, false));
         Log.v(TAG, "Dst address: " + MeshAddress.formatAddress(dst, false));
         Log.v(TAG, "Sequence number: " + sequenceNumber);
+        Log.v(TAG, "ttl: " + node.ttl);
         Log.v(TAG, "Control message opcode: " + Integer.toHexString(opcode));
         Log.v(TAG, "Control message parameters: " + MeshParserUtils.bytesToHex(parameters, false));
 

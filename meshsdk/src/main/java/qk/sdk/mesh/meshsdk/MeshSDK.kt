@@ -45,6 +45,7 @@ object MeshSDK {
     // 初始化 mesh
     fun init(context: Context) {
         mContext = context
+        Utils.mContext = context
         mContext?.apply {
             MeshHelper.initMesh(this)
         }
@@ -619,6 +620,39 @@ object MeshSDK {
                 MeshHelper.getSelectedElement()?.meshModels?.get(ON_OFF_MODELID)
             )
             MeshHelper.sendGenericOnOff(onOff, 0)
+
+            mConnectCallbacks.remove("setGenericOnOff")
+            callback.onResult(true)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            callback.onResult(false)
+        }
+    }
+
+    fun setUnacknowledgedGenericOnOff(
+        uuid: String, onOff: Boolean,
+        eleIndex: Int, callback: BooleanCallback
+    ) {
+        if (!MeshHelper.isConnectedToProxy()) {
+            callback.onResult(false)
+            return
+        }
+
+        mConnectCallbacks["setGenericOnOff"] = callback
+        try {
+            if (MeshHelper.getSelectedMeshNode()?.uuid != uuid) {
+                MeshHelper.getProvisionNode()?.forEach { node ->
+                    if (node.uuid.toUpperCase() == uuid.toUpperCase()) {
+                        MeshHelper.setSelectedMeshNode(node)
+                    }
+                }
+            }
+
+            MeshHelper.setSelectedModel(
+                MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(eleIndex),
+                MeshHelper.getSelectedElement()?.meshModels?.get(ON_OFF_MODELID)
+            )
+            MeshHelper.sendUnacknowledgedGenericOnOff(onOff, 0)
 
             mConnectCallbacks.remove("setGenericOnOff")
             callback.onResult(true)
@@ -1334,7 +1368,12 @@ object MeshSDK {
         }
     }
 
-    fun modifyLightStatus(uuid: String, params: HashMap<String, Any>, callback: BooleanCallback) {
+    fun modifyLightStatus(
+        uuid: String,
+        params: HashMap<String, Any>,
+        callback: BooleanCallback,
+        isAcknowledged: Boolean = true
+    ) {
         var hsv = params["HSVColor"]
         var bright = params["Brightness"]
         var temperature = params["ColorTemperature"]
@@ -1413,7 +1452,15 @@ object MeshSDK {
             var onOffType = getNumberType(onOff)
             var onOffParam =
                 if (onOffType == 1) onOff as Int else if (onOffType == 2) (onOff as Double).toInt() else (onOff as Float).toInt()
-            setGenericOnOff(uuid, if (onOffParam == 0) false else true, 0, callback)
+            if (isAcknowledged)
+                setGenericOnOff(uuid, if (onOffParam == 0) false else true, 0, callback)
+            else
+                setUnacknowledgedGenericOnOff(
+                    uuid,
+                    if (onOffParam == 0) false else true,
+                    0,
+                    callback
+                )
         } else {
             callback.onResult(false)
         }

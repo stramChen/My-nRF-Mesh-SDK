@@ -60,7 +60,8 @@ abstract class Message implements Parcelable {
         ctl = source.readInt();
         networkLayerPdu = readSparseArrayToParcelable(source);
         pduType = source.readInt();
-        ttl = source.readInt();
+//        ttl = source.readInt();
+        ttl = 16;
         src = source.readInt();
         dst = source.readInt();
         mSequenceNumber = source.createByteArray();
