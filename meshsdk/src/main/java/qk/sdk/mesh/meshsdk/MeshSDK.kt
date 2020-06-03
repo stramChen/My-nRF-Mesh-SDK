@@ -25,6 +25,7 @@ import qk.sdk.mesh.meshsdk.util.Constants.ConnectState
 import rx.Observable
 import rx.android.schedulers.AndroidSchedulers
 import java.lang.Exception
+import java.lang.Thread.sleep
 import java.util.concurrent.atomic.AtomicBoolean
 
 object MeshSDK {
@@ -1323,12 +1324,12 @@ object MeshSDK {
 
             var index = 0
             var modelTotal = 0
-            node?.elements?.values?.forEach { eleValue ->
-                modelTotal += eleValue.meshModels?.size ?: 0
-                eleValue?.meshModels?.values?.forEach { model ->
-                    runBlocking {
-                        launch {
-                            delay(1000)
+            Thread(Runnable {
+                node?.elements?.values?.forEach { eleValue ->
+                    modelTotal += eleValue.meshModels?.size ?: 0
+                    eleValue?.meshModels?.values?.forEach { model ->
+                        if (model is VendorModel || model is GenericOnOffServerModel){
+                            sleep(1000)
                             val modelIdentifier = model.getModelId()
                             val configModelSubscriptionAdd: MeshMessage
                             var elementAddress = eleValue.elementAddress
@@ -1353,11 +1354,11 @@ object MeshSDK {
                                 configModelSubscriptionAdd,
                                 null
                             )
-                            index++
                         }
+                        index++
                     }
                 }
-            }
+            }).start()
 
             if (index == modelTotal) {
                 doMapCallback(
