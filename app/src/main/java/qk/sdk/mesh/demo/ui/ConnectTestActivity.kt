@@ -155,22 +155,40 @@ class ConnectTestActivity : BaseMeshActivity() {
 
         btn_set_publication.setOnClickListener {
             //            MeshSDK.resetNode(mUUID)
-            MeshSDK.setPublication(mUUID, Constants.TEST_GROUP, object : MapCallback {
+            MeshSDK.setPublication(mUUID, Constants.TEST_GROUP, 0xC000, object : MapCallback {
                 override fun onResult(result: HashMap<String, Any>) {
                     result.forEach { t, u ->
-                        Utils.printLog(TAG, "set publication,key:$t,value:$u")
+                        Utils.printLog(TAG, "set publication 0xC000,key:$t,value:$u")
                     }
+                    MeshSDK.setPublication(
+                        mUUID,
+                        Constants.TEST_GROUP_PIR,
+                        0xC002,
+                        object : MapCallback {
+                            override fun onResult(result: HashMap<String, Any>) {
+                                result.forEach { t, u ->
+                                    Utils.printLog(TAG, "set publication 0xC002,key:$t,value:$u")
+                                }
+                            }
+                        })
                 }
             })
+
         }
 
         btn_subscribe.setOnClickListener {
 //            if (MeshHelper.getGroupByName(Constants.TEST_GROUP) == null)
-                MeshSDK.createGroup(Constants.TEST_GROUP, object : BooleanCallback {
-                    override fun onResult(boolean: Boolean) {
-                        Utils.printLog(TAG, "createGroup:$boolean")
-                    }
-                })
+            MeshSDK.createGroup(Constants.TEST_GROUP, object : BooleanCallback {
+                override fun onResult(boolean: Boolean) {
+                    Utils.printLog(TAG, "createGroup:$boolean")
+                }
+            }, 0xC000)
+
+            MeshSDK.createGroup(Constants.TEST_GROUP_PIR, object : BooleanCallback {
+                override fun onResult(boolean: Boolean) {
+                    Utils.printLog(TAG, "createGroup TEST_GROUP_PIR:$boolean")
+                }
+            }, 0xC002)
 
 //            MeshSDK.setPublication(mUUID, Constants.TEST_GROUP, object : MapCallback {
 //                override fun onResult(result: HashMap<String, Any>) {

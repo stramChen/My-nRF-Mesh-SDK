@@ -912,7 +912,7 @@ object MeshHelper {
 
     private fun addPoxyFilter(groupAdd: String): Boolean {
         val address = MeshParserUtils.toByteArray(groupAdd)
-        Utils.printLog(TAG, "address bytes:${ByteUtil.bytesToHexString(address)}")
+        Utils.printLog(TAG, "addPoxyFilter address bytes:${ByteUtil.bytesToHexString(address)}")
 
         val addAddressToFilter = ProxyConfigAddAddressToFilter(
             arrayListOf(

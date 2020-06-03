@@ -122,7 +122,8 @@ public class ConfigModelPublicationSet extends ConfigMessage {
 
         final int rfu = 0; // We ignore the rfu here
         final int octet5 = (applicationKeyIndex[0] | (credentialFlag ? 0b01 : 0b00) << 4);
-        final byte publishPeriod = (byte) ((publicationResolution << 6) | (publicationSteps & 0x3F));
+//        final byte publishPeriod = (byte) ((publicationResolution << 6) | (publicationSteps & 0x3F));
+        final byte publishPeriod = (byte) publicationSteps;
         final int octet8 = (publishRetransmitIntervalSteps << 5) | (publishRetransmitCount & 0x07);
         //We check if the model identifier value is within the range of a 16-bit value here. If it is then it is a sig model
         if (modelIdentifier >= Short.MIN_VALUE && modelIdentifier <= Short.MAX_VALUE) {
@@ -153,7 +154,7 @@ public class ConfigModelPublicationSet extends ConfigMessage {
             paramsBuffer.put(modelIdentifier[2]);
             mParameters = paramsBuffer.array();
         }
-        Log.e(TAG,"assembleMessageParameters:"+ ByteUtil.bytesToHexString(mParameters));
+        Log.e(TAG, "assembleMessageParameters:" + ByteUtil.bytesToHexString(mParameters));
         Log.v(TAG, "Publication set: " + MeshParserUtils.bytesToHex(mParameters, false));
     }
 

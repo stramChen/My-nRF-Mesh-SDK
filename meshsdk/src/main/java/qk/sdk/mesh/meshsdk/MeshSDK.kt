@@ -42,6 +42,9 @@ object MeshSDK {
 
     var mConnectCallbacks = HashMap<String, Any>(20)
 
+    private const val PUBLISH_INTERVAL = 88
+    private const val PUBLISH_TTL = 5
+
     // 初始化 mesh
     fun init(context: Context) {
         mContext = context
@@ -1131,9 +1134,8 @@ object MeshSDK {
                                     publishAddress,
                                     meshModel.boundAppKeyIndexes[0],
                                     false,
-                                    MeshParserUtils.USE_DEFAULT_TTL
-                                    ,
-                                    53,
+                                    PUBLISH_TTL,
+                                    PUBLISH_INTERVAL,
                                     0,
                                     0,
                                     0,
@@ -1206,9 +1208,8 @@ object MeshSDK {
                                     publishAddress,
                                     meshModel.boundAppKeyIndexes[0],
                                     false,
-                                    MeshParserUtils.USE_DEFAULT_TTL
-                                    ,
-                                    53,
+                                    PUBLISH_TTL,
+                                    PUBLISH_INTERVAL,
                                     0,
                                     0,
                                     0,
@@ -1481,7 +1482,7 @@ object MeshSDK {
         var meshCallback = object : MeshCallback {
             override fun onReceive(msg: MeshMessage) {
                 var node = MeshHelper?.getMeshNetwork()?.getNode(msg.src)
-                Utils.printLog(TAG, "receive uuid:${node?.uuid} ,sendSubscribeMsg uuid:$uuid")
+                Utils.printLog(TAG, " uuid:${node?.uuid} ,sendSubscribeMsg uuid:$uuid")
                 if (uuid.isNotEmpty() && node?.uuid?.toUpperCase() != uuid.toUpperCase()) {
                     return
                 }
