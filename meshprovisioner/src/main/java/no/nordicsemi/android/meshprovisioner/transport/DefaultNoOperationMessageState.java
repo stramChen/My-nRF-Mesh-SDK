@@ -20,6 +20,7 @@ import no.nordicsemi.android.meshprovisioner.opcodes.ProxyConfigMessageOpCodes;
 import no.nordicsemi.android.meshprovisioner.opcodes.SensorOpCodes;
 import no.nordicsemi.android.meshprovisioner.utils.AddressArray;
 import no.nordicsemi.android.meshprovisioner.utils.ByteUtil;
+import no.nordicsemi.android.meshprovisioner.utils.CommonUtil;
 import no.nordicsemi.android.meshprovisioner.utils.ExtendedInvalidCipherTextException;
 import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils;
 import no.nordicsemi.android.meshprovisioner.utils.NetworkTransmitSettings;
@@ -82,6 +83,7 @@ class DefaultNoOperationMessageState extends MeshMessageState {
         final byte[] accessPayload = message.getAccessPdu();
         final ProvisionedMeshNode node = mInternalTransportCallbacks.getNode(message.getSrc());
         final int opCodeLength = ((accessPayload[0] & 0xF0) >> 6);
+        CommonUtil.INSTANCE.printLog(TAG, "opCodeLength:" + opCodeLength + " ,opCode:" + message.getOpCode());
         //OpCode length
         switch (opCodeLength) {
             case 0:

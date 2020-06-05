@@ -557,7 +557,10 @@ abstract class BaseMeshNetwork {
     }
 
     public int getGlobalTtl() {
-        return getSelectedProvisioner().getGlobalTtl();
+        if (getSelectedProvisioner() == null) {
+            return 5;
+        } else
+            return getSelectedProvisioner().getGlobalTtl();
     }
 
     /**

@@ -1484,9 +1484,9 @@ object MeshSDK {
             override fun onReceive(msg: MeshMessage) {
                 var node = MeshHelper?.getMeshNetwork()?.getNode(msg.src)
                 Utils.printLog(TAG, " uuid:${node?.uuid} ,sendSubscribeMsg uuid:$uuid")
-                if (uuid.isNotEmpty() && node?.uuid?.toUpperCase() != uuid.toUpperCase()) {
-                    return
-                }
+//                if (uuid.isNotEmpty() && node?.uuid?.toUpperCase() != uuid.toUpperCase()) {
+//                    return
+//                }
 
                 var map = HashMap<String, Any>()
                 map["uuid"] = node?.uuid ?: ""

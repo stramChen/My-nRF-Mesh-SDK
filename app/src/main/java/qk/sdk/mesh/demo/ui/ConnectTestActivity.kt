@@ -29,6 +29,7 @@ class ConnectTestActivity : BaseMeshActivity() {
 
     override fun init() {
         mUUID = intent.getStringExtra("uuid") ?: ""
+        Utils.printLog(TAG, "mesh uuid:${mUUID}")
         initView()
 //        if (!MeshSDK.isConnectedToProxy()) {
 ////            startScan(Constants.SCAN_PROVISIONED, scanCallback)
