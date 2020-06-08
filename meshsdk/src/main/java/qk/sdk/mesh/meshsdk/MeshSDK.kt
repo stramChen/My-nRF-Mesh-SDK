@@ -787,9 +787,9 @@ object MeshSDK {
                                                     var quadrupleIndex = 0
                                                     var map = HashMap<String, Any>()
                                                     for (index in 0 until msg.parameter.size) {
-                                                        if (msg.parameter[index] == 0x00.toByte()) {
+                                                        if (msg.parameter[index] == 0x00.toByte() || msg.parameter[index] == 0x20.toByte() || index == msg.parameter.size - 1) {
                                                             when (quadrupleIndex) {
-                                                                0 -> {
+                                                                0 -> {//pk
                                                                     var pkBytes =
                                                                         ByteArray(index - preIndex)
                                                                     System.arraycopy(
@@ -803,7 +803,7 @@ object MeshSDK {
                                                                     quadrupleIndex++
                                                                     preIndex = index + 1
                                                                 }
-                                                                1 -> {
+                                                                1 -> {//ps
                                                                     var psBytes =
                                                                         ByteArray(index - preIndex)
                                                                     System.arraycopy(
@@ -817,7 +817,7 @@ object MeshSDK {
                                                                     quadrupleIndex++
                                                                     preIndex = index + 1
                                                                 }
-                                                                2 -> {
+                                                                2 -> {//dn
                                                                     var dnBytes =
                                                                         ByteArray(index - preIndex)
                                                                     System.arraycopy(
@@ -831,7 +831,7 @@ object MeshSDK {
                                                                     quadrupleIndex++
                                                                     preIndex = index + 1
                                                                 }
-                                                                3 -> {
+                                                                3 -> {//ds
                                                                     var dsBytes =
                                                                         ByteArray(index - preIndex)
                                                                     System.arraycopy(
@@ -842,6 +842,20 @@ object MeshSDK {
                                                                         dsBytes.size
                                                                     )
                                                                     map.put("ds", String(dsBytes))
+                                                                    quadrupleIndex++
+                                                                    preIndex = index + 1
+                                                                }
+                                                                4 -> {//product_id
+                                                                    var pidBytes =
+                                                                        ByteArray(index - preIndex)
+                                                                    System.arraycopy(
+                                                                        msg.parameter,
+                                                                        preIndex,
+                                                                        pidBytes,
+                                                                        0,
+                                                                        pidBytes.size
+                                                                    )
+                                                                    map.put("pid", String(pidBytes))
                                                                     quadrupleIndex++
                                                                     preIndex = index + 1
                                                                 }
@@ -1328,7 +1342,7 @@ object MeshSDK {
                 node?.elements?.values?.forEach { eleValue ->
                     modelTotal += eleValue.meshModels?.size ?: 0
                     eleValue?.meshModels?.values?.forEach { model ->
-                        if (model is VendorModel || model is GenericOnOffServerModel){
+                        if (model is VendorModel || model is GenericOnOffServerModel) {
                             sleep(1000)
                             val modelIdentifier = model.getModelId()
                             val configModelSubscriptionAdd: MeshMessage
