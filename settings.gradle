@@ -10,3 +10,5 @@ include ':app', ':meshsdk', ':meshprovisioner', ':mxnrfmesh', ':testdependence'
 //project(':MXCommonSDK').projectDir = new File("../MXCommonSDK")
 //include ':MXCommonSDK:http'
 //include ':MXCommonSDK:util'
+include ':realsilota'
+include ':baseutil'

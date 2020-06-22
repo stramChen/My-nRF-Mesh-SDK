@@ -22,7 +22,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".ui.PIRActivity"></activity>
+        <activity android:name=".ui.GattDfuActivity"></activity>
+        <activity android:name=".ui.PIRActivity" />
         <activity android:name=".ui.OnOffMeshActivity" />
         <activity android:name=".ui.GroupActivity" />
         <activity android:name=".ui.NetKeyActivity" /> <!-- <activity android:name=".ui.ConnectMeshActivity" /> -->

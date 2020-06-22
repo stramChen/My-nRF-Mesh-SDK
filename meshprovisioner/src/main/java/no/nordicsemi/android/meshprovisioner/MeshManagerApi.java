@@ -894,6 +894,20 @@ public class MeshManagerApi implements MeshMngrApi {
         return network;
     }
 
+    public void generateProvisioner() {
+        if (mMeshNetwork == null)
+            return;
+
+        final AllocatedUnicastRange unicastRange = new AllocatedUnicastRange(0x0001, 0x199A);
+        final AllocatedGroupRange groupRange = new AllocatedGroupRange(0xC000, 0xCC9A);
+        final AllocatedSceneRange sceneRange = new AllocatedSceneRange(0x0001, 0x3333);
+        final Provisioner provisioner = mMeshNetwork.createProvisioner("nRF Mesh Provisioner", unicastRange, groupRange, sceneRange);
+        final int unicast = provisioner.getAllocatedUnicastRanges().get(0).getLowAddress();
+        provisioner.assignProvisionerAddress(unicast);
+        mMeshNetwork.selectProvisioner(provisioner);
+        mMeshNetwork.addProvisioner(provisioner);
+    }
+
     private List<NetworkKey> generateNetKeys(final String meshUuid) {
         final List<NetworkKey> networkKeys = new ArrayList<>();
         final NetworkKey networkKey = new NetworkKey(0, SecureUtils.generateRandomNumber());

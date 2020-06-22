@@ -234,6 +234,8 @@ open class BaseMeshService : LifecycleService() {
                                     isProvisioningStarted = true
                                 }
                             }
+                        } catch (e: IllegalArgumentException) {
+                            mNrfMeshManager?.meshManagerApi?.generateProvisioner()
                         } catch (e: Exception) {
                             e.printStackTrace()
                             //todo  记录日志
@@ -245,6 +247,8 @@ open class BaseMeshService : LifecycleService() {
                                     )
                                 )
                             }
+                        } finally {
+
                         }
                     }
                 }
@@ -291,7 +295,7 @@ open class BaseMeshService : LifecycleService() {
         timeOut: Boolean = false,
         retry: Boolean = false
     ) {
-        Utils.printLog(TAG,"sendMeshPdu")
+        Utils.printLog(TAG, "sendMeshPdu")
         mNrfMeshManager?.meshManagerApi?.createMeshPdu(dst, message)
         MeshHandler.addRunnable(MeshMsgSender(method, dst, message, callback, timeOut, retry))
     }
@@ -419,22 +423,45 @@ open class BaseMeshService : LifecycleService() {
 
                     MeshSDK.mConnectCallbacks.forEach { key, value ->
                         if (value is MapCallback && meshMsg is VendorModelMessageStatus) {
-                            var map = HashMap<String, Any>()
-                            map["params"] = ByteUtil.bytesToHexString(this)
-                            map["opcode"] = "${meshMsg.opCode}"
-                            meshMsg.mMessage.apply {
-                                if (meshMsg.mMessage is AccessMessage) {
-                                    var pdus = (meshMsg.mMessage as AccessMessage).accessPdu
-                                    Utils.printLog(
-                                        TAG,
-                                        "mesh msg opcode:${meshMsg.opCode},pus:${ByteUtil.bytesToHexString(
-                                            pdus
-                                        )}"
-                                    )
-                                    map["accessPDU"] = ByteUtil.bytesToHexString(pdus)
+                            when (meshMsg.opCode) {
+                                0x8204 -> {//on off
+
+                                }
+                                0x10 -> {//light status
+                                    if (this.size >= 8) {
+                                        MeshSDK.parseLightStatus(
+                                            meshMsg.parameter,
+                                            value,
+                                            HashMap<String, Any>()
+                                        )
+                                    }
+                                }
+                                0x0B -> {//version
+                                    if (this.size >= 3) {
+                                        var map = HashMap<String, Any>()
+                                        map["version"] = "${this[0]}.${this[1]}.${this[2]}"
+                                        value.onResult(map)
+                                    }
+                                }
+                                else -> {
+                                    var map = HashMap<String, Any>()
+                                    map["params"] = ByteUtil.bytesToHexString(this)
+                                    map["opcode"] = "${meshMsg.opCode}"
+                                    meshMsg.mMessage.apply {
+                                        if (meshMsg.mMessage is AccessMessage) {
+                                            var pdus = (meshMsg.mMessage as AccessMessage).accessPdu
+                                            Utils.printLog(
+                                                TAG,
+                                                "mesh msg opcode:${meshMsg.opCode},pus:${ByteUtil.bytesToHexString(
+                                                    pdus
+                                                )}"
+                                            )
+                                            map["accessPDU"] = ByteUtil.bytesToHexString(pdus)
+                                        }
+                                    }
+                                    value.onResult(map)
                                 }
                             }
-                            value.onResult(map)
                         }
                     }
                 }
@@ -451,5 +478,9 @@ open class BaseMeshService : LifecycleService() {
 //        mNrfMeshManager?.provisionedNodes?.observe(this, Observer {
 //
 //        })
+    }
+
+    internal fun clearGatt() {
+        mNrfMeshManager?.clearGatt()
     }
 }

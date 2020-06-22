@@ -331,15 +331,19 @@ public class MeshParserUtils {
      * @return array of opcodes
      */
     public static int getOpCode(final byte[] accessPayload, final int opCodeCount) {
+        CommonUtil.INSTANCE.printLog(TAG, "getopcode:" + ((byte) (MeshParserUtils.unsignedByteToInt(accessPayload[0]) ^ 0xC0)));
+
         switch (opCodeCount) {
             case 1:
                 return accessPayload[0];
             case 2:
                 return MeshParserUtils.unsignedBytesToInt(accessPayload[1], accessPayload[0]);
+//            default:
+//                return ((byte) (MeshParserUtils.unsignedByteToInt(accessPayload[1]))
+//                        | (byte) ((MeshParserUtils.unsignedByteToInt(accessPayload[0]) << 8)
+//                        | (byte) ((MeshParserUtils.unsignedByteToInt(accessPayload[2]) << 16))));
             default:
-                return ((byte) (MeshParserUtils.unsignedByteToInt(accessPayload[1]))
-                        | (byte) ((MeshParserUtils.unsignedByteToInt(accessPayload[0]) << 8)
-                        | (byte) ((MeshParserUtils.unsignedByteToInt(accessPayload[2]) << 16))));
+                return ((MeshParserUtils.unsignedByteToInt(accessPayload[0]) ^ 0xC0));
         }
     }
 

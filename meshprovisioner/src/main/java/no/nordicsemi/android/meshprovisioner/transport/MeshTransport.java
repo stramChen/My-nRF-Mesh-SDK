@@ -34,6 +34,7 @@ import java.util.UUID;
 
 import no.nordicsemi.android.meshprovisioner.ApplicationKey;
 import no.nordicsemi.android.meshprovisioner.MeshManagerApi;
+import no.nordicsemi.android.meshprovisioner.utils.CommonUtil;
 import no.nordicsemi.android.meshprovisioner.utils.MeshAddress;
 import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils;
 
@@ -128,16 +129,16 @@ final class MeshTransport extends NetworkLayer {
         final int sequenceNumber = node.incrementSequenceNumber();
         final byte[] sequenceNum = MeshParserUtils.getSequenceNumberBytes(sequenceNumber);
 
-        Log.v(TAG, "Src address: " + MeshAddress.formatAddress(src, false));
-        Log.v(TAG, "ttl: " + node.getTtl());
-        Log.v(TAG, "Dst address: " + MeshAddress.formatAddress(dst, false));
-        Log.v(TAG, "Key: " + MeshParserUtils.bytesToHex(key, false));
-        Log.v(TAG, "akf: " + akf);
-        Log.v(TAG, "aid: " + aid);
-        Log.v(TAG, "aszmic: " + aszmic);
-        Log.v(TAG, "Sequence number: " + sequenceNumber);
-        Log.v(TAG, "Access message opcode: " + Integer.toHexString(accessOpCode));
-        Log.v(TAG, "Access message parameters: " + MeshParserUtils.bytesToHex(accessMessageParameters, false));
+        CommonUtil.INSTANCE.printLog(TAG, "Src address: " + MeshAddress.formatAddress(src, false));
+        CommonUtil.INSTANCE.printLog(TAG, "ttl: " + node.getTtl());
+        CommonUtil.INSTANCE.printLog(TAG, "Dst address: " + MeshAddress.formatAddress(dst, false));
+        CommonUtil.INSTANCE.printLog(TAG, "Key: " + MeshParserUtils.bytesToHex(key, false));
+        CommonUtil.INSTANCE.printLog(TAG, "akf: " + akf);
+        CommonUtil.INSTANCE.printLog(TAG, "aid: " + aid);
+        CommonUtil.INSTANCE.printLog(TAG, "aszmic: " + aszmic);
+        CommonUtil.INSTANCE.printLog(TAG, "Sequence number: " + sequenceNumber);
+        CommonUtil.INSTANCE.printLog(TAG, "Access message opcode: " + Integer.toHexString(accessOpCode));
+        CommonUtil.INSTANCE.printLog(TAG, "Access message parameters: " + MeshParserUtils.bytesToHex(accessMessageParameters, false));
 
         final AccessMessage message = new AccessMessage();
         message.setSrc(src);

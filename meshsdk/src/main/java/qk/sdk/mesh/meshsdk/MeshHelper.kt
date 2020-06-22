@@ -76,7 +76,7 @@ object MeshHelper {
     ) {
 //        rx.Observable.create<String> {
 //        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
-        unRegisterConnectListener()
+//        unRegisterConnectListener()
         MeshProxyService.mMeshProxyService?.connect(device, connectToNetwork, callback)
 //        }.subscribeOn(AndroidSchedulers.mainThread()).sendSubscribeMsg()
     }
@@ -1076,6 +1076,10 @@ object MeshHelper {
             }
 
         }
+    }
+
+    fun clearGatt(){
+        MeshProxyService.mMeshProxyService?.clearGatt()
     }
 
     internal class MeshProxyService : BaseMeshService() {

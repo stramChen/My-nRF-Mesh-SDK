@@ -1459,4 +1459,8 @@ class NrfMeshManager(
             meshManagerApi.importMeshNetworkJson(this, json)
         }
     }
+
+    internal fun clearGatt(){
+        bleMeshManager?.clearGatt()
+    }
 }

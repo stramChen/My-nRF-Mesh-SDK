@@ -14,3 +14,9 @@
 /mx-nrfmesh/build
 /fyaccount/build
 /gradle
+/realsilota/.gitignore
+/realsilota/consumer-rules.pro
+/realsilota/proguard-rules.pro
+/baseutil/.gitignore
+/baseutil/consumer-rules.pro
+/baseutil/proguard-rules.pro

@@ -33,7 +33,7 @@ android {
 }
 
 dependencies {
-//    implementation fileTree(dir: 'libs', include: ['*.aar', '*.jar'], exclude: [])
+    implementation fileTree(dir: 'libs', include: ['*.aar', '*.jar'], exclude: [])
 //    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.50"
 //    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0-gradle"
 
@@ -49,6 +49,7 @@ dependencies {
 
 //    api project(':QKMeshDemo:meshsdk')
     api project(':meshsdk')
+//    api project(':realsilota')
 
 //    api(name: 'meshsdk-0.0.8', ext: 'aar') {
 //        exclude group: 'android.suppor.v4'

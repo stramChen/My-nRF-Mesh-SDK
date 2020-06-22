@@ -119,8 +119,8 @@ public final class MeshNetwork extends BaseMeshNetwork {
      * @return Allocated unicast address or -1 if none
      * @throws IllegalArgumentException if there is no allocated unicast range to the provisioner
      */
-    public int nextAvailableUnicastAddress(final int elementCount, @NonNull final Provisioner provisioner) throws IllegalArgumentException {
-        if (provisioner.getAllocatedUnicastRanges() != null && provisioner.getAllocatedUnicastRanges().isEmpty()) {
+    public int nextAvailableUnicastAddress(final int elementCount, final Provisioner provisioner) throws IllegalArgumentException {
+        if (provisioner == null || provisioner.getAllocatedUnicastRanges() == null || provisioner.getAllocatedUnicastRanges().isEmpty()) {
             throw new IllegalArgumentException("Please allocate a unicast address range to the provisioner");
         }
 

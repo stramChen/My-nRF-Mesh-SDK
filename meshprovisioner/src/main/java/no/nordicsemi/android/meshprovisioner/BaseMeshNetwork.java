@@ -28,6 +28,7 @@ import java.util.UUID;
 
 import no.nordicsemi.android.meshprovisioner.transport.Element;
 import no.nordicsemi.android.meshprovisioner.transport.ProvisionedMeshNode;
+import no.nordicsemi.android.meshprovisioner.utils.CommonUtil;
 import no.nordicsemi.android.meshprovisioner.utils.MeshAddress;
 import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils;
 import no.nordicsemi.android.meshprovisioner.utils.ProxyFilter;
@@ -848,6 +849,7 @@ abstract class BaseMeshNetwork {
      */
     public Provisioner getSelectedProvisioner() {
         for (Provisioner provisioner : provisioners) {
+            CommonUtil.INSTANCE.printLog(TAG, "provisioner isLastSelected:" + provisioner.isLastSelected());
             if (provisioner.isLastSelected()) {
                 return provisioner;
             }
