@@ -49,6 +49,9 @@ object MeshSDK {
     private const val PUBLISH_INTERVAL = 88
     private const val PUBLISH_TTL = 5
 
+    //callback name
+    const val CALLBACK_GET_IDENTITY = "getDeviceIdentityKeys"
+
     // 初始化 mesh
     fun init(context: Context) {
         mContext = context
@@ -776,118 +779,118 @@ object MeshSDK {
 
                                 synchronized(msgIndex) {
                                     when (opcode) {
-                                        "00" -> {//四元组
-                                            Utils.printLog(
-                                                TAG,
-                                                "quadruple size:${msg.parameter.size} ,content：${String(
-                                                    msg.parameter
-                                                )}"
-                                            )
-
-                                            if (msgIndex < 0 && msg.parameter.size >= 40) {
-
-                                                var preIndex = 0
-                                                var quadrupleIndex = 0
-                                                var map = HashMap<String, Any>()
-                                                for (index in 0 until msg.parameter.size) {
-                                                    if (msg.parameter[index] == 0x00.toByte() || msg.parameter[index] == 0x20.toByte() || index == msg.parameter.size - 1) {
-                                                        when (quadrupleIndex) {
-                                                            0 -> {//pk
-                                                                var pkBytes =
-                                                                    ByteArray(index - preIndex)
-                                                                System.arraycopy(
-                                                                    msg.parameter,
-                                                                    preIndex,
-                                                                    pkBytes,
-                                                                    0,
-                                                                    pkBytes.size
-                                                                )
-                                                                map.put("pk", String(pkBytes))
-                                                                quadrupleIndex++
-                                                                preIndex = index + 1
-                                                            }
-                                                            1 -> {//ps
-                                                                var psBytes =
-                                                                    ByteArray(index - preIndex)
-                                                                System.arraycopy(
-                                                                    msg.parameter,
-                                                                    preIndex,
-                                                                    psBytes,
-                                                                    0,
-                                                                    psBytes.size
-                                                                )
-                                                                map.put("ps", String(psBytes))
-                                                                quadrupleIndex++
-                                                                preIndex = index + 1
-                                                            }
-                                                            2 -> {//dn
-                                                                var dnBytes =
-                                                                    ByteArray(index - preIndex)
-                                                                System.arraycopy(
-                                                                    msg.parameter,
-                                                                    preIndex,
-                                                                    dnBytes,
-                                                                    0,
-                                                                    dnBytes.size
-                                                                )
-                                                                map.put("dn", String(dnBytes))
-                                                                quadrupleIndex++
-                                                                preIndex = index + 1
-                                                            }
-                                                            3 -> {//ds
-                                                                var dsBytes =
-                                                                    ByteArray(index - preIndex)
-                                                                System.arraycopy(
-                                                                    msg.parameter,
-                                                                    preIndex,
-                                                                    dsBytes,
-                                                                    0,
-                                                                    dsBytes.size
-                                                                )
-                                                                map.put("ds", String(dsBytes))
-                                                                quadrupleIndex++
-                                                                preIndex = index + 1
-                                                            }
-                                                            4 -> {//product_id
-                                                                var pidBytes =
-                                                                    ByteArray(index - preIndex)
-                                                                System.arraycopy(
-                                                                    msg.parameter,
-                                                                    preIndex,
-                                                                    pidBytes,
-                                                                    0,
-                                                                    pidBytes.size
-                                                                )
-                                                                map.put("pid", String(pidBytes))
-                                                                quadrupleIndex++
-                                                                preIndex = index + 1
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                                map.put(
-                                                    "code",
-                                                    ConnectState.COMMON_SUCCESS.code
-                                                )
-                                                if (callback is MapCallback) {
-                                                    map.forEach { t, u ->
-                                                        Log.e(TAG, "key:$t,value:$u")
-                                                    }
-                                                    callback.onResult(map)
-                                                    MeshHandler.removeRunnable(method)
-                                                }
-                                                mConnectCallbacks.remove("sendMeshMessage")
-                                                msgIndex = 0
-                                            } else {
-                                                //todo log
-                                            }
-                                        }
+//                                        "00" -> {//四元组
+//                                            Utils.printLog(
+//                                                TAG,
+//                                                "quadruple size:${msg.parameter.size} ,content：${String(
+//                                                    msg.parameter
+//                                                )}"
+//                                            )
+//
+//                                            if (msgIndex < 0 && msg.parameter.size >= 40) {
+//
+//                                                var preIndex = 0
+//                                                var quadrupleIndex = 0
+//                                                var map = HashMap<String, Any>()
+//                                                for (index in 0 until msg.parameter.size) {
+//                                                    if (msg.parameter[index] == 0x00.toByte() || msg.parameter[index] == 0x20.toByte() || index == msg.parameter.size - 1) {
+//                                                        when (quadrupleIndex) {
+//                                                            0 -> {//pk
+//                                                                var pkBytes =
+//                                                                    ByteArray(index - preIndex)
+//                                                                System.arraycopy(
+//                                                                    msg.parameter,
+//                                                                    preIndex,
+//                                                                    pkBytes,
+//                                                                    0,
+//                                                                    pkBytes.size
+//                                                                )
+//                                                                map.put("pk", String(pkBytes))
+//                                                                quadrupleIndex++
+//                                                                preIndex = index + 1
+//                                                            }
+//                                                            1 -> {//ps
+//                                                                var psBytes =
+//                                                                    ByteArray(index - preIndex)
+//                                                                System.arraycopy(
+//                                                                    msg.parameter,
+//                                                                    preIndex,
+//                                                                    psBytes,
+//                                                                    0,
+//                                                                    psBytes.size
+//                                                                )
+//                                                                map.put("ps", String(psBytes))
+//                                                                quadrupleIndex++
+//                                                                preIndex = index + 1
+//                                                            }
+//                                                            2 -> {//dn
+//                                                                var dnBytes =
+//                                                                    ByteArray(index - preIndex)
+//                                                                System.arraycopy(
+//                                                                    msg.parameter,
+//                                                                    preIndex,
+//                                                                    dnBytes,
+//                                                                    0,
+//                                                                    dnBytes.size
+//                                                                )
+//                                                                map.put("dn", String(dnBytes))
+//                                                                quadrupleIndex++
+//                                                                preIndex = index + 1
+//                                                            }
+//                                                            3 -> {//ds
+//                                                                var dsBytes =
+//                                                                    ByteArray(index - preIndex)
+//                                                                System.arraycopy(
+//                                                                    msg.parameter,
+//                                                                    preIndex,
+//                                                                    dsBytes,
+//                                                                    0,
+//                                                                    dsBytes.size
+//                                                                )
+//                                                                map.put("ds", String(dsBytes))
+//                                                                quadrupleIndex++
+//                                                                preIndex = index + 1
+//                                                            }
+//                                                            4 -> {//product_id
+//                                                                var pidBytes =
+//                                                                    ByteArray(index - preIndex)
+//                                                                System.arraycopy(
+//                                                                    msg.parameter,
+//                                                                    preIndex,
+//                                                                    pidBytes,
+//                                                                    0,
+//                                                                    pidBytes.size
+//                                                                )
+//                                                                map.put("pid", String(pidBytes))
+//                                                                quadrupleIndex++
+//                                                                preIndex = index + 1
+//                                                            }
+//                                                        }
+//                                                    }
+//                                                }
+//                                                map.put(
+//                                                    "code",
+//                                                    ConnectState.COMMON_SUCCESS.code
+//                                                )
+//                                                if (callback is MapCallback) {
+//                                                    map.forEach { t, u ->
+//                                                        Log.e(TAG, "key:$t,value:$u")
+//                                                    }
+//                                                    callback.onResult(map)
+//                                                    MeshHandler.removeRunnable(method)
+//                                                }
+//                                                mConnectCallbacks.remove(if (method.isEmpty()) "sendMeshMessage" else method)
+//                                                msgIndex = 0
+//                                            } else {
+//                                                //todo log
+//                                            }
+//                                        }
                                         "02" -> {//重启网关
                                             if (callback is BooleanCallback) {
                                                 callback.onResult(true)
                                             }
 
-                                            mConnectCallbacks.remove("sendMeshMessage")
+                                            mConnectCallbacks.remove(if (method.isEmpty()) "sendMeshMessage" else method)
                                         }
                                         "04" -> {//set cwrgb
                                             if (callback is MapCallback && msg.parameter.size == 5) {
@@ -908,7 +911,7 @@ object MeshSDK {
                                                     if (c == 0 && w == 0 && r == 0 && g == 0 && b == 0) false else true
                                                 )
                                                 callback.onResult(map)
-                                                mConnectCallbacks.remove("sendMeshMessage")
+                                                mConnectCallbacks.remove(if (method.isEmpty()) "sendMeshMessage" else method)
                                                 msgIndex = 0
                                             } else {
                                                 //todo log
@@ -917,7 +920,7 @@ object MeshSDK {
                                         "05" -> {//get cwrgb
                                             if (msgIndex < 0 && callback is BooleanCallback) {
                                                 callback.onResult(true)
-                                                mConnectCallbacks.remove("sendMeshMessage")
+                                                mConnectCallbacks.remove(if (method.isEmpty()) "sendMeshMessage" else method)
                                                 msgIndex = 0
                                             } else {
                                                 //todo log
@@ -932,7 +935,7 @@ object MeshSDK {
                                                         HashMap<String, Any>()
                                                     )
 
-                                                    mConnectCallbacks.remove("sendMeshMessage")
+                                                    mConnectCallbacks.remove(if (method.isEmpty()) "sendMeshMessage" else method)
                                                     msgIndex = 0
                                                 } else {
                                                     //todo log
@@ -945,7 +948,7 @@ object MeshSDK {
                                             if (msgIndex < 0 && callback is BooleanCallback) {
                                                 callback.onResult(true)
 
-                                                mConnectCallbacks.remove("sendMeshMessage")
+                                                mConnectCallbacks.remove(if (method.isEmpty()) "sendMeshMessage" else method)
                                                 msgIndex = 0
                                             } else {
                                                 //todo log
@@ -990,7 +993,7 @@ object MeshSDK {
     }
 
     fun getDeviceIdentityKeys(uuid: String, callback: MapCallback) {
-        sendMeshMessage(uuid, 0, 0, "00", "", callback, "getDeviceIdentityKeys", true, true)
+        sendMeshMessage(uuid, 0, 0, "00", "", callback, CALLBACK_GET_IDENTITY, true, true)
     }
 
     fun resetNode(uuid: String) {
@@ -1771,7 +1774,7 @@ object MeshSDK {
     }
 
     fun getDeviceVersion(uuid: String, callback: MapCallback) {
-        sendMeshMessage(uuid, 0, VENDOR_MODELID, "0A", "", callback)
+        sendMeshMessage(uuid, 0, VENDOR_MODELID, "0A", "", callback, "getDeviceVersion")
     }
 
 }

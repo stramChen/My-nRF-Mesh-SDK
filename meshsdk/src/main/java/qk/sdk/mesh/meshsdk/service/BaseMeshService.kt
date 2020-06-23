@@ -421,26 +421,129 @@ open class BaseMeshService : LifecycleService() {
                         meshCallback.onReceive(meshMsg)
                     }
 
-                    MeshSDK.mConnectCallbacks.forEach { key, value ->
-                        if (value is MapCallback && meshMsg is VendorModelMessageStatus) {
-                            when (meshMsg.opCode) {
-                                0x8204 -> {//on off
+                    var connectCallbacksIterator = MeshSDK.mConnectCallbacks.iterator()
+                    while (connectCallbacksIterator.hasNext()) {
+                        var callbackIterator = connectCallbacksIterator.next()
 
+                        if (callbackIterator.value is MapCallback && meshMsg is VendorModelMessageStatus) {
+                            when (meshMsg.opCode) {
+                                0x01 -> {//quadruples
+                                    Utils.printLog(
+                                        TAG,
+                                        "quadruple size:${meshMsg.parameter.size} ,content：${String(
+                                            meshMsg.parameter
+                                        )}"
+                                    )
+
+                                    if (meshMsg.parameter.size >= 40 && callbackIterator.key == MeshSDK.CALLBACK_GET_IDENTITY) {
+                                        var preIndex = 0
+                                        var quadrupleIndex = 0
+                                        var map = HashMap<String, Any>()
+                                        for (index in 0 until meshMsg.parameter.size) {
+                                            if (meshMsg.parameter[index] == 0x00.toByte() || meshMsg.parameter[index] == 0x20.toByte() || index == meshMsg.parameter.size - 1) {
+                                                when (quadrupleIndex) {
+                                                    0 -> {//pk
+                                                        var pkBytes =
+                                                            ByteArray(index - preIndex)
+                                                        System.arraycopy(
+                                                            meshMsg.parameter,
+                                                            preIndex,
+                                                            pkBytes,
+                                                            0,
+                                                            pkBytes.size
+                                                        )
+                                                        map.put("pk", String(pkBytes))
+                                                        quadrupleIndex++
+                                                        preIndex = index + 1
+                                                    }
+                                                    1 -> {//ps
+                                                        var psBytes =
+                                                            ByteArray(index - preIndex)
+                                                        System.arraycopy(
+                                                            meshMsg.parameter,
+                                                            preIndex,
+                                                            psBytes,
+                                                            0,
+                                                            psBytes.size
+                                                        )
+                                                        map.put("ps", String(psBytes))
+                                                        quadrupleIndex++
+                                                        preIndex = index + 1
+                                                    }
+                                                    2 -> {//dn
+                                                        var dnBytes =
+                                                            ByteArray(index - preIndex)
+                                                        System.arraycopy(
+                                                            meshMsg.parameter,
+                                                            preIndex,
+                                                            dnBytes,
+                                                            0,
+                                                            dnBytes.size
+                                                        )
+                                                        map.put("dn", String(dnBytes))
+                                                        quadrupleIndex++
+                                                        preIndex = index + 1
+                                                    }
+                                                    3 -> {//ds
+                                                        var dsBytes =
+                                                            ByteArray(index - preIndex)
+                                                        System.arraycopy(
+                                                            meshMsg.parameter,
+                                                            preIndex,
+                                                            dsBytes,
+                                                            0,
+                                                            dsBytes.size
+                                                        )
+                                                        map.put("ds", String(dsBytes))
+                                                        quadrupleIndex++
+                                                        preIndex = index + 1
+                                                    }
+                                                    4 -> {//product_id
+                                                        var pidBytes =
+                                                            ByteArray(index - preIndex)
+                                                        System.arraycopy(
+                                                            meshMsg.parameter,
+                                                            preIndex,
+                                                            pidBytes,
+                                                            0,
+                                                            pidBytes.size
+                                                        )
+                                                        map.put("pid", String(pidBytes))
+                                                        quadrupleIndex++
+                                                        preIndex = index + 1
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        map.put(
+                                            "code",
+                                            Constants.ConnectState.COMMON_SUCCESS.code
+                                        )
+                                        map.forEach { t, u ->
+                                            Log.e(TAG, "key:$t,value:$u")
+                                        }
+                                        (callbackIterator.value as MapCallback).onResult(map)
+                                        MeshHandler.removeRunnable(MeshSDK.CALLBACK_GET_IDENTITY)
+                                        connectCallbacksIterator.remove()
+                                    } else {
+                                        //todo log
+                                    }
                                 }
                                 0x10 -> {//light status
-                                    if (this.size >= 8) {
+                                    if (this.size >= 8 && callbackIterator.key == "subscribeStatus") {
                                         MeshSDK.parseLightStatus(
                                             meshMsg.parameter,
-                                            value,
+                                            callbackIterator.value as MapCallback,
                                             HashMap<String, Any>()
                                         )
                                     }
                                 }
                                 0x0B -> {//version
-                                    if (this.size >= 3) {
+                                    if (this.size >= 3 && callbackIterator.key == "getDeviceVersion") {
                                         var map = HashMap<String, Any>()
                                         map["version"] = "${this[0]}.${this[1]}.${this[2]}"
-                                        value.onResult(map)
+                                        (callbackIterator.value as MapCallback).onResult(map)
+                                        connectCallbacksIterator.remove()
                                     }
                                 }
                                 else -> {
@@ -459,7 +562,8 @@ open class BaseMeshService : LifecycleService() {
                                             map["accessPDU"] = ByteUtil.bytesToHexString(pdus)
                                         }
                                     }
-                                    value.onResult(map)
+                                    (callbackIterator.value as MapCallback).onResult(map)
+                                    connectCallbacksIterator.remove()
                                 }
                             }
                         }
