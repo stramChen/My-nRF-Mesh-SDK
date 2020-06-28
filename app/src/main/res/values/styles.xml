@@ -13,6 +13,9 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <!--为了解决白屏问题-->
         <!--<item name="android:windowDisablePreview">true</item>-->
+        <!--禁止多点触控-->
+        <item name="android:windowEnableSplitTouch">false</item>
+        <item name="android:splitMotionEvents">false</item>
     </style>
 
     <style name="tv_content_title">

@@ -1,14 +1,13 @@
 package qk.sdk.mesh.demo.base
 
+//import com.joker.api.wrapper.ListenerWrapper
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-//import com.joker.api.wrapper.ListenerWrapper
 import no.nordicsemi.android.meshprovisioner.transport.MeshMessage
-import qk.sdk.mesh.demo.R
+import qk.sdk.mesh.demo.util.StatusBarUtil
 import qk.sdk.mesh.meshsdk.MeshHelper
 import qk.sdk.mesh.meshsdk.callback.MeshCallback
 import qk.sdk.mesh.meshsdk.callback.ScanCallback
-import qk.sdk.mesh.meshsdk.util.Utils
 import java.util.*
 
 abstract class BaseMeshActivity : AppCompatActivity() {
@@ -24,6 +23,19 @@ abstract class BaseMeshActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(setLayoutId())
         init()
+    }
+
+    protected open fun initAppBar(isDrak: Boolean) {
+        StatusBarUtil.setRootViewFitsSystemWindows(this, true)
+        //设置状态栏透明
+        StatusBarUtil.setTranslucentStatus(this)
+        if (isDrak) {
+            if (!StatusBarUtil.setStatusBarDarkTheme(this, true)) {
+                //如果不支持设置深色风格 为了兼容总不能让状态栏白白的看不清, 于是设置一个状态栏颜色为半透明,
+                //这样半透明+白=灰, 状态栏的文字能看得清
+                StatusBarUtil.setStatusBarColor(this, 0x55000000)
+            }
+        }
     }
 
     internal fun sendMessage(method:String,address: Int, message: MeshMessage, callback: MeshCallback? = null) {

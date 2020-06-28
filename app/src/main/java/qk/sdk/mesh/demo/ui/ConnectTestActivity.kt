@@ -238,21 +238,21 @@ class ConnectTestActivity : BaseMeshActivity() {
 //
 //                }
 //            })
-//            MeshSDK.fetchLightCurrentStatus(mUUID, object : MapCallback {
-//                override fun onResult(result: HashMap<String, Any>) {
-//                    result.forEach { t, u ->
-//                        Utils.printLog(TAG, "key:$t,value:$u")
-//                    }
-//                }
-//            })
+            MeshSDK.fetchLightCurrentStatus(mUUID, object : MapCallback {
+                override fun onResult(result: HashMap<String, Any>) {
+                    result.forEach { t, u ->
+                        Utils.printLog(TAG, "key:$t,value:$u")
+                    }
+                }
+            })
 
-//            MeshSDK.getDeviceVersion(mUUID, object : MapCallback {
-//                override fun onResult(result: HashMap<String, Any>) {
-//                    result.forEach { t, u ->
-//                        Utils.printLog(TAG, "key:$t,value:$u")
-//                    }
-//                }
-//            })
+            MeshSDK.getDeviceVersion(mUUID, object : MapCallback {
+                override fun onResult(result: HashMap<String, Any>) {
+                    result.forEach { t, u ->
+                        Utils.printLog(TAG, "key:$t,value:$u")
+                    }
+                }
+            })
 //            MeshSDK.sendMeshMessage(mUUID,0,0,"05","0016000000",object :BooleanCallback{
 //                override fun onResult(boolean: Boolean) {
 //

@@ -36,6 +36,7 @@ class ScanTestActivity : BaseMeshActivity(),
 
     override fun setLayoutId(): Int = R.layout.activity_scan
     override fun init() {
+        initAppBar(true)
         initView()
     }
 

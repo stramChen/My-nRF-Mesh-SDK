@@ -50,8 +50,8 @@ object Constants {
 
         BIND_APP_KEY_FOR_NODE_FAILED("", 208),//绑定appkey失败
         CONNECTING("连接中", 201),
-        DISCOVERING_SERVICE("检查服务中", 202),
-        INITIALIZING("初始化蓝牙连接", 203),
+        DISCOVERING_SERVICE("发现服务中", 202),
+        DEVICE_CONNECTED("蓝牙连接", 203),
         RECONNETCING("正在重连", 205),
         DISCONNECTING("正在断开连接", 206),
         DISCONNECTED("连接已断开", 207),
@@ -59,6 +59,7 @@ object Constants {
         PROVISION_FAILED("provision failed", -208),//provision 失败
         STOP_CONNECT("stop connect", 209),
         CONNECT_ENABLED("connect enabled", 210),//无可直连设备（不可直连蓝牙低功耗设备，若当前只有蓝牙低功耗设备时提示）
+        DEVICE_NOT_SUPPORTED("device not supported", 211),//设备不支持
 
         NET_KEY_DELETE_FAILED("netKey正在使用中，需先删除netKey对应的设备", 401),//netKey正在使用中，需先删除netKey对应的设备
         NET_KEY_NOT_EXIST("netKey不存在", 403),//netKey正在使用中，需先删除netKey对应的设备

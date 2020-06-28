@@ -113,10 +113,10 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
             }
         })
 
-        MeshSDK.connect(ByteUtil.bytesToHexString(
-            MeshHelper.getAllNetworkKey()?.get(1)?.key
-        ),
-//                MeshSDK.connect("758DB07ED6CE6FEE180DFE199EC65BCF",
+//        MeshSDK.connect(ByteUtil.bytesToHexString(
+//            MeshHelper.getAllNetworkKey()?.get(1)?.key
+//        ),
+                MeshSDK.connect("758DB07ED6CE6FEE180DFE199EC65BCF",
             object : MapCallback {
                 override fun onResult(result: HashMap<String, Any>) {
                     Utils.printLog(TAG, "connect result:${result.get("code")}")

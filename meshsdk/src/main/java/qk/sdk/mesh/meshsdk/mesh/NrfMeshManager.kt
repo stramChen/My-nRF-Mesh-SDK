@@ -309,13 +309,17 @@ class NrfMeshManager(
                 CONNECTING.msg
             )
         )
+        Utils.printLog(
+            TAG,
+            "post msg:${CONNECTING.msg},bleMeshManager is null:${bleMeshManager == null}"
+        )
         //Added a 1 second delay for connection, mostly to wait for a disconnection to complete before connecting.
         if (bluetoothDevice != null) {
             mHandler.postDelayed({
-                bleMeshManager?.connect(bluetoothDevice)?.retry(3, 200)?.enqueue()
-            }, 1000)
+                bleMeshManager?.connect(bluetoothDevice)?.retry(3, 100)?.enqueue()
+            }, 100)
         } else {
-            //todo 记录日志
+            Utils.printLog(TAG, "bluetoothDevice is null")
         }
     }
 
@@ -462,8 +466,8 @@ class NrfMeshManager(
         mIsConnected = true
         mConnectionState.postValue(
             CallbackMsg(
-                DISCOVERING_SERVICE.code,
-                DISCOVERING_SERVICE.msg
+                DEVICE_CONNECTED.code,
+                DEVICE_CONNECTED.msg
             )
         )
         mIsConnectedToProxy.postValue(true)
@@ -528,8 +532,8 @@ class NrfMeshManager(
     override fun onServicesDiscovered(device: BluetoothDevice, optionalServicesFound: Boolean) {
         mConnectionState.postValue(
             CallbackMsg(
-                INITIALIZING.code,
-                INITIALIZING.msg
+                DISCOVERING_SERVICE.code,
+                DISCOVERING_SERVICE.msg
             )
         )
     }
@@ -538,9 +542,9 @@ class NrfMeshManager(
         mOnDeviceReady.postValue(null)
         mConnectionState.postValue(CallbackMsg(COMMON_SUCCESS.code, COMMON_SUCCESS.msg))
 
-        if (bleMeshManager!!.isProvisioningComplete) {
+        if (bleMeshManager?.isProvisioningComplete == true) {
             if (mSetupProvisionedNode) {
-                if (mMeshNetwork!!.selectedProvisioner!!.provisionerAddress != null) {
+                if (mMeshNetwork?.selectedProvisioner?.provisionerAddress != null) {
                     mHandler.postDelayed({
                         //Adding a slight delay here so we don't send anything before we receive the mesh beacon message
                         val node = mProvisionedMeshNodeLiveData.value
@@ -580,7 +584,12 @@ class NrfMeshManager(
     }
 
     override fun onDeviceNotSupported(device: BluetoothDevice) {
-
+        mConnectionState.postValue(
+            CallbackMsg(
+                DEVICE_NOT_SUPPORTED.code,
+                DEVICE_NOT_SUPPORTED.msg
+            )
+        )
     }
 
     override fun onNetworkLoaded(meshNetwork: MeshNetwork) {
@@ -1460,7 +1469,7 @@ class NrfMeshManager(
         }
     }
 
-    internal fun clearGatt(){
+    internal fun clearGatt() {
         bleMeshManager?.clearGatt()
     }
 }

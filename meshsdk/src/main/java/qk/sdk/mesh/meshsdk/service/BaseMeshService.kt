@@ -83,9 +83,9 @@ open class BaseMeshService : LifecycleService() {
     internal fun stopScan() {
         mScanCallback = null
         mNrfMeshManager?.stopScan()
-//        mNrfMeshManager?.getScannerResults()?.removeObservers(this)
+        mNrfMeshManager?.getScannerResults()?.removeObservers(this)
         // 获取扫描状态结果
-//        mNrfMeshManager?.getScannerState()?.removeObservers(this)
+        mNrfMeshManager?.getScannerState()?.removeObservers(this)
     }
 
     internal fun stopConnect() {
@@ -117,22 +117,20 @@ open class BaseMeshService : LifecycleService() {
     private fun setConnectObserver() {
         Utils.printLog(TAG, "setConnectObserver")
         mNrfMeshManager?.isDeviceReady?.observe(this, Observer {
-            if (mNrfMeshManager?.bleMeshManager?.isDeviceReady ?: false) {
+            if (mNrfMeshManager?.bleMeshManager?.isDeviceReady == true) {
                 mConnectCallback?.onConnect()
             } else {
                 //todo 日志记录
             }
         })
         mNrfMeshManager?.connectionState?.observe(this, Observer {
-            if (it != null) {
-                mConnectCallback?.onConnectStateChange(it)
-                Utils.printLog(TAG, " mNrfMeshManager?.connectionState:${it.msg}")
-                LogFileUtil.writeLogToInnerFile(
-                    this@BaseMeshService,
-                    "${it.msg}",
-                    LogFileUtil.getInnerFileName(Constants.MESH_LOG_FILE_NAME)
-                )
-            }
+            mConnectCallback?.onConnectStateChange(it)
+            Utils.printLog(TAG, " mNrfMeshManager?.connectionState:${it.msg}")
+            LogFileUtil.writeLogToInnerFile(
+                this@BaseMeshService,
+                "${it.msg}",
+                LogFileUtil.getInnerFileName(Constants.MESH_LOG_FILE_NAME)
+            )
         })
         mNrfMeshManager?.provisionedNodes?.observe(this, Observer {
             mConnectCallback?.onConnectStateChange(
