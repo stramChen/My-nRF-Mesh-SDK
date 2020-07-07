@@ -158,7 +158,7 @@ enum class ConnectState(var msg: String, var code: Int = 1000) {
         CANNOT_FIND_DEVICE_BY_MAC("找不到mac地址对应的设备", 102),//传参错误，找不到mac地址对应的设备
         CONNECT_FAILED("未释放蓝牙资源", 133),//未释放蓝牙资源,android native层定义的错误码
 
-        PROVISION_SUCCESS("provisioned", 200),//provision 成功
+        PROVISION_SUCCESS("provisioned", 208),//provision 成功
 
         CONNECTING("连接中", 201),
         DISCOVERING_SERVICE("检查服务中", 202),

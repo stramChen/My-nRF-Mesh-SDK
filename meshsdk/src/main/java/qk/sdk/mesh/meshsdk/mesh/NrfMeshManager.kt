@@ -43,6 +43,7 @@ import no.nordicsemi.android.support.v18.scanner.*
 import qk.sdk.mesh.meshsdk.bean.*
 import qk.sdk.mesh.meshsdk.bean.scan.ScannerLiveData
 import qk.sdk.mesh.meshsdk.bean.scan.ScannerStateLiveData
+import qk.sdk.mesh.meshsdk.service.BaseMeshService
 import qk.sdk.mesh.meshsdk.util.*
 import qk.sdk.mesh.meshsdk.util.Constants.ConnectState.*
 import java.util.*
@@ -290,6 +291,7 @@ class NrfMeshManager(
      * @param connectToNetwork True if connecting to an unprovisioned node or proxy node
      */
     internal fun connect(
+        context: Context,
         device: ExtendedBluetoothDevice,
         connectToNetwork: Boolean
     ) {
@@ -303,15 +305,21 @@ class NrfMeshManager(
         val bluetoothDevice = device.device
         Utils.printLog(TAG, "connect $connectToNetwork")
         initIsConnectedLiveData()
+        Utils.printLog(
+            TAG,
+            "post msg:${CONNECTING.msg},bleMeshManager is null:${bleMeshManager == null},state has active observers:${mConnectionState.hasActiveObservers()}"
+        )
+        if (!mConnectionState.hasActiveObservers()) {
+            if (context is BaseMeshService) {
+                context.setConnectObserver()
+            }
+        }
+
         mConnectionState.postValue(
             CallbackMsg(
                 CONNECTING.code,
                 CONNECTING.msg
             )
-        )
-        Utils.printLog(
-            TAG,
-            "post msg:${CONNECTING.msg},bleMeshManager is null:${bleMeshManager == null}"
         )
         //Added a 1 second delay for connection, mostly to wait for a disconnection to complete before connecting.
         if (bluetoothDevice != null) {
@@ -532,8 +540,8 @@ class NrfMeshManager(
     override fun onServicesDiscovered(device: BluetoothDevice, optionalServicesFound: Boolean) {
         mConnectionState.postValue(
             CallbackMsg(
-                DISCOVERING_SERVICE.code,
-                DISCOVERING_SERVICE.msg
+                DISCOVERED_SERVICE.code,
+                DISCOVERED_SERVICE.msg
             )
         )
     }
@@ -568,11 +576,21 @@ class NrfMeshManager(
     }
 
     override fun onBonded(device: BluetoothDevice) {
-        // Empty.
+        mConnectionState.postValue(
+            CallbackMsg(
+                DEVICE_NOT_SUPPORTED.code,
+                DEVICE_NOT_SUPPORTED.msg
+            )
+        )
     }
 
     override fun onBondingFailed(device: BluetoothDevice) {
-        // Empty.
+        mConnectionState.postValue(
+            CallbackMsg(
+                DEVICE_NOT_SUPPORTED.code,
+                DEVICE_NOT_SUPPORTED.msg
+            )
+        )
     }
 
     override fun onError(device: BluetoothDevice, message: String, errorCode: Int) {
@@ -595,6 +613,8 @@ class NrfMeshManager(
     override fun onNetworkLoaded(meshNetwork: MeshNetwork) {
         loadNetwork(meshNetwork)
         loadGroups()
+        mNetworkImportState.postValue(Constants.ConnectState.COMMON_SUCCESS.msg)
+        Utils.printLog(TAG, "onNetworkLoaded")
     }
 
     override fun onNetworkUpdated(meshNetwork: MeshNetwork) {
@@ -788,6 +808,10 @@ class NrfMeshManager(
 
     override fun onMeshMessageReceived(src: Int, meshMessage: MeshMessage) {
         val node = mMeshNetwork?.getNode(src)
+        Utils.printLog(
+            TAG,
+            "onMeshMessageReceived:${ByteUtil.bytesToHexString(meshMessage.parameter)}"
+        )
         if (node != null)
             if (meshMessage is ProxyConfigFilterStatus) {
                 mProvisionedMeshNode = node
@@ -868,24 +892,26 @@ class NrfMeshManager(
                 }
 
             } else if (meshMessage is ConfigModelPublicationStatus) {
-
                 if (updateNode(node)) {
+                    Utils.printLog(TAG, "meshMessage is ConfigModelPublicationStatus")
                     if (node.elements.containsKey(meshMessage.elementAddress)) {
                         val element = node.elements[meshMessage.elementAddress]
                         mSelectedElement = element
                         val model = element?.meshModels?.get(meshMessage.modelIdentifier)
                         mSelectedModel = model
+                        mMeshMessageLiveData.postValue(meshMessage)
                     }
                 }
 
             } else if (meshMessage is ConfigModelSubscriptionStatus) {
-
                 if (updateNode(node)) {
+                    Utils.printLog(TAG, "meshMessage is ConfigModelSubscriptionStatus")
                     if (node.elements.containsKey(meshMessage.elementAddress)) {
                         val element = node.elements[meshMessage.elementAddress]
                         mSelectedElement = element
                         val model = element?.meshModels?.get(meshMessage.modelIdentifier)
                         mSelectedModel = model
+                        mMeshMessageLiveData.postValue(meshMessage)
                     }
                 }
 
@@ -928,7 +954,8 @@ class NrfMeshManager(
                 }
 
             } else if (meshMessage is VendorModelMessageStatus) {
-
+                Utils.printLog(TAG, "meshMessage is VendorModelMessageStatus")
+                mMeshMessageLiveData.postValue(meshMessage)
                 if (updateNode(node)) {
                     if (node.elements.containsKey(meshMessage.srcAddress)) {
                         val element = node.elements[meshMessage.srcAddress]
@@ -976,11 +1003,11 @@ class NrfMeshManager(
         mMeshNetwork = meshNetwork
         mMeshNetwork?.apply {
             if (!this.isProvisionerSelected) {
-                meshNetwork.provisioners?.apply {
+                this.provisioners?.apply {
                     if (this.size > 0) {
                         val provisioner = this[0]
                         provisioner.isLastSelected = true
-                        mMeshNetwork!!.selectProvisioner(provisioner)
+                        mMeshNetwork?.selectProvisioner(provisioner)
                     }
                 }
             }

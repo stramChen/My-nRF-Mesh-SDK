@@ -334,6 +334,7 @@ object MeshSDK {
                         MeshHelper.setSelectedMeshNode(node)
                     }
                 }
+
                 if (MeshHelper.isConnectedToProxy()) {
                     var bindedModelIndex = -1
                     var bindedEleIndex = -1
@@ -448,8 +449,8 @@ object MeshSDK {
                                                             doMapCallback(
                                                                 map, callback,
                                                                 CallbackMsg(
-                                                                    ConnectState.COMMON_SUCCESS.code,
-                                                                    ConnectState.COMMON_SUCCESS.msg
+                                                                    ConnectState.BIND_APP_KEY_SUCCESS.code,
+                                                                    ConnectState.BIND_APP_KEY_SUCCESS.msg
                                                                 )
                                                             )
                                                         }
@@ -1175,61 +1176,57 @@ object MeshSDK {
 
     }
 
-    fun sendSubscribeMsg(uuid: String, groupAddr: Int, callback: MapCallback) {
-        var map = HashMap<String, Any>()
-        if (doProxyCheck(uuid, map, callback)) {
-
-            if (MeshHelper.getGroupByAddress(groupAddr) == null) {
-                doMapCallback(
-                    map,
-                    callback,
-                    CallbackMsg(ConnectState.GROUP_NOT_EXIST.code, ConnectState.GROUP_NOT_EXIST.msg)
-                )
-            }
-
-            //获取provisioned节点
-            var node = MeshHelper.getProvisionedNodeByUUID(uuid)
-
-            var index = 0
-            var modelTotal = 0
-            node?.elements?.values?.forEach { eleValue ->
-                modelTotal += eleValue.meshModels?.size ?: 0
-                eleValue?.meshModels?.values?.forEach { model ->
-                    if (model is VendorModel || model is GenericOnOffServerModel) {
-                        runBlocking {
-                            launch {
-                                delay(1000)
-                                val modelIdentifier = model.getModelId()
-                                val configModelSubscriptionAdd: MeshMessage
-                                var elementAddress = eleValue.elementAddress
-                                configModelSubscriptionAdd =
-                                    ConfigModelSubscriptionAdd(
-                                        elementAddress,
-                                        groupAddr,
-                                        modelIdentifier
-                                    )
-                                MeshHelper.sendMessage(
-                                    "sendSubscribeMsg",
-                                    node.unicastAddress,
-                                    configModelSubscriptionAdd,
-                                    null
-                                )
-                                index++
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (index == modelTotal) {
-                doMapCallback(
-                    map,
-                    callback,
-                    CallbackMsg(ConnectState.COMMON_SUCCESS.code, ConnectState.COMMON_SUCCESS.msg)
-                )
-            }
-        }
-    }
+//    fun sendSubscribeMsg(uuid: String, groupAddr: Int, callback: MapCallback) {
+//        var map = HashMap<String, Any>()
+//        if (doProxyCheck(uuid, map, callback)) {
+//
+//            if (MeshHelper.getGroupByAddress(groupAddr) == null) {
+//                doMapCallback(
+//                    map,
+//                    callback,
+//                    CallbackMsg(ConnectState.GROUP_NOT_EXIST.code, ConnectState.GROUP_NOT_EXIST.msg)
+//                )
+//            }
+//
+//            //获取provisioned节点
+//            var node = MeshHelper.getProvisionedNodeByUUID(uuid)
+//
+//            var index = 0
+//            var modelTotal = 0
+//
+//            node?.elements?.values?.forEach { eleValue ->
+//                modelTotal += eleValue.meshModels?.size ?: 0
+//                eleValue?.meshModels?.values?.forEach { model ->
+//                    if (model is VendorModel || model is GenericOnOffServerModel) {
+//                        val modelIdentifier = model.getModelId()
+//                        val configModelSubscriptionAdd: MeshMessage
+//                        var elementAddress = eleValue.elementAddress
+//                        configModelSubscriptionAdd =
+//                            ConfigModelSubscriptionAdd(
+//                                elementAddress,
+//                                groupAddr,
+//                                modelIdentifier
+//                            )
+//                        MeshHelper.sendMessage(
+//                            "sendSubscribeMsg",
+//                            node.unicastAddress,
+//                            configModelSubscriptionAdd,
+//                            null
+//                        )
+//                        index++
+//                    }
+//                }
+//            }
+//
+//            if (index == modelTotal) {
+//                doMapCallback(
+//                    map,
+//                    callback,
+//                    CallbackMsg(ConnectState.COMMON_SUCCESS.code, ConnectState.COMMON_SUCCESS.msg)
+//                )
+//            }
+//        }
+//    }
 
     /**
      * 设置设备订阅地址
@@ -1424,11 +1421,11 @@ object MeshSDK {
     fun subscribeStatus(uuid: String, callback: MapCallback) {
         var meshCallback = object : MeshCallback {
             override fun onReceive(msg: MeshMessage) {
-                var node = MeshHelper?.getMeshNetwork()?.getNode(msg.src)
+                var node = MeshHelper.getMeshNetwork()?.getNode(msg.src)
                 Utils.printLog(TAG, " uuid:${node?.uuid} ,sendSubscribeMsg uuid:$uuid")
-//                if (uuid.isNotEmpty() && node?.uuid?.toUpperCase() != uuid.toUpperCase()) {
-//                    return
-//                }
+                if (uuid.isNotEmpty() && node?.uuid?.toUpperCase() != uuid.toUpperCase()) {
+                    return
+                }
 
                 var map = HashMap<String, Any>()
                 map["uuid"] = node?.uuid ?: ""

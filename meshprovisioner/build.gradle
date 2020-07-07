@@ -91,13 +91,10 @@ dependencies {
 uploadArchives {
     repositories {
         mavenDeployer {
-//            repository(url: "http://10.0.0.40:8081/repository/meshprovisioner/") {
-//                authentication(userName: "admin", password: "518215wybalw")
-//            }
             repository(url: "file:///Users/wangyue/Documents/mxchip/aar/")
             pom.project {
                 name 'meshprovisioner'
-                version '0.4.6-snapshot'
+                version '0.4.7-snapshot'
                 artifactId 'meshprovisioner'
                 groupId 'cn.mxchip.meshprovisioner.test'
                 packaging 'aar'
@@ -109,34 +106,3 @@ uploadArchives {
 repositories {
     mavenCentral()
 }
-//publishing {
-//    publications {
-//        maven(MavenPublication) {
-//            groupId 'cn.mxchip.meshprovisioner.test'
-//            artifactId 'meshprovisioner'
-//            version '0.0.1'
-//            artifact "$buildDir/outputs/aar/meshprovisioner.aar"
-////            name 'meshprovisioner'
-////            packaging 'aar'
-////            description 'meshprovisioner for mxchip'
-//
-//            pom.withXml {
-//                def dependenciesNode = asNode().appenNode('dependencies')
-//                configurations.implementation.allDependencies.each { dependency ->
-//                    if (!"unspecified".equals(dependenciesNode.name)) {
-//                        def dependencyNode = dependenciesNode.appendNode('dependency')
-//                        dependencyNode.appendNode('groupId', dependency.group)
-//                        dependencyNode.appendNode('artifactId', dependency.name)
-//                        dependencyNode.appendNode('version', dependency.version)
-//                    }
-//                }
-//            }
-//        }
-//    }
-//
-//    repositories {
-//        maven {
-//            url "$buildDir/repo"
-//        }
-//    }
-//}

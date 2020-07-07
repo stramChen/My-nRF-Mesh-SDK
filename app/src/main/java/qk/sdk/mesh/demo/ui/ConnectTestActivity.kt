@@ -266,48 +266,6 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
     }
 
-    //
-//    /**
-//     * 在获取到appkey之后，获取当前节点的元素列表
-//     */
-//    private fun getCompositionData() {
-//        val configCompositionDataGet = ConfigCompositionDataGet()
-//        val node = MeshHelper.getSelectedMeshNode()
-//        node?.let {
-//            sendMessage(it.unicastAddress, configCompositionDataGet)
-//        }
-//    }
-//
-//    private fun bindModel(type: Int) {
-//        var mNode = MeshHelper.getSelectedMeshNode()
-//        mNode?.let { node ->
-//            var elementsMap = node.elements.values
-//            var elements = ArrayList<Element>()
-//            elements.addAll(elementsMap)
-//            if (elements.size > 0)
-//                elements[0].let { element ->
-//                    var modelsMap = element.meshModels.values
-//                    var models = ArrayList<MeshModel>()
-//                    models.addAll(modelsMap)
-//                    models.forEach { model ->
-//                        when (type) {
-//                            MODEL_TYPE_GENERIC -> {
-//                                if (model is GenericOnOffServerModel) {
-//                                    MeshHelper.setSelectedModel(element, model)
-//                                }
-//                            }
-//                            MODEL_TYPE_VENDOR -> {
-//                                if (model is VendorModel) {
-//                                    MeshHelper.setSelectedModel(element, model)
-//                                    Utils.printLog(TAG, "set selected vendor model!")
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//        }
-//    }
-//
     override fun onDestroy() {
         super.onDestroy()
         MeshSDK.unSubscribeLightStatus()

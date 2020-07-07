@@ -32,9 +32,6 @@ object Constants {
     const val DFU_WORK_MODE_SILENCE = 16
 
 
-    //    val PROVISION_SUCCESS_CODE = 200//provision 成功
-//    val PROVISION_WRONG_PARAM_CODE = 322 //provision传参错误，找不到mac地址对应的设备
-//    val PROVISION_WRONG_PARAM = "找不到mac地址对应的设备" //provision传参错误，找不到mac地址对应的设备
     const val KEY_CODE = "code"
     const val KEY_MESSAGE = "message"
 
@@ -45,13 +42,13 @@ object Constants {
         CONNECT_BLE_RESOURCE_FAILED("Error on connection state change", 133),
         BLE_NOT_AVAILABLE("蓝牙未开启", 104),//未开启蓝牙
         NET_KEY_IS_NULL("networkKey is null", 105),//没有setCurrentNetworkKey
+        SERVICE_CREATED("mesh service is created", 106),//mesh服务创建成功
 
         COMMON_SUCCESS("success", 200),// 全局通用，操作成功
 
-        BIND_APP_KEY_FOR_NODE_FAILED("", 208),//绑定appkey失败
         CONNECTING("连接中", 201),
-        DISCOVERING_SERVICE("发现服务中", 202),
-        DEVICE_CONNECTED("蓝牙连接", 203),
+        DISCOVERED_SERVICE("已发现服务", 202),
+        DEVICE_CONNECTED("蓝牙已连接", 203),
         RECONNETCING("正在重连", 205),
         DISCONNECTING("正在断开连接", 206),
         DISCONNECTED("连接已断开", 207),
@@ -60,6 +57,11 @@ object Constants {
         STOP_CONNECT("stop connect", 209),
         CONNECT_ENABLED("connect enabled", 210),//无可直连设备（不可直连蓝牙低功耗设备，若当前只有蓝牙低功耗设备时提示）
         DEVICE_NOT_SUPPORTED("device not supported", 211),//设备不支持
+        DEVICE_BONDED("device bonded", 212),//
+        DEVICE_BOND_FAILED("device bond failed", 213),//
+        DEVICE_QUADRUPLE_RECEIVED("receive device quadruples", 214),//获取设备四元组成功
+        BIND_APP_KEY_SUCCESS("bind key success", 215),//绑定key成功
+        BIND_APP_KEY_FOR_NODE_FAILED("", -215),//绑定appkey失败
 
         NET_KEY_DELETE_FAILED("netKey正在使用中，需先删除netKey对应的设备", 401),//netKey正在使用中，需先删除netKey对应的设备
         NET_KEY_NOT_EXIST("netKey不存在", 403),//netKey正在使用中，需先删除netKey对应的设备

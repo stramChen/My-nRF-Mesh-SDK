@@ -38,8 +38,7 @@ open class BaseMeshService : LifecycleService() {
 
     override fun onCreate() {
         super.onCreate()
-        if (mNrfMeshManager == null)
-            mNrfMeshManager = NrfMeshManager(this, MeshManagerApi(this), BleMeshManager(this))
+        mNrfMeshManager = NrfMeshManager(this, MeshManagerApi(this), BleMeshManager(this))
         setObserver()
     }
 
@@ -49,12 +48,6 @@ open class BaseMeshService : LifecycleService() {
 
     //开始扫描
     internal fun startScan(filterUuid: UUID, scanCallback: ScanCallback?, networkKey: String = "") {
-//        mScanCallback = scanCallback
-        //获取扫描结果
-//        mNrfMeshManager?.getScannerResults()?.observe(this, Observer {
-//            Utils.printLog(TAG, "get scanner result:${it.devices.size}")
-//            mScanCallback?.onScanResult(it.devices, it.updatedDeviceIndex)
-//        })
         // 获取扫描状态结果
         mNrfMeshManager?.getScannerState()?.observe(this, Observer {
             if (!it.isBluetoothEnabled)
@@ -89,7 +82,7 @@ open class BaseMeshService : LifecycleService() {
     }
 
     internal fun stopConnect() {
-        mNrfMeshManager?.connectionState?.removeObservers(this)
+        mConnectCallback = null
         mNrfMeshManager?.isDeviceReady?.removeObservers(this)
         mConnectCallback = null
 
@@ -111,10 +104,10 @@ open class BaseMeshService : LifecycleService() {
     ) {
         mConnectCallback = callback
         setConnectObserver()
-        mNrfMeshManager?.connect(device, connectToNetwork)
+        mNrfMeshManager?.connect(this, device, connectToNetwork)
     }
 
-    private fun setConnectObserver() {
+    fun setConnectObserver() {
         Utils.printLog(TAG, "setConnectObserver")
         mNrfMeshManager?.isDeviceReady?.observe(this, Observer {
             if (mNrfMeshManager?.bleMeshManager?.isDeviceReady == true) {
@@ -132,6 +125,12 @@ open class BaseMeshService : LifecycleService() {
                 LogFileUtil.getInnerFileName(Constants.MESH_LOG_FILE_NAME)
             )
         })
+
+        Utils.printLog(
+            TAG,
+            " mNrfMeshManager?.connectionState has active observers:${mNrfMeshManager?.connectionState?.hasActiveObservers()}"
+        )
+
         mNrfMeshManager?.provisionedNodes?.observe(this, Observer {
             mConnectCallback?.onConnectStateChange(
                 CallbackMsg(
@@ -303,7 +302,8 @@ open class BaseMeshService : LifecycleService() {
 //    }
 
     internal fun unRegisterConnectListener() {
-        mNrfMeshManager?.connectionState?.removeObservers(this)
+//        mNrfMeshManager?.connectionState?.removeObservers(this)
+        mConnectCallback = null
     }
 
     internal fun setSelectedModel(

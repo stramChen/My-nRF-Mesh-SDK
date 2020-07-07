@@ -17,7 +17,7 @@ object MeshHandler {
 
     private val requestMaps = ConcurrentHashMap<String, MeshCallback>(20)
     private val runnableMaps = ConcurrentHashMap<String, TimeOutRunnable>(20)
-    private val TIME_OUT_MILLS = 2 * 1000L
+    private val TIME_OUT_MILLS = 3 * 1000L
 
     init {
         handlerThread.start()

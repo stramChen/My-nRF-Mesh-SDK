@@ -94,8 +94,8 @@ public class LogFileUtil {
                         Date date = formatter.parse(names[2] + " 00:00:00");
                         Date nowDate = new Date();
                         long diff = nowDate.getTime() - date.getTime();
-                        if (diff / 1000 / 60 / 60 / 24 >= 3) {//本地保留3天内的日志，3天之前的日志删除
-                            //todo 此处处理逻辑待与产品确定
+                        if (diff / 1000 / 60 / 60 / 24 <= 1) {//本地保留当天的日志，其他日志删除
+                            //todo mxchip 此处处理逻辑待与产品确定
                             logFile.delete();
                         }
                     } catch (Exception e) {

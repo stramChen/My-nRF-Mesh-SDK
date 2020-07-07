@@ -54,23 +54,23 @@ class MeshNetworkLiveData internal constructor() : LiveData<MeshNetworkLiveData>
             }
         }
 
-    val networkKeys: List<NetworkKey>
-        get() = meshNetwork!!.netKeys
+    val networkKeys: List<NetworkKey>?
+        get() = meshNetwork?.netKeys
 
     /**
      * Returns the app keys list
      */
-    val appKeys: List<ApplicationKey>
-        get() = meshNetwork!!.appKeys
+    val appKeys: List<ApplicationKey>?
+        get() = meshNetwork?.appKeys
 
     /**
      * Returns the list of [Provisioner]
      */
-    val provisioners: List<Provisioner>
-        get() = meshNetwork!!.provisioners
+    val provisioners: List<Provisioner>?
+        get() = meshNetwork?.provisioners
 
     val provisioner: Provisioner?
-        get() = meshNetwork!!.selectedProvisioner
+        get() = meshNetwork?.selectedProvisioner
 
     /**
      * Returns the network name

@@ -700,10 +700,12 @@ abstract class BaseMeshNetwork {
 
         for (Provisioner other : provisioners) {
             if (!other.getProvisionerUuid().equalsIgnoreCase(provisioner.getProvisionerUuid())) {
-                if (provisioner.hasOverlappingUnicastRanges(other.getAllocatedUnicastRanges())
-                        || provisioner.hasOverlappingGroupRanges(other.getAllocatedGroupRanges())
-                        || provisioner.hasOverlappingSceneRanges(other.getAllocatedSceneRanges())) {
-                    throw new IllegalArgumentException("Provisioner ranges overlap.");
+                if (provisioner.hasOverlappingUnicastRanges(other.getAllocatedUnicastRanges())) {
+                    throw new IllegalArgumentException("other.getProvisionerUuid not equalsIgnoreCase ProvisionerUuid");
+                }else if ( provisioner.hasOverlappingGroupRanges(other.getAllocatedGroupRanges())){
+                    throw new IllegalArgumentException("Provisioner Overlapping GroupRanges.");
+                }else if (provisioner.hasOverlappingSceneRanges(other.getAllocatedSceneRanges())){
+                    throw new IllegalArgumentException("Provisioner Overlapping SceneRanges.");
                 }
             }
         }

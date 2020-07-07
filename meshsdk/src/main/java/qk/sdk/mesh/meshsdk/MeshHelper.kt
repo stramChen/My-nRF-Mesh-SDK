@@ -271,7 +271,6 @@ object MeshHelper {
 //        val applicationKey = getAppKeys()?.get(index)
 
         if (applicationKey == null) {
-            //todo 日志记录
             Utils.printLog(TAG, "addAppKeys() applicationKey is null!")
         }
 
@@ -282,7 +281,6 @@ object MeshHelper {
                 "networkKey.keyIndex:${networkKey?.keyIndex},applicationKey.boundNetKeyIndex:${this.boundNetKeyIndex}"
             )
             if (networkKey == null || networkKey.keyIndex != this.boundNetKeyIndex) {
-                //todo 日志记录
                 Utils.printLog(TAG, "addAppKeys() networkKey is null!")
             } else {
                 val node = getSelectedMeshNode()
@@ -1078,9 +1076,17 @@ object MeshHelper {
         }
     }
 
-    fun clearGatt(){
+    fun clearGatt() {
         MeshProxyService.mMeshProxyService?.clearGatt()
     }
+
+    fun restartService(context: Context, callback: MapCallback) {
+        context.stopService(Intent(context, MeshProxyService::class.java))
+        mMeshProxyServiceCallback = callback
+        initMesh(context)
+    }
+
+    private var mMeshProxyServiceCallback: MapCallback? = null
 
     internal class MeshProxyService : BaseMeshService() {
         companion object {
@@ -1090,12 +1096,18 @@ object MeshHelper {
 
         override fun onCreate() {
             super.onCreate()
-            if (mMeshProxyService == null)
-                mMeshProxyService = this
+            Utils.printLog(TAG, "service created")
 
-            mProvisionCallback?.apply {
-                getProvisionedNodes(this)
-            }
+            mNrfMeshManager?.mNetworkImportState?.observe(this, androidx.lifecycle.Observer {
+                mMeshProxyServiceCallback?.onResult(
+                    hashMapOf(
+                        "code" to Constants.ConnectState.SERVICE_CREATED.code,
+                        "msg" to Constants.ConnectState.SERVICE_CREATED.msg
+                    )
+                )
+            })
+
+            mMeshProxyService = this
         }
     }
 }
