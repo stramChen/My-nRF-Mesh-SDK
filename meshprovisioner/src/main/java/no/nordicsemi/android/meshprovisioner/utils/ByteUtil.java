@@ -225,4 +225,17 @@ public class ByteUtil {
         Log.e(tag, "mesh:" + msg);
 //        }
     }
+
+    public static byte[] hexStringToBytes(String hex) {
+        int m = 0, n = 0;
+        int byteLen = hex.length() / 2; // 每两个字符描述一个字节
+        byte[] ret = new byte[byteLen];
+        for (int i = 0; i < byteLen; i++) {
+            m = i * 2 + 1;
+            n = m + 1;
+            int intVal = Integer.decode("0x" + hex.substring(i * 2, m) + hex.substring(m, n));
+            ret[i] = Byte.valueOf((byte) intVal);
+        }
+        return ret;
+    }
 }

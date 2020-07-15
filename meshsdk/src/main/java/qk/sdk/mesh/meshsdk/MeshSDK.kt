@@ -9,6 +9,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import me.weyye.hipermission.PermissionCallback
+import no.nordicsemi.android.meshprovisioner.ApplicationKey
 import no.nordicsemi.android.meshprovisioner.UnprovisionedBeacon
 import no.nordicsemi.android.meshprovisioner.models.GenericOnOffServerModel
 import no.nordicsemi.android.meshprovisioner.models.VendorModel
@@ -324,6 +325,116 @@ object MeshSDK {
     const val ADD_APPKEYS = "addAppkeys"
     const val GET_COMPOSITION_DATA = "getCompositionData"
     const val BIND_APP_KEY = "bindAppKey"
+
+//    fun addApplicationKeyForNode(uuid: String, appKey: String, callback: MapCallback) {
+//        var map = HashMap<String, Any>()
+//        doBaseCheck(uuid, map, callback)
+//
+//        MeshHelper.getAppkeyByKeyName(appKey)?.let { applicationKey ->
+//            MeshHelper.getProvisionNode()?.forEach { node ->
+//                if (node.uuid == uuid) {
+//                    MeshHelper.setSelectedMeshNode(node)
+//                }
+//            }
+//
+//            if (MeshHelper.isConnectedToProxy()) {
+//                var bindedModelIndex = -1
+//                var bindedEleIndex = -1
+//                var currentModel: MeshModel? = null
+//                var currentElement: Element? = null
+//                var currentNode: ProvisionedMeshNode? = null
+//                var meshCallback = object :
+//                    MeshCallback {
+//                    override fun onReceive(msg: MeshMessage) {
+//                        if (msg is ConfigAppKeyStatus) {
+//                            if (msg.isSuccessful) {//添加appkey成功
+//                                Utils.printLog(TAG, "add app key success!")
+//                                MeshHandler.removeRunnable(ADD_APPKEYS)
+//                                if ((MeshHelper.getSelectedMeshNode()?.elements?.size
+//                                        ?: 0) <= 0
+//                                ) {
+//                                    MeshHelper.getCompositionData(GET_COMPOSITION_DATA, this)
+//                                }
+//                            } else {
+//                                Utils.printLog(
+//                                    TAG,
+//                                    "add app key failed,because ${msg.statusCodeName}!"
+//                                )
+//                                map.clear()
+//                                doMapCallback(
+//                                    map, callback,
+//                                    CallbackMsg(
+//                                        ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.code,
+//                                        msg.statusCodeName
+//                                    )
+//                                )
+//                            }
+//                        } else if (msg is ConfigCompositionDataStatus) {
+//                            Utils.printLog(TAG, "get getCompositionData success!")
+//                            MeshHandler.removeRunnable(GET_COMPOSITION_DATA)
+//                            synchronized(bindedModelIndex) {
+//                                if (bindedModelIndex == -1) {
+//                                    MeshHelper.getSelectedMeshNode()?.let { node ->
+//                                        currentNode = node
+//                                        node.elements?.values?.elementAt(0)?.let { eleValue ->
+//                                            if (eleValue.meshModels?.size ?: 0 >= LEAST_MODEL_COUNT && eleValue.meshModels?.values?.elementAt(
+//                                                    if (eleValue.meshModels?.size ?: 0 == 1) 0 else 1
+//                                                ) != null
+//                                            ) {//默认跳过第一个model，从第二个开始bind
+//                                                bindedModelIndex = 1
+//                                                bindedEleIndex = 0
+//                                                Utils.printLog(
+//                                                    TAG,
+//                                                    "get getCompositionData bindAppKey!"
+//                                                )
+//                                                currentModel =
+//                                                    eleValue.meshModels?.values?.elementAt(
+//                                                        if (eleValue.meshModels?.size ?: 0 == 1) 0 else 1
+//                                                    )
+//                                                MeshHelper.setSelectedModel(
+//                                                    eleValue,
+//                                                    currentModel
+//                                                )
+//                                                currentElement = eleValue
+//
+//                                                MeshHelper.bindAppKey(
+//                                                    BIND_APP_KEY,
+//                                                    applicationKey.keyIndex, this
+//                                                )
+//                                            }
+//                                        }
+//                                    }
+//                                }
+//                            }
+//
+//                        }
+//                    }
+//
+//                    override fun onError(msg: CallbackMsg) {
+//
+//                    }
+//                }
+//                MeshHelper.addAppkeys(
+//                    ADD_APPKEYS,
+//                    applicationKey.keyIndex,
+//                    meshCallback,
+//                    true,
+//                    true
+//                )
+//            } else {
+//                map.clear()
+//                map.put(
+//                    Constants.KEY_MESSAGE,
+//                    ConnectState.CONNECT_NOT_EXIST.msg
+//                )
+//                map.put(
+//                    Constants.KEY_CODE,
+//                    ConnectState.CONNECT_NOT_EXIST.code
+//                )
+//            }
+//        }
+//    }
+
     fun bindApplicationKeyForNode(uuid: String, appKey: String, callback: MapCallback) {
         Observable.create<String> {}.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
             var map = HashMap<String, Any>()
@@ -1667,6 +1778,31 @@ object MeshSDK {
 
     fun getDeviceVersion(uuid: String, callback: MapCallback) {
         sendMeshMessage(uuid, 0, VENDOR_MODELID, "0A", "", callback, "getDeviceVersion")
+    }
+
+    fun sendGroupMsg(groupAddr: Int, vid: Int) {
+        MeshHelper.getGroupByAddress(groupAddr)?.let { group ->
+            MeshHelper.getMeshNetwork()?.let { network ->
+                network.getModels(group)?.forEach foreach@{ model ->
+                    if (MeshParserUtils.isVendorModel(model.modelId)) {
+                        model.boundAppKeyIndexes?.let { boundedAppkeys ->
+                            if (boundedAppkeys.size == 1) {
+                                val appKey: ApplicationKey = network.getAppKey(boundedAppkeys[0])
+                                val message = VendorModelMessageUnacked(
+                                    appKey,
+                                    model.modelId,
+                                    (model as VendorModel).companyIdentifier,
+                                    0x18,
+                                    byteArrayOf(vid.toByte())
+                                )
+                                MeshHelper.sendMessage("", group.address, message, null)
+                                return@foreach
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
 }

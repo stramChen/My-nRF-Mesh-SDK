@@ -217,7 +217,7 @@ open class BaseMeshService : LifecycleService() {
                             network.assignUnicastAddress(unicast)
                             if (!isProvisioningStarted) {
                                 var node = mNrfMeshManager?.unprovisionedMeshNode?.value
-                                if (node != null && node.provisioningCapabilities.availableOOBTypes.size == 1
+                                if (node != null && node.provisioningCapabilities.availableOOBTypes.size >0
                                     && node.provisioningCapabilities.availableOOBTypes[0] == AuthenticationOOBMethods.NO_OOB_AUTHENTICATION
                                 ) {
                                     node.nodeName = mNrfMeshManager?.meshNetworkLiveData?.nodeName

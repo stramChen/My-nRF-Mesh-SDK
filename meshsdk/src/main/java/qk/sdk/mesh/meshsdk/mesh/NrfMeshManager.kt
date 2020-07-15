@@ -1455,8 +1455,6 @@ class NrfMeshManager(
             val scanner = BluetoothLeScannerCompat.getScanner()
             mScanDataCallback = scanCallback
             scanner.startScan(filters, settings, mScanCallbacks)
-            Utils.printLog(TAG, "start scan mScanDataCallback：${mScanDataCallback == null}")
-//            registerBroadcastReceivers()
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
             mScannerStateLiveData.bluetoothDisabled()

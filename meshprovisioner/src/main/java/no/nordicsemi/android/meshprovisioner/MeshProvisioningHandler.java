@@ -46,12 +46,14 @@ import no.nordicsemi.android.meshprovisioner.provisionerstates.ProvisioningState
 import no.nordicsemi.android.meshprovisioner.provisionerstates.UnprovisionedMeshNode;
 import no.nordicsemi.android.meshprovisioner.transport.MeshModel;
 import no.nordicsemi.android.meshprovisioner.transport.ProvisionedMeshNode;
+import no.nordicsemi.android.meshprovisioner.utils.ByteUtil;
 import no.nordicsemi.android.meshprovisioner.utils.InputOOBAction;
 import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils;
 import no.nordicsemi.android.meshprovisioner.utils.OutputOOBAction;
 import no.nordicsemi.android.meshprovisioner.utils.StaticOOBType;
 
 class MeshProvisioningHandler implements InternalProvisioningCallbacks {
+    private String TAG = "MeshProvisioningHandler";
 
     static final int ATTENTION_TIMER = 5; //seconds
     private final InternalTransportCallbacks mInternalTransportCallbacks;
@@ -104,6 +106,7 @@ class MeshProvisioningHandler implements InternalProvisioningCallbacks {
             case PROVISIONING_INVITE:
                 break;
             case PROVISIONING_CAPABILITIES:
+                ByteUtil.printLog(TAG, "PROVISIONING_CAPABILITIES");
                 if (validateMessage(data)) {
                     if (!parseProvisioningCapabilitiesMessage(unprovisionedMeshNode, data)) {
                         parseProvisioningState(unprovisionedMeshNode, data);

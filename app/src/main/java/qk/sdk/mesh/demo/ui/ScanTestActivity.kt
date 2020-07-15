@@ -100,10 +100,10 @@ class ScanTestActivity : BaseMeshActivity(),
             }
         })
 
-//        MeshSDK.getCurrentNetworkKey(object : StringCallback {
-//            override fun onResultMsg(msg: String) {
+        MeshSDK.getCurrentNetworkKey(object : StringCallback {
+            override fun onResultMsg(msg: String) {
                 MeshSDK.provision(
-                    data.get("uuid") as String, netKey,
+                    data.get("uuid") as String, msg,
                     object : MapCallback {
                         override fun onResult(msg: HashMap<String, Any>) {
                             tv_status.visibility = View.VISIBLE
@@ -136,8 +136,8 @@ class ScanTestActivity : BaseMeshActivity(),
                             }
                         }
                     })
-//            }
-//        })
+            }
+        })
 
     }
 

@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import kotlinx.android.synthetic.main.activity_connect.*
+import no.nordicsemi.android.meshprovisioner.transport.MeshMessage
+import no.nordicsemi.android.meshprovisioner.transport.VendorModelMessageUnacked
 import qk.sdk.mesh.demo.R
 import qk.sdk.mesh.demo.base.BaseMeshActivity
 import qk.sdk.mesh.demo.util.Constants
@@ -13,6 +15,7 @@ import qk.sdk.mesh.meshsdk.callback.ArrayStringCallback
 import qk.sdk.mesh.meshsdk.callback.BooleanCallback
 import qk.sdk.mesh.meshsdk.callback.MapCallback
 import qk.sdk.mesh.meshsdk.callback.StringCallback
+import qk.sdk.mesh.meshsdk.util.ByteUtil
 import qk.sdk.mesh.meshsdk.util.Utils
 
 class ConnectTestActivity : BaseMeshActivity() {
@@ -101,6 +104,11 @@ class ConnectTestActivity : BaseMeshActivity() {
                     Utils.printLog(TAG, "switch_mode result:$boolean")
                 }
             })
+
+//            var ruleMsg = "00010cd85d00080106000282030101"
+//            var meshMsg =
+//                VendorModelMessageUnacked(null, 0, 0, 18, ByteUtil.hexStringToBytes(ruleMsg))
+//            MeshHelper.sendMeshPdu("", 0xC002, meshMsg, null)
         }
 
         switch_on_off.setOnCheckedChangeListener { buttonView, isChecked ->
