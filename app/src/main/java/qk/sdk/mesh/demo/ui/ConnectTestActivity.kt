@@ -34,13 +34,6 @@ class ConnectTestActivity : BaseMeshActivity() {
         mUUID = intent.getStringExtra("uuid") ?: ""
         Utils.printLog(TAG, "mesh uuid:${mUUID}")
         initView()
-//        if (!MeshSDK.isConnectedToProxy()) {
-////            startScan(Constants.SCAN_PROVISIONED, scanCallback)
-//
-//        } else {
-//
-//            MeshHelper.addConnectCallback(connectCallback!!)
-//        }
     }
 
     override fun setLayoutId(): Int = R.layout.activity_connect
@@ -60,7 +53,7 @@ class ConnectTestActivity : BaseMeshActivity() {
 //                    }
 //                }
 //            })
-            MeshSDK.sendMeshMessage(mUUID, 0, 0, "15", "00", object : BooleanCallback {
+            MeshSDK.sendMeshMessage(mUUID, 0, "15", "00", object : BooleanCallback {
                 override fun onResult(boolean: Boolean) {
                     Log.e(TAG, "reboot :$boolean")
                 }
@@ -77,7 +70,7 @@ class ConnectTestActivity : BaseMeshActivity() {
                                 ArrayStringCallback {
                                 override fun onResult(result: ArrayList<String>) {
                                     if (result.size > 0) {
-                                        MeshSDK.bindApplicationKeyForNode(
+                                        MeshSDK.addApplicationKeyForNode(
                                             mUUID,
                                             result.get(0),
                                             object : MapCallback {

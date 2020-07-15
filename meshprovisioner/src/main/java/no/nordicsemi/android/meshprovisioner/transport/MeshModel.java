@@ -36,6 +36,7 @@ import java.util.UUID;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import no.nordicsemi.android.meshprovisioner.utils.MeshAddress;
 
 /**
@@ -120,7 +121,7 @@ public abstract class MeshModel implements Parcelable {
         return Collections.unmodifiableList(mBoundAppKeyIndexes);
     }
 
-    protected void setBoundAppKeyIndex(final int appKeyIndex) {
+    public void setBoundAppKeyIndex(final int appKeyIndex) {
         if (!mBoundAppKeyIndexes.contains(appKeyIndex))
             mBoundAppKeyIndexes.add(appKeyIndex);
     }

@@ -32,6 +32,7 @@ import androidx.annotation.VisibleForTesting;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import no.nordicsemi.android.meshprovisioner.utils.ByteUtil;
 import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils;
 
 
@@ -76,6 +77,7 @@ abstract class AccessLayer {
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     final void createAccessMessage(@NonNull final AccessMessage accessMessage) {
         final byte[] opCodes = MeshParserUtils.getOpCode(accessMessage.getOpCode());
+        ByteUtil.printLog(TAG, "opcode:" + ByteUtil.bytesToHexString(opCodes));
         final byte[] parameters = accessMessage.getParameters();
         final ByteBuffer accessMessageBuffer;
         if (parameters != null) {
@@ -87,7 +89,7 @@ abstract class AccessLayer {
         }
         final byte[] accessPdu = accessMessageBuffer.array();
 
-        Log.v(TAG, "Created Access PDU " + MeshParserUtils.bytesToHex(accessPdu, false));
+        ByteUtil.printLog(TAG, "Created mesh Access PDU " + MeshParserUtils.bytesToHex(accessPdu, false));
         accessMessage.setAccessPdu(accessMessageBuffer.array());
     }
 

@@ -37,7 +37,7 @@ class OnOffMeshActivity : BaseMeshActivity() {
                                 ArrayStringCallback {
                                 override fun onResult(result: ArrayList<String>) {
                                     if (result.size > 0) {
-                                        MeshSDK.bindApplicationKeyForNode(
+                                        MeshSDK.addApplicationKeyForNode(
                                             mUUID,
                                             result.get(0),
                                             object : MapCallback {
@@ -59,42 +59,42 @@ class OnOffMeshActivity : BaseMeshActivity() {
         var btn2 = 0
         var btn3 = 0
         btn_ele_fir.setOnClickListener {
-            MeshSDK.setGenericOnOff(
-                mUUID,
-                if (btn1 % 2 == 0) true else false,
-                0,
-                object : BooleanCallback {
-                    override fun onResult(boolean: Boolean) {
-                        btn1++
-                        Utils.printLog(TAG, "setGenericOnOff result:$boolean")
-                    }
-                })
+//            MeshSDK.setGenericOnOff(
+//                mUUID,
+//                if (btn1 % 2 == 0) true else false,
+//                0,
+//                object : BooleanCallback {
+//                    override fun onResult(boolean: Boolean) {
+//                        btn1++
+//                        Utils.printLog(TAG, "setGenericOnOff result:$boolean")
+//                    }
+//                })
         }
 
         btn_ele_sec.setOnClickListener {
-            MeshSDK.setGenericOnOff(
-                mUUID,
-                if (btn2 % 2 == 0) true else false,
-                1,
-                object : BooleanCallback {
-                    override fun onResult(boolean: Boolean) {
-                        btn2++
-                        Utils.printLog(TAG, "setGenericOnOff result:$boolean")
-                    }
-                })
+//            MeshSDK.setGenericOnOff(
+//                mUUID,
+//                if (btn2 % 2 == 0) true else false,
+//                1,
+//                object : BooleanCallback {
+//                    override fun onResult(boolean: Boolean) {
+//                        btn2++
+//                        Utils.printLog(TAG, "setGenericOnOff result:$boolean")
+//                    }
+//                })
         }
 
         btn_ele_thir.setOnClickListener {
-            MeshSDK.setGenericOnOff(
-                mUUID,
-                if (btn3 % 2 == 0) true else false,
-                2,
-                object : BooleanCallback {
-                    override fun onResult(boolean: Boolean) {
-                        btn3++
-                        Utils.printLog(TAG, "setGenericOnOff result:$boolean")
-                    }
-                })
+//            MeshSDK.setGenericOnOff(
+//                mUUID,
+//                if (btn3 % 2 == 0) true else false,
+//                2,
+//                object : BooleanCallback {
+//                    override fun onResult(boolean: Boolean) {
+//                        btn3++
+//                        Utils.printLog(TAG, "setGenericOnOff result:$boolean")
+//                    }
+//                })
         }
 
         btn_publish.setOnClickListener {

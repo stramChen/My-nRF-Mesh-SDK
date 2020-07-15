@@ -362,8 +362,9 @@ public class MeshParserUtils {
             return new byte[]{(byte) (0x80 | ((opCode >> 8) & 0x3F)), (byte) (opCode & 0xFF)};
         } else {
             return new byte[]{(byte) (0xC0 | ((opCode >> 16) & 0x3F)),
-                    (byte) ((opCode >> 8) & 0xFF),
-                    (byte) (opCode & 0xFF)};
+                    (byte) (opCode & 0xFF),
+                    (byte) ((opCode >> 8) & 0xFF)
+            };
         }
     }
 
@@ -401,7 +402,7 @@ public class MeshParserUtils {
 //        opCodes[2] = (byte) ((companyIdentifier >> 8) & 0xFF);
 //        return opCodes;
         if (companyIdentifier != 0xFFFF) {
-            return new byte[]{(byte) (0xC0 | (opCode & 0x3F)), (byte) (companyIdentifier & 0xFF), (byte) ((companyIdentifier >> 8) & 0xFF)};
+            return new byte[]{(byte) (0xC0 | (opCode & 0x3F)), (byte) ((companyIdentifier >> 8) & 0xFF), (byte) (companyIdentifier & 0xFF)};
         }
         return null;
     }

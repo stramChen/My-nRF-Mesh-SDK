@@ -1,4 +1,4 @@
-include ':app', ':meshsdk', ':meshprovisioner', ':mxnrfmesh', ':testdependence'
+include ':app', ':meshsdk', ':meshprovisioner'
 //setBinding(new Binding([gradle: this]))
 //evaluate(new File(
 //  settingsDir,

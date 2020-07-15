@@ -49,6 +49,7 @@ dependencies {
 
 //    api project(':QKMeshDemo:meshsdk')
     api project(':meshsdk')
+    api project(':meshprovisioner')
 //    api project(':realsilota')
 
 //    api(name: 'meshsdk-0.0.8', ext: 'aar') {
