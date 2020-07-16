@@ -331,7 +331,7 @@ public class MeshParserUtils {
      * @return array of opcodes
      */
     public static int getOpCode(final byte[] accessPayload, final int opCodeCount) {
-        CommonUtil.INSTANCE.printLog(TAG, "getopcode:" + ((byte) (MeshParserUtils.unsignedByteToInt(accessPayload[0]) ^ 0xC0)));
+        CommonUtil.INSTANCE.printLog(TAG, "getopcode int:" + ((MeshParserUtils.unsignedByteToInt(accessPayload[0]) ^ 0xC0)));
 
         switch (opCodeCount) {
             case 1:
@@ -402,7 +402,7 @@ public class MeshParserUtils {
 //        opCodes[2] = (byte) ((companyIdentifier >> 8) & 0xFF);
 //        return opCodes;
         if (companyIdentifier != 0xFFFF) {
-            return new byte[]{(byte) (0xC0 | (opCode & 0x3F)), (byte) ((companyIdentifier >> 8) & 0xFF), (byte) (companyIdentifier & 0xFF)};
+            return new byte[]{(byte) (0xC0 | (opCode & 0x3F)), (byte) (companyIdentifier & 0xFF), (byte) ((companyIdentifier >> 8) & 0xFF)};
         }
         return null;
     }

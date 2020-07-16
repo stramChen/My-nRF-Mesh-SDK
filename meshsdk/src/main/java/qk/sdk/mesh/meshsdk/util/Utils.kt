@@ -24,7 +24,9 @@ package qk.sdk.mesh.meshsdk.util
 
 import android.Manifest
 import android.app.Activity
+import android.app.ActivityManager
 import android.bluetooth.BluetoothAdapter
+import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -319,4 +321,28 @@ object Utils {
         return uuid == macSB.toString()
     }
 
+    fun isServiceExisted(context: Context, className: String): Boolean {
+        val activityManager = context
+            .getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val serviceList = activityManager
+            .getRunningServices(Int.MAX_VALUE)
+        if (serviceList.size <= 0) {
+            return false
+        }
+        for (i in serviceList.indices) {
+            val serviceInfo: ActivityManager.RunningServiceInfo = serviceList[i]
+            val serviceName: ComponentName = serviceInfo.service
+            if (serviceName.className == className) {
+                return true
+            }
+        }
+        return false
+    }
+
+
+    fun getNumberType(number: Any?): Int {
+        if (number == null)
+            return -2
+        return if (number is Int) 1 else if (number is Double) 2 else if (number is Float) 3 else -1
+    }
 }

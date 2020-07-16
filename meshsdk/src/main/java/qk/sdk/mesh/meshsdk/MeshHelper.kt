@@ -213,6 +213,9 @@ object MeshHelper {
         MeshProxyService.mMeshProxyService?.setSelectedModel(element, model)
     }
 
+    /**
+     * 向设备添加appKey
+     */
     fun addAppKeys(meshCallback: MeshCallback?) {
         rx.Observable.create<String> {
         }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
@@ -311,7 +314,7 @@ object MeshHelper {
     }
 
     /**
-     * 在绑定好appkey之后，获取当前节点的元素列表
+     * 在绑定好appkey之后，获取当前节点的element、model列表
      */
     fun getCompositionData(method: String, callback: MeshCallback) {
         rx.Observable.create<String> {
@@ -329,55 +332,6 @@ object MeshHelper {
                 )
             }
         }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
-    }
-
-    // 绑定 application key
-    fun bindAppKey(meshCallback: MeshCallback?) {
-        getSelectedMeshNode()?.let {
-            val element = getSelectedElement()
-            if (element != null) {
-                Utils.printLog(TAG, "getSelectedElement")
-                val model = getSelectedModel()
-                if (model != null) {
-                    Utils.printLog(TAG, "getSelectedModel")
-                    val configModelAppUnbind =
-                        ConfigModelAppBind(element.elementAddress, model.modelId, 0)
-                    sendMessage(
-                        "bindAppKey",
-                        it.unicastAddress,
-                        configModelAppUnbind,
-                        meshCallback,
-                        true,
-                        true
-                    )
-                }
-            }
-        }
-    }
-
-    fun bindAppKey(method: String, appKeyIndex: Int, meshCallback: MeshCallback?) {
-        getSelectedMeshNode()?.let {
-            val element = getSelectedElement()
-            if (element != null) {
-                val model = getSelectedModel()
-                if (model != null) {
-                    Utils.printLog(
-                        TAG,
-                        "bindAppKey getSelectedEle:${element.elementAddress},getSelectedModel:${model.modelId}"
-                    )
-                    val configModelAppUnbind =
-                        ConfigModelAppBind(element.elementAddress, model.modelId, appKeyIndex)
-                    sendMessage(
-                        method,
-                        it.unicastAddress,
-                        configModelAppUnbind,
-                        meshCallback,
-                        true,
-                        true
-                    )
-                }
-            }
-        }
     }
 
     fun createNetworkKey(key: String) {
@@ -436,10 +390,6 @@ object MeshHelper {
 
     fun setCurrentNetworkKey(networkKey: String) {
         MeshProxyService.mMeshProxyService?.setCurrentNetworkKey(networkKey)
-    }
-
-    fun getPrimaryNetKey() {
-
     }
 
     fun getCurrentNetworkKey(): NetworkKey? {
@@ -520,7 +470,10 @@ object MeshHelper {
         }
     }
 
-    // 向设备发送指令
+    /**
+     * 向设备发送指令
+     * @param message 组成：$Opcode$TID$AttrType$AttrValue
+     */
     fun sendMessage(
         method: String,
         dst: Int,
@@ -533,7 +486,6 @@ object MeshHelper {
             sendMeshPdu(method, dst, message, callback, timeOut, retry)
         } catch (ex: IllegalArgumentException) {
             ex.printStackTrace()
-            //todo 日志记录
         }
     }
 
@@ -585,195 +537,6 @@ object MeshHelper {
         return MeshProxyService.mMeshProxyService?.isConnectedToProxy() ?: false
     }
 
-    fun sendGenericOnOffGet(meshCallback: MeshCallback?) {
-        val element = getSelectedElement()
-        if (element != null) {
-            val model = getSelectedModel()
-            if (model != null) {
-                if (model.boundAppKeyIndexes.isNotEmpty()) {
-                    val appKeyIndex = model.boundAppKeyIndexes[0]
-                    val appKey =
-                        getMeshNetwork()?.getAppKey(appKeyIndex)
-
-                    appKey?.let {
-                        val address = element.elementAddress
-                        Utils.printLog(
-                            TAG,
-                            "Sending message to element's unicast address: " + MeshAddress.formatAddress(
-                                address,
-                                true
-                            )
-                        )
-
-                        val genericOnOffSet = GenericOnOffGet(appKey)
-                        sendMessage("sendGenericOnOffGet", address, genericOnOffSet, meshCallback)
-                    }
-                } else {
-                    //todo 日志记录
-                    Utils.printLog(TAG, "sendGenericOnOffGet failed!")
-                }
-            }
-        }
-    }
-
-    fun sendGenericOnOff(state: Boolean, delay: Int) {
-        getSelectedMeshNode()?.let { node ->
-            node.ttl = 16
-            getSelectedElement()?.let { element ->
-                getSelectedModel()?.let { model ->
-                    if (model.boundAppKeyIndexes.isNotEmpty()) {
-                        val appKeyIndex = model.boundAppKeyIndexes[0]
-                        val appKey =
-                            getMeshNetwork()?.getAppKey(appKeyIndex)
-                        val address = element.elementAddress
-                        if (appKey != null) {
-                            val genericOnOffSet = GenericOnOffSet(
-                                appKey,
-                                state,
-                                node.sequenceNumber,
-                                0,
-                                0,
-                                delay
-                            )
-                            sendMessage("sendGenericOnOff", address, genericOnOffSet, null)
-                        }
-                    } else {
-                        Utils.printLog(TAG, "boundAppKeyIndexes is null!")
-                    }
-                }
-            }
-        }
-    }
-
-    fun sendUnacknowledgedGenericOnOff(state: Boolean, delay: Int) {
-        getSelectedMeshNode()?.let { node ->
-            getSelectedElement()?.let { element ->
-                getSelectedModel()?.let { model ->
-                    if (model.boundAppKeyIndexes.isNotEmpty()) {
-                        val appKeyIndex = model.boundAppKeyIndexes[0]
-                        val appKey =
-                            getMeshNetwork()?.getAppKey(appKeyIndex)
-                        val address = element.elementAddress
-                        if (appKey != null) {
-                            val genericOnOffSet = GenericOnOffSetUnacknowledged(
-                                appKey,
-                                state,
-                                node.sequenceNumber,
-                                0,
-                                0,
-                                delay
-                            )
-                            sendMessage("sendGenericOnOff", address, genericOnOffSet, null)
-                        }
-                    } else {
-                        Utils.printLog(TAG, "boundAppKeyIndexes is null!")
-                    }
-                }
-            }
-        }
-    }
-
-//    fun sendGenericOnOff(state: Boolean, delay: Int?, meshCallback: MeshCallback?) {
-//        if (meshCallback == null)
-//            Utils.printLog(TAG, "")
-//        getSelectedMeshNode()?.let { node ->
-//            getSelectedElement()?.let { element ->
-//                getSelectedModel()?.let { model ->
-//                    if (model.boundAppKeyIndexes.isNotEmpty()) {
-//                        val appKeyIndex = model.boundAppKeyIndexes[0]
-//                        val appKey =
-//                            getMeshNetwork()?.getAppKey(appKeyIndex)
-//                        val address = element.elementAddress
-//                        if (appKey != null) {
-//                            val genericOnOffSet = GenericOnOffSet(
-//                                appKey,
-//                                state,
-//                                node.sequenceNumber,
-//                                0,
-//                                0,
-//                                delay
-//                            )
-//                            sendMessage(address, genericOnOffSet)
-//                        }
-//                    } else {
-//                        Utils.printLog(TAG, "boundAppKeyIndexes is null!")
-//                    }
-//                }
-//            }
-//        }
-//    }
-
-    /**
-     * Send vendor model acknowledged message
-     *
-     * @param opcode     opcode of the message
-     * @param parameters parameters of the message
-     */
-    // 私有协议 opcode, value
-    fun sendVendorModelMessage(
-        method: String,
-        opcode: Int,
-        parameters: ByteArray?,
-        acknowledged: Boolean,
-        callback: MeshCallback? = null,
-        timeout: Boolean,
-        retry: Boolean
-    ) {
-        val element = getSelectedElement()
-        if (element != null) {
-            val model = getSelectedModel()
-            if (model != null && model is VendorModel) {
-                if (model.boundAppKeyIndexes.size > 0) {
-                    val appKeyIndex = model.boundAppKeyIndexes[0]
-                    val appKey = getMeshNetwork()?.getAppKey(appKeyIndex)
-                    val message: MeshMessage
-                    if (appKey != null) {
-                        if (acknowledged) {
-                            message = VendorModelMessageAcked(
-                                appKey,
-                                model.modelId,
-                                model.companyIdentifier,
-                                opcode,
-                                parameters!!
-                            )
-                            sendMessage(
-                                method,
-                                element.elementAddress,
-                                message,
-                                callback,
-                                timeout,
-                                retry
-                            )
-                        } else {
-                            message = VendorModelMessageUnacked(
-                                appKey,
-                                model.modelId,
-                                model.companyIdentifier,
-                                opcode,
-                                parameters
-                            )
-                            sendMessage(
-                                method,
-                                element.elementAddress,
-                                message,
-                                callback,
-                                timeout,
-                                retry
-                            )
-                        }
-                    }
-                } else {
-                    //todo
-                    Utils.printLog(TAG, "model don't boundAppKey")
-                }
-            }
-        }
-    }
-
-//    fun unRegisterMeshMsg() {
-//        MeshProxyService.mMeshProxyService?.unRegisterMeshMsg()
-//    }
-
     fun unRegisterConnectListener() {
         MeshProxyService.mMeshProxyService?.unRegisterConnectListener()
     }
@@ -789,81 +552,6 @@ object MeshHelper {
             MeshProxyService.mMeshProxyService?.importMeshNetworkJson(json, callback)
         }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
-
-//    fun updateDeviceImg(
-//        context: Context,
-//        uuid: String,
-//        path: String,
-//        callback: DfuAdapter.DfuHelperCallback
-//    ) {
-//        if (uuid.isEmpty() || path.isEmpty()) {
-//            callback.onError(
-//                Constants.ERROR_TYPE_FILE_ERROR,
-//                Constants.ConnectState.DFU_PARAM_ERROR.code
-//            )
-//        }
-//
-//        if (!File(path).exists()) {
-//            callback.onError(
-//                Constants.ERROR_TYPE_PARAM_ERROR,
-//                Constants.ConnectState.DFU_FILE_NOT_EXIST.code
-//            )
-//        }
-//
-//        mDfuHelper = DfuHelper.getInstance(context)
-//        if (mDfuHelper != null && getDfuConfig() != null) {
-//            mDfuHelper.addDfuHelperCallback(callback)
-//            initialize(context, Utils.getMacFromUUID(uuid))
-//            BackgroundScanAutoConnected.getInstance()
-//                .scanLeDevice(false, BackgroundScanAutoConnected.SCAN_PROXY)
-//            BackgroundScanAutoConnected.getInstance().gattLayerInstance
-//                .setIs_OTA_SERVICE_On(true)
-//            if (BackgroundScanAutoConnected.getInstance().isConnect()) {
-//                connectRemoteDevice(
-//                    BackgroundScanAutoConnected.getInstance().getGattLayerInstance().getBluetoothDevice(
-//                        Utils.getMacFromUUID(uuid)
-//                    ), false
-//                )
-//            }
-//
-//            getDfuConfig()?.otaWorkMode = Constants.DFU_WORK_MODE_SILENCE//设置更新模式为静默更新
-//            getDfuConfig()?.filePath = path//设置bin文件路径
-//            getDfuConfig()?.address = Utils.getMacFromUUID(uuid)//设置更新设备
-//            try {
-//                var binInfo = BinFactory.loadImageBinInfo(
-//                    path,
-//                    mDfuHelper.otaDeviceInfo, false
-//                )
-//                if (checkFileContent(mDfuHelper, getDfuConfig(), binInfo)) {
-////                getDfuConfig()?.setAutomaticActiveEnabled(SettingsHelper.getInstance().isAutomaticActiveEnabled())
-//                    getDfuConfig()?.isBatteryCheckEnabled = false
-//                    getDfuConfig()?.isVersionCheckEnabled = false
-//
-////                        getDfuConfig().setSpeedControlEnabled(true)
-////                        getDfuConfig().setControlSpeed(speed)
-//                    getDfuConfig()?.isSpeedControlEnabled = (false)
-//                    getDfuConfig()?.controlSpeed = (0)
-//                    getDfuConfig()?.address = getDfuConfig()?.address
-//
-//                    val ret = mDfuHelper.startOtaProcess(getDfuConfig())
-//                    if (!ret) {
-//                        //todo
-//                        Utils.printLog(TAG, "开始ota失败")
-//                    }
-//                } else {
-//                    //todo
-//                    Utils.printLog(TAG, "校验bin文件失败")
-//                }
-//            }catch (e:DfuException){
-//                e.printStackTrace()
-//                //todo
-//            }
-//        } else {
-//            //todo
-//            Utils.printLog(TAG, "dfu 未初始化！")
-//        }
-//    }
-
 
     fun createGroup(groupName: String, groupAdd: Int = 0): Boolean {
         Utils.printLog(TAG, "groupName:$groupName,groupAdd:$groupAdd")
@@ -954,97 +642,6 @@ object MeshHelper {
         }
         return null
     }
-
-//    fun setPublication(groupName: String) {
-//        //通过uuid获取group
-//        var group = getGroupByName(groupName)
-//        if (group == null) {
-//            Utils.printLog(TAG, "setPublication group is null")
-//            return
-//        }
-//
-//        //获取provisioned节点
-//        var node = getProvisionedNodeByUUID(groupName)
-//        if (node == null) {
-//            Utils.printLog(TAG, "setPublication node is null")
-//            return
-//        }
-//
-//        var publishAddress = group.address
-//        node.elements.values.elementAt(0).meshModels?.values?.forEach { meshModel ->
-//            if (meshModel.boundAppKeyIndexes?.size ?: 0 > 0) {
-//                runBlocking {
-//                    launch {
-//                        delay(1000)
-//                        var meshMsg = ConfigModelPublicationSet(
-//                            node.elements.values.elementAt(0).elementAddress
-//                            ,
-//                            publishAddress,
-//                            meshModel.boundAppKeyIndexes?.get(0) ?: 0,
-//                            false,
-//                            MeshParserUtils.USE_DEFAULT_TTL
-//                            ,
-//                            53,
-//                            0,
-//                            1,
-//                            1,
-//                            meshModel.modelId
-//                        )
-//
-//                        try {
-//                            MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi
-//                                ?.createMeshPdu(node.unicastAddress, meshMsg)
-//                        } catch (ex: IllegalArgumentException) {
-//                            ex.printStackTrace()
-//                        }
-//                    }
-//                }
-//
-//            }
-//
-//        }
-//
-//    }
-//
-//    fun sendSubscribeMsg(uuid: String) {
-//        var node = getProvisionedNodeByUUID(uuid)
-//        if (node == null) {
-//            Utils.printLog(TAG, "sendSubscribeMsg node is null")
-//            return
-//        }
-//
-//        var group = getGroupByName(uuid)
-//        if (group == null) {
-//            Utils.printLog(TAG, "sendSubscribeMsg group is null")
-//            return
-//        }
-//        node.elements.values.elementAt(0).meshModels?.values?.forEach { model ->
-//            runBlocking {
-//                launch {
-//                    delay(1000)
-//                    val modelIdentifier = model.getModelId()
-//                    val configModelSubscriptionAdd: MeshMessage
-//                    var elementAddress = node.elements.values.elementAt(0).elementAddress
-//                    if (group.addressLabel == null) {
-//                        configModelSubscriptionAdd =
-//                            ConfigModelSubscriptionAdd(
-//                                elementAddress,
-//                                group.getAddress(),
-//                                modelIdentifier
-//                            )
-//                    } else {
-//                        configModelSubscriptionAdd = ConfigModelSubscriptionVirtualAddressAdd(
-//                            elementAddress,
-//                            group.getAddressLabel()!!,
-//                            modelIdentifier
-//                        )
-//                    }
-//                    sendMessage(node.unicastAddress, configModelSubscriptionAdd)
-//
-//                }
-//            }
-//        }
-//    }
 
     fun subscribeLightStatus(meshCallback: MeshCallback) {
         rx.Observable.create<String> {

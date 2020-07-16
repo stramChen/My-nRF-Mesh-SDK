@@ -22,13 +22,13 @@ class PIRActivity : AppCompatActivity() {
         MeshHelper.getGroupByAddress(0XC002)?.apply {
             MeshSDK.createGroup("${this.name}", object : BooleanCallback {
                 override fun onResult(boolean: Boolean) {
-                    MeshSDK.subscribeStatus("", object : MapCallback {
-                        override fun onResult(result: HashMap<String, Any>) {
-                            result.forEach { key, value ->
-                                Utils.printLog("TAG", "key:$key,value:$value")
-                            }
-                        }
-                    })
+//                    MeshSDK.subscribeStatus("", object : MapCallback {
+//                        override fun onResult(result: HashMap<String, Any>) {
+//                            result.forEach { key, value ->
+//                                Utils.printLog("TAG", "key:$key,value:$value")
+//                            }
+//                        }
+//                    })
                 }
             })
         }

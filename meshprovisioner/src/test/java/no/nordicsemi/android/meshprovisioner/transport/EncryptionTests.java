@@ -128,8 +128,8 @@ public class EncryptionTests {
     @Test
     public void secure_network_beacon_isCorrect() {
         //8.2.6
-        final byte[] ivIndex = MeshParserUtils.toByteArray("12345678");
-        final byte[] flags = new byte[]{0x00};
+        final int ivIndex = MeshParserUtils.bytesToInt(MeshParserUtils.toByteArray("12345678"));
+        final int flags = 0;
         final byte[] networkId = MeshParserUtils.toByteArray("3ecaff672f673370");
         final byte[] authenticationValue = MeshParserUtils.toByteArray("8ea261582f364f6f3c74ef80336ca17e");
 

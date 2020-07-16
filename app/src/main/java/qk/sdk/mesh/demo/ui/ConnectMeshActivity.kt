@@ -59,11 +59,11 @@ class ConnectMeshActivity : BaseMeshActivity() {
             if (!(MeshHelper.getSelectedModel() is GenericOnOffServerModel)) {
                 bindModel(MODEL_TYPE_GENERIC)
             }
-            if (MeshHelper.getSelectedModel()?.boundAppKeyIndexes?.isNotEmpty() ?: false) {
-                MeshHelper.sendGenericOnOff(isChecked, 0)
-            } else {
-                MeshHelper.bindAppKey(meshCallback)
-            }
+//            if (MeshHelper.getSelectedModel()?.boundAppKeyIndexes?.isNotEmpty() ?: false) {
+//                MeshHelper.sendGenericOnOff(isChecked, 0)
+//            } else {
+//                MeshHelper.bindAppKey(meshCallback)
+//            }
 
         }
 
@@ -94,7 +94,7 @@ class ConnectMeshActivity : BaseMeshActivity() {
 //                    false
 //                )
             } else if (MeshHelper.getSelectedModel() is VendorModel) {
-                MeshHelper.bindAppKey(meshCallback)
+//                MeshHelper.bindAppKey(meshCallback)
             }
         }
 
@@ -104,7 +104,7 @@ class ConnectMeshActivity : BaseMeshActivity() {
         }
 
         tv_ping.setOnClickListener {
-            MeshHelper.sendGenericOnOffGet(meshCallback)
+//            MeshHelper.sendGenericOnOffGet(meshCallback)
         }
     }
 
@@ -194,7 +194,7 @@ class ConnectMeshActivity : BaseMeshActivity() {
                         "switch_on_off.visibility:${switch_on_off.visibility},add app key success!"
                     )
                     btn_add_app_key.visibility = View.GONE
-                    MeshHelper.bindAppKey(this)
+//                    MeshHelper.bindAppKey(this)
                 } else {
                     Utils.printLog(TAG, "add app key failed!")
                 }

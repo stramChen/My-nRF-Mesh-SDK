@@ -42,20 +42,15 @@ class ConnectTestActivity : BaseMeshActivity() {
         btn_add_app_key.isEnabled = true
         btn_add_app_key.visibility = View.VISIBLE
         tv_address.text = MeshHelper.getSelectedMeshNode()?.uuid ?: ""
-        tv_proxy_address.text = MeshHelper.getConnectedDevice()?.getAddress() ?: ""
+        tv_proxy_address.text = MeshHelper.getConnectedDevice()?.getAddress() ?: mUUID
         tv_ttl.text = "${MeshHelper.getSelectedMeshNode()?.ttl ?: ""}"
 
         tv_proxy_address.setOnClickListener {
-            //            MeshSDK.subscribeStatus(mUUID, object : MapCallback {
-//                override fun onResult(result: HashMap<String, Any>) {
-//                    result.forEach { t, u ->
-//                        Utils.printLog(TAG, "subscribeStatus,key:$t,value:$u")
-//                    }
-//                }
-//            })
-            MeshSDK.sendMeshMessage(mUUID, 0, "15", "00", object : BooleanCallback {
-                override fun onResult(boolean: Boolean) {
-                    Log.e(TAG, "reboot :$boolean")
+            MeshSDK.fetchLightCurrentStatus(mUUID, object : MapCallback {
+                override fun onResult(result: HashMap<String, Any>) {
+                    result.forEach { key, value ->
+                        Utils.printLog(TAG, "key:$key,value:$value")
+                    }
                 }
             })
         }
@@ -122,18 +117,12 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
 
         btn_send_vendor.setOnClickListener {
-            var c = sb_vendor_c.progress * 360 / 100
-            var w = sb_vendor_w.progress
-            var r = sb_vendor_r.progress
-            var g = sb_vendor_g.progress
-            var b = sb_vendor_b.progress * 3800 / 100 + 2700
-            Utils.printLog(TAG, "h:$c,s:$w,v:$r,b:$g,t:$b")
-//            MeshSDK.setLightProperties(mUUID, c, w, r, g, b, object :
-//                BooleanCallback {
-//                override fun onResult(boolean: Boolean) {
-//                    Utils.printLog(TAG, "setLightProperties result:$boolean")
-//                }
-//            })
+            var h = sb_vendor_c.progress * 360 / 100
+            var s = sb_vendor_w.progress
+            var v = sb_vendor_r.progress
+            var b = sb_vendor_g.progress
+            var t = sb_vendor_b.progress * 192 + 800
+            Utils.printLog(TAG, "h:$h,s:$s,v:$v,b:$b,t:$t")
             var map = HashMap<String, Any>()
             var callback = object : BooleanCallback {
                 override fun onResult(boolean: Boolean) {
@@ -141,15 +130,14 @@ class ConnectTestActivity : BaseMeshActivity() {
                 }
             }
             var vendorMap = HashMap<String, Int>()
-            if (g != 0) {
-                map["Brightness"] = g
-            } else if (b != 2700) {
-//                vendorMap["Temperature"] = b
-                map["Temperature"] = b
+            if (b != 0) {
+                map["Brightness"] = b
+            } else if (t != 800) {
+                map["ColorTemperature"] = t
             } else {
-                vendorMap["hue"] = c
-                vendorMap["saturation"] = w
-                vendorMap["value"] = r
+                vendorMap["hue"] = h
+                vendorMap["saturation"] = s
+                vendorMap["value"] = v
                 map["HSVColor"] = vendorMap
             }
             MeshSDK.modifyLightStatus(mUUID, map, callback)
@@ -157,24 +145,24 @@ class ConnectTestActivity : BaseMeshActivity() {
 
         btn_set_publication.setOnClickListener {
             //            MeshSDK.resetNode(mUUID)
-            MeshSDK.setPublication(mUUID, Constants.TEST_GROUP, 0xC000, object : MapCallback {
-                override fun onResult(result: HashMap<String, Any>) {
-                    result.forEach { t, u ->
-                        Utils.printLog(TAG, "set publication 0xC000,key:$t,value:$u")
-                    }
-                    MeshSDK.setPublication(
-                        mUUID,
-                        Constants.TEST_GROUP_PIR,
-                        0xC002,
-                        object : MapCallback {
-                            override fun onResult(result: HashMap<String, Any>) {
-                                result.forEach { t, u ->
-                                    Utils.printLog(TAG, "set publication 0xC002,key:$t,value:$u")
-                                }
-                            }
-                        })
-                }
-            })
+//            MeshSDK.setPublication(mUUID, Constants.TEST_GROUP, 0xC000, object : MapCallback {
+//                override fun onResult(result: HashMap<String, Any>) {
+//                    result.forEach { t, u ->
+//                        Utils.printLog(TAG, "set publication 0xC000,key:$t,value:$u")
+//                    }
+//                    MeshSDK.setPublication(
+//                        mUUID,
+//                        Constants.TEST_GROUP_PIR,
+//                        0xC002,
+//                        object : MapCallback {
+//                            override fun onResult(result: HashMap<String, Any>) {
+//                                result.forEach { t, u ->
+//                                    Utils.printLog(TAG, "set publication 0xC002,key:$t,value:$u")
+//                                }
+//                            }
+//                        })
+//                }
+//            })
 
         }
 
@@ -199,13 +187,13 @@ class ConnectTestActivity : BaseMeshActivity() {
 //                    }
 //                }
 //            })
-            MeshSDK.subscribeStatus(mUUID, object : MapCallback {
-                override fun onResult(result: HashMap<String, Any>) {
-                    result.forEach { t, u ->
-                        Utils.printLog(TAG, "set sendSubscribeMsg,key:$t,value:$u")
-                    }
-                }
-            })
+//            MeshSDK.subscribeStatus(mUUID, object : MapCallback {
+//                override fun onResult(result: HashMap<String, Any>) {
+//                    result.forEach { t, u ->
+//                        Utils.printLog(TAG, "set sendSubscribeMsg,key:$t,value:$u")
+//                    }
+//                }
+//            })
 //            MeshSDK.sendSubscribeMsg(mUUID, 0xC002, object : MapCallback {
 //                override fun onResult(result: HashMap<String, Any>) {
 //                    result.forEach { t, u ->
@@ -227,13 +215,13 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
 
         tv_ping.setOnClickListener {
-            MeshSDK.getDeviceIdentityKeys(mUUID, object : MapCallback {
-                override fun onResult(result: HashMap<String, Any>) {
-                    result.forEach { t, u ->
-                        Log.e(TAG, "key:$t,value:$u")
-                    }
-                }
-            })
+//            MeshSDK.getDeviceIdentityKeys(mUUID, object : MapCallback {
+//                override fun onResult(result: HashMap<String, Any>) {
+//                    result.forEach { t, u ->
+//                        Log.e(TAG, "key:$t,value:$u")
+//                    }
+//                }
+//            })
 //            MeshSDK.sendMeshMessage(mUUID,0,0,"16","00",object :BooleanCallback{
 //                override fun onResult(boolean: Boolean) {
 //
@@ -247,13 +235,13 @@ class ConnectTestActivity : BaseMeshActivity() {
                 }
             })
 
-            MeshSDK.getDeviceVersion(mUUID, object : MapCallback {
-                override fun onResult(result: HashMap<String, Any>) {
-                    result.forEach { t, u ->
-                        Utils.printLog(TAG, "key:$t,value:$u")
-                    }
-                }
-            })
+//            MeshSDK.getDeviceVersion(mUUID, object : MapCallback {
+//                override fun onResult(result: HashMap<String, Any>) {
+//                    result.forEach { t, u ->
+//                        Utils.printLog(TAG, "key:$t,value:$u")
+//                    }
+//                }
+//            })
 //            MeshSDK.sendMeshMessage(mUUID,0,0,"05","0016000000",object :BooleanCallback{
 //                override fun onResult(boolean: Boolean) {
 //

@@ -67,8 +67,8 @@ android {
 dependencies {
     // Required -- JUnit 4 framework
 //    testImplementation 'junit:junit:4.12'
-//    testImplementation 'org.mockito:mockito-core:2.18.0'
-//    androidTestImplementation 'org.mockito:mockito-android:2.6.3'
+    testImplementation 'org.mockito:mockito-core:2.18.0'
+    androidTestImplementation 'org.mockito:mockito-android:2.6.3'
     api('androidx.annotation:annotation:1.1.0') {
         transitive = true
     }

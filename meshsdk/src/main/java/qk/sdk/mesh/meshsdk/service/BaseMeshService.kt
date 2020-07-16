@@ -202,7 +202,6 @@ open class BaseMeshService : LifecycleService() {
         networkKey: NetworkKey,
         callback: BaseCallback
     ) {
-//        isProvisioningStarted = false
         mNrfMeshManager?.unprovisionedMeshNode?.observe(this, Observer {
             if (it != null) {
                 var capibilities = it.provisioningCapabilities
@@ -529,11 +528,11 @@ open class BaseMeshService : LifecycleService() {
                                 }
                                 0x10 -> {//light status
                                     if (this.size >= 8 && callbackIterator.key == "subscribeStatus") {
-                                        MeshSDK.parseLightStatus(
-                                            meshMsg.parameter,
-                                            callbackIterator.value as MapCallback,
-                                            HashMap<String, Any>()
-                                        )
+//                                        MeshSDK.parseLightStatus(
+//                                            meshMsg.parameter,
+//                                            callbackIterator.value as MapCallback,
+//                                            HashMap<String, Any>()
+//                                        )
                                     }
                                 }
                                 0x0B -> {//version
@@ -569,17 +568,6 @@ open class BaseMeshService : LifecycleService() {
                 }
             }
         })
-
-
-//        //已配对设备列表
-//        mNrfMeshManager?.nodes?.observe(this, Observer {
-//
-//        })
-//
-//        //已配对设备列表刷新
-//        mNrfMeshManager?.provisionedNodes?.observe(this, Observer {
-//
-//        })
     }
 
     internal fun clearGatt() {

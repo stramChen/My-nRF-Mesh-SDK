@@ -98,13 +98,13 @@ class OnOffMeshActivity : BaseMeshActivity() {
         }
 
         btn_publish.setOnClickListener {
-            MeshSDK.setPublication(mUUID, Constants.TEST_GROUP, object : MapCallback {
-                override fun onResult(result: HashMap<String, Any>) {
-                    result.forEach { key, value ->
-                        Utils.printLog(TAG, "key:$key,value:$value")
-                    }
-                }
-            })
+//            MeshSDK.setPublication(mUUID, Constants.TEST_GROUP, object : MapCallback {
+//                override fun onResult(result: HashMap<String, Any>) {
+//                    result.forEach { key, value ->
+//                        Utils.printLog(TAG, "key:$key,value:$value")
+//                    }
+//                }
+//            })
         }
 
         btn_subscribe.setOnClickListener {

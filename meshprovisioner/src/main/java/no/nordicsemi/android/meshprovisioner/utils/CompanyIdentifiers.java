@@ -1896,6 +1896,7 @@ public class CompanyIdentifiers {
         vendorModels.append(0x0741,	"MAC SRL");
         vendorModels.append(0x0742,	"DML LLC");
         vendorModels.append(0x0743,	"Sanofi");
+        vendorModels.append(0x0922,	"Shanghai MXCHIP Information Technology Co.,Ltd");
     }
 
     /**
