@@ -216,7 +216,7 @@ open class BaseMeshService : LifecycleService() {
                             network.assignUnicastAddress(unicast)
                             if (!isProvisioningStarted) {
                                 var node = mNrfMeshManager?.unprovisionedMeshNode?.value
-                                if (node != null && node.provisioningCapabilities.availableOOBTypes.size >0
+                                if (node != null && node.provisioningCapabilities.availableOOBTypes.size > 0
                                     && node.provisioningCapabilities.availableOOBTypes[0] == AuthenticationOOBMethods.NO_OOB_AUTHENTICATION
                                 ) {
                                     node.nodeName = mNrfMeshManager?.meshNetworkLiveData?.nodeName
@@ -412,7 +412,7 @@ open class BaseMeshService : LifecycleService() {
         //接收到的mesh消息
         mNrfMeshManager?.meshMessageLiveData?.observe(this, Observer { meshMsg ->
             meshMsg.parameter?.apply {
-                if (this.isNotEmpty()) {
+                if (this.isNotEmpty() && this.size > 2) {
                     Utils.printLog(TAG, "mesh msg:${ByteUtil.bytesToHexString(this)}")
                     MeshHandler.getAllCallback().forEach { meshCallback ->
                         meshCallback.onReceive(meshMsg)
@@ -423,8 +423,9 @@ open class BaseMeshService : LifecycleService() {
                         var callbackIterator = connectCallbacksIterator.next()
 
                         if (callbackIterator.value is MapCallback && meshMsg is VendorModelMessageStatus) {
-                            when (meshMsg.opCode) {
-                                0x01 -> {//quadruples
+                            var attrType = ByteUtil.bytesToHexString(byteArrayOf(this[1], this[2]))
+                            when (attrType) {
+                                MeshSDK.ATTR_TYPE_COMMON_GET_QUADRUPLES -> {//获取四元组，pk、ps、dn、ds、pid
                                     Utils.printLog(
                                         TAG,
                                         "quadruple size:${meshMsg.parameter.size} ,content：${String(
@@ -433,11 +434,11 @@ open class BaseMeshService : LifecycleService() {
                                     )
 
                                     if (meshMsg.parameter.size >= 40 && callbackIterator.key == MeshSDK.CALLBACK_GET_IDENTITY) {
-                                        var preIndex = 0
+                                        var preIndex = 3
                                         var quadrupleIndex = 0
                                         var map = HashMap<String, Any>()
-                                        for (index in 0 until meshMsg.parameter.size) {
-                                            if (meshMsg.parameter[index] == 0x00.toByte() || meshMsg.parameter[index] == 0x20.toByte() || index == meshMsg.parameter.size - 1) {
+                                        for (index in 3 until meshMsg.parameter.size) {
+                                            if (meshMsg.parameter[index] == 0x20.toByte() || index == meshMsg.parameter.size - 1) {
                                                 when (quadrupleIndex) {
                                                     0 -> {//pk
                                                         var pkBytes =
@@ -524,23 +525,6 @@ open class BaseMeshService : LifecycleService() {
                                         connectCallbacksIterator.remove()
                                     } else {
                                         //todo log
-                                    }
-                                }
-                                0x10 -> {//light status
-                                    if (this.size >= 8 && callbackIterator.key == "subscribeStatus") {
-//                                        MeshSDK.parseLightStatus(
-//                                            meshMsg.parameter,
-//                                            callbackIterator.value as MapCallback,
-//                                            HashMap<String, Any>()
-//                                        )
-                                    }
-                                }
-                                0x0B -> {//version
-                                    if (this.size >= 3 && callbackIterator.key == "getDeviceVersion") {
-                                        var map = HashMap<String, Any>()
-                                        map["version"] = "${this[0]}.${this[1]}.${this[2]}"
-                                        (callbackIterator.value as MapCallback).onResult(map)
-                                        connectCallbacksIterator.remove()
                                     }
                                 }
                                 else -> {

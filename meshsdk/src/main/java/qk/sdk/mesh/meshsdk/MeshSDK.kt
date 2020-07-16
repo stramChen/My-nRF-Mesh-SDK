@@ -39,26 +39,26 @@ object MeshSDK {
     /**
      * opcode
      */
-    private const val VENDOR_MSG_ATTR_GET = "10"
-    private const val VENDOR_MSG_ATTR_SET = "11"
-    private const val VENDOR_MSG_ATTR_SET_UNACKED = "12"
-    private const val VENDOR_MSG_ATTR_STATUS = "13"
-    private const val VENDOR_MSG_HB = "14"
+    const val VENDOR_MSG_ATTR_GET = "10"
+    const val VENDOR_MSG_ATTR_SET = "11"
+    const val VENDOR_MSG_ATTR_SET_UNACKED = "12"
+    const val VENDOR_MSG_ATTR_STATUS = "13"
+    const val VENDOR_MSG_HB = "14"
 
     /**
      * 通用attr type
      */
-    private const val ATTR_TYPE_COMMON_GET_STATUS = "0100" //设备上报属性
-    private const val ATTR_TYPE_COMMON_SET_PROTOCAL_VERSION = "0200" //设置协议版本
-    private const val ATTR_TYPE_COMMON_GET_QUADRUPLES = "0300" // 获取设备五元组信息
+    const val ATTR_TYPE_COMMON_GET_STATUS = "0100" //设备上报属性
+    const val ATTR_TYPE_COMMON_SET_PROTOCAL_VERSION = "0200" //设置协议版本
+    const val ATTR_TYPE_COMMON_GET_QUADRUPLES = "0300" // 获取设备五元组信息
 
     /**
      * 灯的attr type
      */
-    private const val ATTR_TYPE_LIGHT_ON_OFF = "0001" //开关
-    private const val ATTR_TYPE_LIGHT_BRIGHTNESS = "2101" //亮度
-    private const val ATTR_TYPE_LIGHT_TEMPRETURE = "2201" //色温
-    private const val ATTR_TYPE_LIGHT_HSV = "2301" //颜色hsv
+    const val ATTR_TYPE_LIGHT_ON_OFF = "0001" //开关
+    const val ATTR_TYPE_LIGHT_BRIGHTNESS = "2101" //亮度
+    const val ATTR_TYPE_LIGHT_TEMPRETURE = "2201" //色温
+    const val ATTR_TYPE_LIGHT_HSV = "2301" //颜色hsv
 
     //callback name
     const val CALLBACK_GET_IDENTITY = "getDeviceIdentityKeys"
@@ -759,7 +759,7 @@ object MeshSDK {
                                                 }
                                                 Utils.printLog(
                                                     TAG,
-                                                    "send opcode:$opcode"
+                                                    "send opcode:$opcode,param:${String(msg.parameter)}"
                                                 )
 
                                                 synchronized(msgIndex) {
@@ -865,8 +865,8 @@ object MeshSDK {
         sendMeshMessage(
             uuid,
             0,
-            ATTR_TYPE_COMMON_GET_QUADRUPLES,
-            "",
+            VENDOR_MSG_ATTR_GET,
+            "$ATTR_TYPE_COMMON_GET_QUADRUPLES",
             callback,
             CALLBACK_GET_IDENTITY,
             true,
