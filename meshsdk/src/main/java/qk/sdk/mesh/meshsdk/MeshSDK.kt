@@ -2,9 +2,6 @@ package qk.sdk.mesh.meshsdk
 
 import android.bluetooth.BluetoothAdapter
 import android.content.Context
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import me.weyye.hipermission.PermissionCallback
 import no.nordicsemi.android.meshprovisioner.ApplicationKey
 import no.nordicsemi.android.meshprovisioner.UnprovisionedBeacon
@@ -40,7 +37,7 @@ object MeshSDK {
      * opcode
      */
     const val VENDOR_MSG_ATTR_GET = "10"
-    const val VENDOR_MSG_ATTR_SET = "11"
+    const val OPCODE_VENDOR_MSG_ATTR_SET = "11"
     const val VENDOR_MSG_ATTR_SET_UNACKED = "12"
     const val VENDOR_MSG_ATTR_STATUS = "13"
     const val VENDOR_MSG_HB = "14"
@@ -613,7 +610,7 @@ object MeshSDK {
             sendMeshMessage(
                 uuid,
                 eleIndex,
-                VENDOR_MSG_ATTR_SET,
+                OPCODE_VENDOR_MSG_ATTR_SET,
                 "$ATTR_TYPE_LIGHT_ON_OFF${if (onOff) "01" else "00"}",
                 callback
             )
@@ -1182,7 +1179,7 @@ object MeshSDK {
             sendMeshMessage(
                 uuid,
                 0,
-                VENDOR_MSG_ATTR_SET,
+                OPCODE_VENDOR_MSG_ATTR_SET,
                 "$ATTR_TYPE_LIGHT_HSV${ByteUtil.bytesToHexString(
                     byteArrayOf((if (paramType == 1) (v as Int).toByte() else if (paramType == 2) (v as Double).toByte() else (v as Float).toByte()))
                 )}${ByteUtil.bytesToHexString(
@@ -1200,7 +1197,7 @@ object MeshSDK {
             sendMeshMessage(
                 uuid,
                 0,
-                VENDOR_MSG_ATTR_SET,
+                OPCODE_VENDOR_MSG_ATTR_SET,
                 "$ATTR_TYPE_LIGHT_BRIGHTNESS${ByteUtil.bytesToHexString(
                     ByteUtil.shortToByte(if (briType == 1) (bright as Int).toShort() else if (briType == 2) (bright as Double).toShort() else (bright as Float).toShort())
                 )}",
@@ -1211,7 +1208,7 @@ object MeshSDK {
             sendMeshMessage(
                 uuid,
                 0,
-                VENDOR_MSG_ATTR_SET,
+                OPCODE_VENDOR_MSG_ATTR_SET,
                 "$ATTR_TYPE_LIGHT_TEMPRETURE${ByteUtil.bytesToHexString(
                     ByteUtil.shortToByte((if (temType == 1) (temperature as Int).toShort() else if (temType == 2) (temperature as Double).toShort() else (temperature as Float).toShort()))
                 )}",

@@ -84,14 +84,14 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
 
         switch_mode.setOnCheckedChangeListener { buttonView, isChecked ->
-            var map = HashMap<String, Any>()
-            map["LightMode"] = if (isChecked) 1 else 0
-            MeshSDK.modifyLightStatus(mUUID, map, object :
-                BooleanCallback {
-                override fun onResult(boolean: Boolean) {
-                    Utils.printLog(TAG, "switch_mode result:$boolean")
-                }
-            })
+//            var map = HashMap<String, Any>()
+//            map["LightMode"] = if (isChecked) 1 else 0
+//            MeshSDK.modifyLightStatus(mUUID, map, object :
+//                BooleanCallback {
+//                override fun onResult(boolean: Boolean) {
+//                    Utils.printLog(TAG, "switch_mode result:$boolean")
+//                }
+//            })
 
 //            var ruleMsg = "00010cd85d00080106000282030101"
 //            var meshMsg =
@@ -160,17 +160,17 @@ class ConnectTestActivity : BaseMeshActivity() {
 
         btn_subscribe.setOnClickListener {
 //            if (MeshHelper.getGroupByName(Constants.TEST_GROUP) == null)
-            MeshSDK.createGroup(Constants.TEST_GROUP, object : BooleanCallback {
-                override fun onResult(boolean: Boolean) {
-                    Utils.printLog(TAG, "createGroup:$boolean")
-                }
-            }, 0xC000)
-
-            MeshSDK.createGroup(Constants.TEST_GROUP_PIR, object : BooleanCallback {
-                override fun onResult(boolean: Boolean) {
-                    Utils.printLog(TAG, "createGroup TEST_GROUP_PIR:$boolean")
-                }
-            }, 0xC002)
+//            MeshSDK.createGroup(Constants.TEST_GROUP, object : BooleanCallback {
+//                override fun onResult(boolean: Boolean) {
+//                    Utils.printLog(TAG, "createGroup:$boolean")
+//                }
+//            }, 0xC000)
+//
+//            MeshSDK.createGroup(Constants.TEST_GROUP_PIR, object : BooleanCallback {
+//                override fun onResult(boolean: Boolean) {
+//                    Utils.printLog(TAG, "createGroup TEST_GROUP_PIR:$boolean")
+//                }
+//            }, 0xC002)
 
 //            MeshSDK.setPublication(mUUID, Constants.TEST_GROUP, object : MapCallback {
 //                override fun onResult(result: HashMap<String, Any>) {

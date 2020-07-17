@@ -33,7 +33,7 @@ public class ByteUtil {
     }
 
     /**
-     * short到字节数组的转换！
+     * short到字节数组的转换
      *
      * @param
      * @return
@@ -42,7 +42,7 @@ public class ByteUtil {
         byte[] targets = new byte[2];
         for (int i = 0; i < 2; i++) {
             int offset = (targets.length - 1 - i) * 8;
-            targets[i] = (byte) ((number >>> offset) & 0xff);
+            targets[targets.length-1 - i] = (byte) ((number >>> offset) & 0xff);
         }
         return targets;
     }
