@@ -23,7 +23,6 @@
 package no.nordicsemi.android.meshprovisioner;
 
 import android.content.Context;
-import android.net.Uri;
 import android.os.Handler;
 import android.os.ParcelUuid;
 import android.util.Log;

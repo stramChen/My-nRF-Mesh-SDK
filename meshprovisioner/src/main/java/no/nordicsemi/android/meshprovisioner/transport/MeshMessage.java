@@ -2,6 +2,8 @@ package no.nordicsemi.android.meshprovisioner.transport;
 
 import androidx.annotation.NonNull;
 
+import java.util.Arrays;
+
 /**
  * Abstract wrapper class for mesh message.
  */
@@ -82,4 +84,12 @@ public abstract class MeshMessage {
         return mMessage.getDst();
     }
 
+    @Override
+    public String toString() {
+        return "MeshMessage{" +
+                "mAszmic=" + mAszmic +
+                ", mMessage=" + mMessage +
+                ", mParameters=" + Arrays.toString(mParameters) +
+                '}';
+    }
 }

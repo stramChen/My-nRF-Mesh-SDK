@@ -25,6 +25,7 @@ package no.nordicsemi.android.meshprovisioner.provisionerstates;
 import android.os.Parcel;
 
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import no.nordicsemi.android.meshprovisioner.utils.AuthenticationOOBMethods;
 import no.nordicsemi.android.meshprovisioner.utils.SecureUtils;

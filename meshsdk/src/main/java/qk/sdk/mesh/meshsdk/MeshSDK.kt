@@ -14,6 +14,7 @@ import qk.sdk.mesh.meshsdk.bean.CommonErrorMsg
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
 import qk.sdk.mesh.meshsdk.callback.*
 import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
+import qk.sdk.mesh.meshsdk.service.BaseMeshService
 import qk.sdk.mesh.meshsdk.util.*
 import qk.sdk.mesh.meshsdk.util.Constants.ConnectState
 import java.lang.Thread.sleep
@@ -32,6 +33,10 @@ object MeshSDK {
 
     private const val PUBLISH_INTERVAL = 88 //25秒
     private const val PUBLISH_TTL = 5
+
+    //组播订阅地址
+    private const val GROUP_NAME :String = "0xD000";
+    private const val GROUP_NAME_VAL :Int = 0xD000;
 
     /**
      * opcode
@@ -61,25 +66,7 @@ object MeshSDK {
     const val CALLBACK_GET_IDENTITY = "getDeviceIdentityKeys"
 
     // 初始化 mesh
-    fun init(context: Context) {
-        mContext = context
-        Utils.mContext = context
-        mContext?.apply {
-            if (!Utils.isServiceExisted(this, "qk.sdk.mesh.meshsdk.MeshHelper\$MeshProxyService")) {
-                MeshHelper.restartService(applicationContext, object : MapCallback {
-                    override fun onResult(result: HashMap<String, Any>) {
-                        result.forEach {
-                            Utils.printLog(TAG, "key:${it.key},value:${it.value}")
-                        }
-                    }
-                })
-            }
-            LogFileUtil.deleteLog(mContext)
-        }
-    }
-
-    // 初始化 mesh
-    fun init(context: Context, callback: BooleanCallback) {
+    fun init(context: Context, callback: BooleanCallback? =  null) {
         mContext = context
         Utils.mContext = context
         mContext?.apply {
@@ -92,13 +79,15 @@ object MeshSDK {
 
                         result["code"]?.apply {
                             if (this is Int && this == ConnectState.SERVICE_CREATED.code) {
-                                callback.onResult(true)
+                                callback?.onResult(true)
+                                MeshHelper.MeshProxyService.mMeshProxyService?.startHeartBeatCheck();
                             }
                         }
                     }
                 })
             } else {
-                callback.onResult(true)
+                callback?.onResult(true)
+                MeshHelper.MeshProxyService.mMeshProxyService?.startHeartBeatCheck();
             }
             LogFileUtil.deleteLog(mContext)
         }
@@ -403,7 +392,7 @@ object MeshSDK {
     const val GET_COMPOSITION_DATA = "getCompositionData"
 
     /**
-     * 添加appkey，获取Compositio nData并自动绑定所有的element下的所有model
+     * 添加appkey，获取CompositionData并自动绑定所有的element下的所有model
      */
     fun addApplicationKeyForNode(uuid: String, appKey: String, callback: MapCallback) {
         mContext?.apply {
@@ -731,6 +720,7 @@ object MeshSDK {
                                             appKey,
                                             model.modelId,
                                             model.companyIdentifier,
+                                            //Set the opCode to a 3-bit opCode
                                             Integer.valueOf(opcode, 16),
                                             ByteUtil.hexStringToBytes(newParam)
                                         )
@@ -900,7 +890,7 @@ object MeshSDK {
                         var map = HashMap<String, Any>()
                         doBaseCheck(null, map, callback)
                         if (!MeshHelper.isConnectedToProxy() && MeshHelper.getProvisionNode()?.size ?: 0 > 0) {
-                            Utils.printLog(TAG, "connect start scan")
+                            Utils.printLog(TAG, "===>[mesh] connect start scan")
                             setCurrentNetworkKey(networkKey)
                             MeshHelper.startScan(BleMeshManager.MESH_PROXY_UUID, object :
                                 ScanCallback {
@@ -912,7 +902,7 @@ object MeshSDK {
                                         MeshHelper.stopScan()
                                         Utils.printLog(
                                             TAG,
-                                            "connect onScanResult:${devices[0].getAddress()}"
+                                            "===>[mesh] connect onScanResult:${devices[0].getAddress()}"
                                         )
                                         var connectCallback = object :
                                             ConnectCallback {
@@ -1062,6 +1052,119 @@ object MeshSDK {
 //    }
 
     /**
+     * 订阅状态上报
+     */
+    fun registerDownStreamListener(callback: IDownstreamListener){
+        MeshSDK.createGroup(GROUP_NAME, object : BooleanCallback {
+            override fun onResult(boolean: Boolean) {
+                Utils.printLog(TAG, "createGroup:$boolean")
+            }
+        }, GROUP_NAME_VAL)
+        BaseMeshService.mDownStreamCallback = callback
+    }
+
+    /**
+     * 取消状态上报
+     */
+    fun unRegisterDownStreamListener(){
+        MeshHelper.removeGroup(GROUP_NAME);
+    }
+
+
+    fun subscribeStatus(uuid: String, callback: MapCallback) {
+        var meshCallback = object : MeshCallback {
+            override fun onReceive(msg: MeshMessage) {
+                var node = MeshHelper.getMeshNetwork()?.getNode(msg.src)
+                Utils.printLog(TAG, " uuid:${node?.uuid} ,sendSubscribeMsg uuid:$uuid")
+                if (uuid.isNotEmpty() && node?.uuid?.toUpperCase() != uuid.toUpperCase()) {
+                    return
+                }
+
+                var map = HashMap<String, Any>()
+                map["uuid"] = node?.uuid ?: ""
+                if (msg is GenericOnOffStatus) {
+                    var switchMap = HashMap<String, Int>()
+                    var param = msg.parameter
+                    if (param.size == 1) {
+                        var eleIndex =
+                            node?.elements?.values?.indexOf(node?.elements?.get(msg.src)) ?: 0
+                        switchMap["$eleIndex"] = param[0].toInt()
+                        map["OnOffSwitch"] = switchMap
+                        Utils.printLog(
+                            TAG,
+                            "onreceive node:${node?.uuid?.toUpperCase()}, eleIndex:$eleIndex,isOn:${switchMap["$eleIndex"]}"
+                        )
+                        callback.onResult(map)
+                    }
+                } else if (msg is VendorModelMessageStatus) {
+                    if (msg.parameter.size >= 8) {
+//                        parseLightStatus(msg.parameter, callback, map)
+                        Utils.printLog(
+                            TAG,
+                            "onreceive node:${node?.uuid?.toUpperCase()}, isOn:${map["isOn"]}"
+                        )
+                    }
+                    when (msg.opCode) {
+                        0x5D -> {//透传数据
+                            var switchMap = HashMap<String, Int>()
+                            for (index in 0 until msg.parameter.size) {
+                                switchMap["$index"] = msg.parameter[index].toInt()
+                            }
+
+                            map["OnOffSwitch"] = switchMap
+
+                            doMapCallback(
+                                map,
+                                callback,
+                                CallbackMsg(
+                                    ConnectState.COMMON_SUCCESS.code,
+                                    ConnectState.COMMON_SUCCESS.msg
+                                )
+                            )
+                        }
+                    }
+                } else if (msg is SensorStatus) {
+                    msg.msensorData.forEach { sensorData ->
+                        map.put(ByteUtil.bytesToHexString(sensorData.propertyId), sensorData.value)
+
+                        Utils.printLog(
+                            TAG,
+                            "propertyId:${ByteUtil.bytesToHexString(sensorData.propertyId)},value:${ByteUtil.bytesToHexString(
+                                sensorData.value
+                            )}"
+                        )
+                    }
+
+                    doMapCallback(
+                        map,
+                        callback,
+                        CallbackMsg(
+                            ConnectState.COMMON_SUCCESS.code,
+                            ConnectState.COMMON_SUCCESS.msg
+                        )
+                    )
+                } else if (msg is SensorBatteryStatus) {
+                    map.put("battery", msg.battery)
+                    doMapCallback(
+                        map,
+                        callback,
+                        CallbackMsg(
+                            ConnectState.COMMON_SUCCESS.code,
+                            ConnectState.COMMON_SUCCESS.msg
+                        )
+                    )
+                }
+            }
+
+            override fun onError(msg: CallbackMsg) {
+
+            }
+        }
+        mConnectCallbacks["subscribeStatus"] = meshCallback
+        MeshHelper.subscribeLightStatus(meshCallback)
+    }
+
+    /**
      * 设置设备订阅地址
      * @param uuid 设备uuid
      * @param groupName 订阅地址的groupName
@@ -1144,6 +1247,166 @@ object MeshSDK {
 
         }
     }
+
+    fun setPublication(uuid: String, groupName: String, callback: MapCallback) {
+        var map = HashMap<String, Any>()
+        if (doProxyCheck(uuid, map, callback)) {
+            //通过groupName获取group
+            var group = MeshHelper.getGroupByName(groupName)
+            if (group == null) {
+                doMapCallback(
+                    map,
+                    callback,
+                    CallbackMsg(ConnectState.GROUP_NOT_EXIST.code, ConnectState.GROUP_NOT_EXIST.msg)
+                )
+                return
+            }
+
+            //获取provisioned节点
+            var node = MeshHelper.getProvisionedNodeByUUID(uuid)
+            if (node == null) {
+                doMapCallback(
+                    map,
+                    callback,
+                    CallbackMsg(ConnectState.NODE_NOT_EXIST.code, ConnectState.NODE_NOT_EXIST.msg)
+                )
+                return
+            }
+
+            var publishAddress = group.address
+            var modelTotalSize = 0
+            var index = 0
+            Thread(Runnable {
+                node.elements.values.forEach { eleValue ->
+                    modelTotalSize = modelTotalSize.plus(eleValue.meshModels?.values?.size ?: 0)
+                    eleValue.meshModels?.values?.forEach { meshModel ->
+                        if (meshModel.boundAppKeyIndexes?.size ?: 0 > 0 && (meshModel is GenericOnOffServerModel || meshModel is VendorModel)) {
+                            sleep(500)
+                            var meshMsg = ConfigModelPublicationSet(
+                                eleValue.elementAddress
+                                ,
+                                publishAddress,
+                                meshModel.boundAppKeyIndexes[0],
+                                false,
+                                PUBLISH_TTL,
+                                PUBLISH_INTERVAL,
+                                0,
+                                0,
+                                0,
+                                meshModel.modelId
+                            )
+
+                            try {
+                                MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi
+                                    ?.createMeshPdu(node.unicastAddress, meshMsg)
+                                index++
+                            } catch (ex: IllegalArgumentException) {
+                                ex.printStackTrace()
+                            }
+                        } else {
+                            index++
+                        }
+                    }
+                }
+
+                if (index == modelTotalSize) {
+                    doMapCallback(
+                        map,
+                        callback,
+                        CallbackMsg(
+                            ConnectState.COMMON_SUCCESS.code,
+                            ConnectState.COMMON_SUCCESS.msg
+                        )
+                    )
+                } else {
+                    doMapCallback(
+                        map,
+                        callback,
+                        CallbackMsg(
+                            ConnectState.PUBLISH_FAILED.code,
+                            ConnectState.PUBLISH_FAILED.msg
+                        )
+                    )
+                }
+            }).start()
+        }
+
+    }
+
+//    fun setPublication(uuid: String, groupName: String, groupAddr: Int, callback: MapCallback) {
+//        var map = HashMap<String, Any>()
+//        if (doProxyCheck(uuid, map, callback)) {
+//            if (MeshHelper.getGroupByAddress(groupAddr) == null) {
+//                MeshHelper.createGroup(groupName, groupAddr)
+//            }
+//
+//            //获取provisioned节点
+//            var node = MeshHelper.getProvisionedNodeByUUID(uuid)
+//            if (node == null) {
+//                doMapCallback(
+//                    map,
+//                    callback,
+//                    CallbackMsg(ConnectState.NODE_NOT_EXIST.code, ConnectState.NODE_NOT_EXIST.msg)
+//                )
+//                return
+//            }
+//
+//            var publishAddress = groupAddr
+//            var modelTotalSize = 0
+//            var index = 0
+//            node.elements.values.forEach { eleValue ->
+//                modelTotalSize = modelTotalSize.plus(eleValue.meshModels?.values?.size ?: 0)
+//                eleValue.meshModels?.values?.forEach { meshModel ->
+//                    if (meshModel.boundAppKeyIndexes?.size ?: 0 > 0 && (meshModel is GenericOnOffServerModel || meshModel is VendorModel)) {
+//                        runBlocking {
+//                            launch {
+//                                delay(500)
+//                                var meshMsg = ConfigModelPublicationSet(
+//                                    eleValue.elementAddress
+//                                    ,
+//                                    publishAddress,
+//                                    meshModel.boundAppKeyIndexes[0],
+//                                    false,
+//                                    PUBLISH_TTL,
+//                                    PUBLISH_INTERVAL,
+//                                    0,
+//                                    0,
+//                                    0,
+//                                    meshModel.modelId
+//                                )
+//
+//                                try {
+//                                    MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi
+//                                        ?.createMeshPdu(node.unicastAddress, meshMsg)
+//                                    index++
+//                                } catch (ex: IllegalArgumentException) {
+//                                    ex.printStackTrace()
+//                                }
+//                            }
+//                        }
+//                    } else {
+//                        index++
+//                    }
+//                }
+//            }
+//
+//            if (index == modelTotalSize) {
+//                doMapCallback(
+//                    map,
+//                    callback,
+//                    CallbackMsg(ConnectState.COMMON_SUCCESS.code, ConnectState.COMMON_SUCCESS.msg)
+//                )
+//            } else {
+//                doMapCallback(
+//                    map,
+//                    callback,
+//                    CallbackMsg(ConnectState.PUBLISH_FAILED.code, ConnectState.PUBLISH_FAILED.msg)
+//                )
+//            }
+//        }
+//
+//    }
+
 
     /**
      * 协议v2.0：设置灯的hsvbt属性

@@ -26,13 +26,10 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.ArrayList;
 
 import androidx.annotation.NonNull;
 import no.nordicsemi.android.meshprovisioner.opcodes.ConfigMessageOpCodes;
-import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils;
 
 /**
  * Creates the ConfigNetKeyStatus Message.

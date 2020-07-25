@@ -78,7 +78,7 @@ dependencies {
     // Spongycastle - Android implementation of Bouncy Castle
     api 'com.madgag.spongycastle:core:1.58.0.0'
     api 'com.madgag.spongycastle:prov:1.58.0.0'
-    api 'com.google.code.gson:gson:2.8.5'
+    implementation 'com.google.code.gson:gson:2.8.5'
 
     api 'androidx.room:room-runtime:2.2.2'
     annotationProcessor 'androidx.room:room-compiler:2.2.2'
@@ -88,13 +88,22 @@ dependencies {
 //    implementation 'com.novoda:bintray-release:0.2.7'
 }
 
+//task sourceJar (type:Jar) {
+//    classifier = 'sources'
+//    from sourceSets.main.allSource
+//}
+//
+//artifacts {
+//    archives sourceJar
+//}
+
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: "file:///Users/wangyue/Documents/mxchip/aar/")
+            repository(url: "file:///Users/chensichuang/Documents/develop/AndroidStudioProjects/mesh_android/meshsdk/libs")
             pom.project {
                 name 'meshprovisioner'
-                version '0.4.8-snapshot'
+                version '2.0.1-snapshot'
                 artifactId 'meshprovisioner'
                 groupId 'cn.mxchip.meshprovisioner.test'
                 packaging 'aar'

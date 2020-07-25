@@ -1139,7 +1139,7 @@ class NrfMeshManager(
             try {
                 Utils.printLog(
                     TAG,
-                    "onScanResult:$mFilterUuid"
+                    "===>[mesh] 发现设备 onScanResult: callBackType=${callbackType} result=${result}"
                 )
                 if (!mIsScanning)
                     return

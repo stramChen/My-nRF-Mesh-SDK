@@ -272,7 +272,7 @@ MeshSDK.getCurrentNode(callback(result:Map/Dictionary))
 ## code定义
 |错误码|错误信息|
 |:---|:---|
-|101|未初始化sdk|
+|101|未初始化sdk| 
 |102|传参错误，找不到uuid对应的设备|
 |103|未建立连接|
 |104|未开启蓝牙|

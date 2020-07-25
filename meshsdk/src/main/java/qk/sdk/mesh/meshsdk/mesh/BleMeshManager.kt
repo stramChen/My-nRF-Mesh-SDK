@@ -25,15 +25,11 @@ package qk.sdk.mesh.meshsdk.mesh
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
-
-import java.util.Deque
-import java.util.LinkedList
-import java.util.UUID
-
 import no.nordicsemi.android.ble.Request
 import no.nordicsemi.android.ble.callback.DataReceivedCallback
 import no.nordicsemi.android.ble.callback.DataSentCallback
 import qk.sdk.mesh.meshsdk.util.Utils
+import java.util.*
 
 //class BleMeshManager @Inject
 class BleMeshManager

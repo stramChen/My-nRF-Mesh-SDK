@@ -43,7 +43,6 @@ import java.util.Comparator
 import java.util.UUID
 
 import no.nordicsemi.android.support.v18.scanner.ScanResult
-import qk.sdk.mesh.meshsdk.BuildConfig
 
 object Utils {
     private val TAG = "Utils"
@@ -291,7 +290,7 @@ object Utils {
 
     fun printLog(tag: String, msg: String) {
 //        if (BuildConfig.DEBUG) {
-        Log.e(tag, msg)
+        Log.d(tag, msg)
 //        }
         LogFileUtil.writeLogToInnerFile(
             mContext,

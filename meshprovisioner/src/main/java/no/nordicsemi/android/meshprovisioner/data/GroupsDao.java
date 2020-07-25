@@ -6,7 +6,6 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.annotation.RestrictTo;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import androidx.room.Update;

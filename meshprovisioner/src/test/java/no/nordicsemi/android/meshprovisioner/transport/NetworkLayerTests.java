@@ -38,7 +38,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import no.nordicsemi.android.meshprovisioner.utils.ExtendedInvalidCipherTextException;
 import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils;
 import no.nordicsemi.android.meshprovisioner.utils.SecureUtils;
 

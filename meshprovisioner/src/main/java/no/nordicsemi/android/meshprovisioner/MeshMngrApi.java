@@ -1,7 +1,5 @@
 package no.nordicsemi.android.meshprovisioner;
 
-import android.net.Uri;
-
 import java.util.UUID;
 
 import androidx.annotation.NonNull;

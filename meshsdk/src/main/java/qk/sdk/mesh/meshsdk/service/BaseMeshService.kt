@@ -4,10 +4,11 @@ import android.content.Intent
 import android.os.IBinder
 import android.util.Log
 import androidx.lifecycle.LifecycleService
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
-import no.nordicsemi.android.meshprovisioner.*
+import com.google.gson.Gson
+import no.nordicsemi.android.meshprovisioner.MeshManagerApi
+import no.nordicsemi.android.meshprovisioner.MeshNetwork
+import no.nordicsemi.android.meshprovisioner.NetworkKey
 import no.nordicsemi.android.meshprovisioner.transport.*
 import no.nordicsemi.android.meshprovisioner.utils.AuthenticationOOBMethods
 import qk.sdk.mesh.meshsdk.MeshHandler
@@ -18,9 +19,14 @@ import qk.sdk.mesh.meshsdk.callback.*
 import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
 import qk.sdk.mesh.meshsdk.mesh.NrfMeshManager
 import qk.sdk.mesh.meshsdk.util.*
-import java.lang.Exception
+import rx.Observable
+import rx.Subscription
+import rx.schedulers.Schedulers
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 import kotlin.collections.HashMap
+
 
 open class BaseMeshService : LifecycleService() {
     private val TAG = "BaseMeshService"
@@ -30,6 +36,24 @@ open class BaseMeshService : LifecycleService() {
     var mConnectCallback: ConnectCallback? = null
     var mScanCallback: ScanCallback? = null
     var mCurrentNetworkKey: NetworkKey? = null
+
+    private val mHearBeanLock: Any = Any();
+
+    companion object {
+        //心跳OpCode
+        private const val OPCODE_HEART_BEAT: Int = 0x14;
+
+        const val DOWNSTREAM_CALLBACK = "subscribeStatus";
+        //状态上报回调用，一个app从头到尾应该只会持有一个这样的回调用
+        var mDownStreamCallback : IDownstreamListener? = null;
+    }
+
+    private var mHeatBeatSubscription: Subscription? = null;
+
+    //离线状态value 分为 00，01，10，11，低位为上次状态，高位为本次状态
+    private val mHeartBeatMap: ConcurrentHashMap<String?, Int?> =
+        ConcurrentHashMap()
+
 
     override fun onBind(intent: Intent): IBinder? {
         super.onBind(intent)
@@ -107,13 +131,90 @@ open class BaseMeshService : LifecycleService() {
         mNrfMeshManager?.connect(this, device, connectToNetwork)
     }
 
+    /**
+     * 移除心跳检查线程
+     */
+    fun stopHeatBeanCheck() {
+        mHeatBeatSubscription?.unsubscribe();
+        mHeatBeatSubscription = null;
+
+    }
+
+    /**
+     * 开始心跳检查线程，这里只检查离线，在线放在上报的是检查，这样可以加快上线的速度
+     */
+    fun startHeartBeatCheck() {
+        synchronized(this) {
+            if (mHeatBeatSubscription != null) return;
+
+            val nodes = mNrfMeshManager?.nodes?.value
+            if (nodes != null) {
+                for (meshNode in nodes) {
+                    mHeartBeatMap[meshNode.uuid.toUpperCase()] = 0;
+                }
+                mHeatBeatSubscription =
+                    Observable.interval(0, 30 * 1000 + 100, TimeUnit.MILLISECONDS)
+                        .subscribeOn(Schedulers.computation())
+                        .subscribe {
+                            for (uuid in mHeartBeatMap.keys()) {
+                                synchronized(mHearBeanLock) {
+                                    var heartBeanTag = mHeartBeatMap[uuid];
+                                    if (heartBeanTag != null) {
+                                        //设备一直离线，就让它离线吧
+                                        if (heartBeanTag == 0) {
+                                            //do nothing
+                                        }
+                                        //设备离线了 10,feedback
+                                        else if (heartBeanTag == 2) {
+                                            mHeartBeatMap[uuid] = heartBeanTag and 0
+                                            mDownStreamCallback?.onCommand(
+                                                Gson()
+                                                    .toJson(DeviceNode<Any>(STATUS_OFFLINE, uuid))
+                                            )
+                                        }
+                                        //设备上线了 01，feedback
+                                        else if (heartBeanTag == 1) {
+                                            mHeartBeatMap[uuid] = heartBeanTag shl 1
+                                        }
+                                        //设备一直在线 11，改为10
+                                        else if (heartBeanTag == 3) {
+                                            mHeartBeatMap[uuid] = heartBeanTag and 2
+                                        }
+
+                                    }
+                                }
+                            }
+                            checkUpdateHeartBeatNode();
+                        }
+            }
+        }
+    }
+
+    /**
+     * 检查节点是否有更新
+     */
+    fun checkUpdateHeartBeatNode() {
+        val nodes = mNrfMeshManager?.nodes?.value
+        if (nodes != null) {
+            if (nodes.size != mHeartBeatMap.size) {
+                mHeartBeatMap.clear();
+                for (meshNode in nodes) {
+                    mHeartBeatMap[meshNode.uuid.toUpperCase()] = 0;
+                }
+            }
+        }
+    }
+
     fun setConnectObserver() {
         Utils.printLog(TAG, "setConnectObserver")
         mNrfMeshManager?.isDeviceReady?.observe(this, Observer {
             if (mNrfMeshManager?.bleMeshManager?.isDeviceReady == true) {
                 mConnectCallback?.onConnect()
             } else {
-                //todo 日志记录
+                Utils.printLog(
+                    TAG, "connect result:" +
+                            "${mNrfMeshManager?.bleMeshManager?.isDeviceReady}"
+                )
             }
         })
         mNrfMeshManager?.connectionState?.observe(this, Observer {
@@ -171,7 +272,8 @@ open class BaseMeshService : LifecycleService() {
                             if (!isProvisioningStarted) {
                                 var node = mNrfMeshManager?.unprovisionedMeshNode?.value
                                 if (node != null && node.provisioningCapabilities.availableOOBTypes.size == 1 && node.provisioningCapabilities.availableOOBTypes[0] == AuthenticationOOBMethods.NO_OOB_AUTHENTICATION) {
-                                    node.nodeName = mNrfMeshManager?.meshNetworkLiveData?.nodeName
+                                    node.nodeName =
+                                        mNrfMeshManager?.meshNetworkLiveData?.nodeName
                                     mNrfMeshManager?.meshManagerApi?.startProvisioning(node)
                                     Utils.printLog(TAG, "开始provisioning")
                                     isProvisioningStarted = true
@@ -219,7 +321,8 @@ open class BaseMeshService : LifecycleService() {
                                 if (node != null && node.provisioningCapabilities.availableOOBTypes.size > 0
                                     && node.provisioningCapabilities.availableOOBTypes[0] == AuthenticationOOBMethods.NO_OOB_AUTHENTICATION
                                 ) {
-                                    node.nodeName = mNrfMeshManager?.meshNetworkLiveData?.nodeName
+                                    node.nodeName =
+                                        mNrfMeshManager?.meshNetworkLiveData?.nodeName
                                     mNrfMeshManager?.meshManagerApi?.startProvisioning(node)
                                     Utils.printLog(TAG, "开始provisioning")
                                     LogFileUtil.writeLogToInnerFile(
@@ -384,12 +487,11 @@ open class BaseMeshService : LifecycleService() {
         })
     }
 
-    val SUBSCRIBE_VENDOR_MODEL = "subscribeStatus"
     internal fun subscribeLightStatus(callback: MeshCallback) {
 //        MeshHandler.addRunnable(SUBSCRIBE_VENDOR_MODEL, false, false, callback)
         MeshHandler.addRunnable(
             MeshMsgSender(
-                SUBSCRIBE_VENDOR_MODEL,
+                DOWNSTREAM_CALLBACK,
                 null,
                 null,
                 callback,
@@ -400,7 +502,7 @@ open class BaseMeshService : LifecycleService() {
     }
 
     internal fun unSubscribeLightStatus() {
-        MeshHandler.removeRunnable(SUBSCRIBE_VENDOR_MODEL)
+//        MeshHandler.removeRunnable(DOWNSTREAM_CALLBACK)
     }
 
     /**
@@ -411,11 +513,18 @@ open class BaseMeshService : LifecycleService() {
     internal fun setObserver() {
         //接收到的mesh消息
         mNrfMeshManager?.meshMessageLiveData?.observe(this, Observer { meshMsg ->
-            meshMsg.parameter?.apply {
-                if (this.isNotEmpty() && this.size > 2) {
-                    Utils.printLog(TAG, "mesh msg:${ByteUtil.bytesToHexString(this)}")
+            meshMsg?.apply {
+                if (parameter.isNotEmpty() && parameter.size > 2) {
+                    Utils.printLog(
+                        TAG, """===>[mesh] meshMessageLiveDataResult:
+                        |${meshMsg}""".trimMargin()
+                    )
                     MeshHandler.getAllCallback().forEach { meshCallback ->
                         meshCallback.onReceive(meshMsg)
+                    }
+
+                    if(meshMsg is VendorModelMessageStatus && meshMsg.opCode ==OPCODE_HEART_BEAT){
+                        checkDeviceOnline()
                     }
 
                     var connectCallbacksIterator = MeshSDK.mConnectCallbacks.iterator()
@@ -423,7 +532,7 @@ open class BaseMeshService : LifecycleService() {
                         var callbackIterator = connectCallbacksIterator.next()
 
                         if (callbackIterator.value is MapCallback && meshMsg is VendorModelMessageStatus) {
-                            var attrType = ByteUtil.bytesToHexString(byteArrayOf(this[1], this[2]))
+                            var attrType = ByteUtil.bytesToHexString(byteArrayOf(parameter[1], parameter[2]))
                             when (attrType) {
                                 MeshSDK.ATTR_TYPE_COMMON_GET_QUADRUPLES -> {//获取四元组，pk、ps、dn、ds、pid
                                     Utils.printLog(
@@ -529,7 +638,7 @@ open class BaseMeshService : LifecycleService() {
                                 }
                                 else -> {
                                     var map = HashMap<String, Any>()
-                                    map["params"] = ByteUtil.bytesToHexString(this)
+                                    map["params"] = ByteUtil.bytesToHexString(parameter)
                                     map["opcode"] = "${meshMsg.opCode}"
                                     meshMsg.mMessage.apply {
                                         if (meshMsg.mMessage is AccessMessage) {
@@ -552,6 +661,25 @@ open class BaseMeshService : LifecycleService() {
                 }
             }
         })
+    }
+
+    /**
+     * 检查设备是否在线
+     */
+    private fun MeshMessage.checkDeviceOnline() {
+        var uuid: String? = MeshHelper
+            .getMeshNetwork()?.getNode(src)?.uuid?.toUpperCase();
+        synchronized(mHearBeanLock) {
+            //设备一直处于离线状态，赶紧通知它上线吧！
+            if((mHeartBeatMap[uuid] ?: 0) == 0){
+                mDownStreamCallback?.onCommand(
+                    Gson()
+                        .toJson(DeviceNode<Any>(STATUS_ONLINE, uuid))
+                )
+            }
+            //让高位为1,表示当前它肯定是在线的
+            mHeartBeatMap[uuid] = (mHeartBeatMap[uuid] ?: 0) or 1;
+        }
     }
 
     internal fun clearGatt() {

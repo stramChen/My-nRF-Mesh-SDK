@@ -2,7 +2,6 @@ package no.nordicsemi.android.meshprovisioner;
 
 import android.os.Parcel;
 
-import androidx.annotation.NonNull;
 import androidx.room.Ignore;
 import no.nordicsemi.android.meshprovisioner.utils.MeshAddress;
 

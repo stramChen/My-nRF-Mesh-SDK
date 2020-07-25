@@ -1,21 +1,14 @@
 package qk.sdk.mesh.demo.ui
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import kotlinx.android.synthetic.main.activity_connect.*
-import no.nordicsemi.android.meshprovisioner.transport.MeshMessage
-import no.nordicsemi.android.meshprovisioner.transport.VendorModelMessageUnacked
 import qk.sdk.mesh.demo.R
 import qk.sdk.mesh.demo.base.BaseMeshActivity
 import qk.sdk.mesh.demo.util.Constants
 import qk.sdk.mesh.meshsdk.MeshHelper
 import qk.sdk.mesh.meshsdk.MeshSDK
-import qk.sdk.mesh.meshsdk.callback.ArrayStringCallback
-import qk.sdk.mesh.meshsdk.callback.BooleanCallback
-import qk.sdk.mesh.meshsdk.callback.MapCallback
-import qk.sdk.mesh.meshsdk.callback.StringCallback
-import qk.sdk.mesh.meshsdk.util.ByteUtil
+import qk.sdk.mesh.meshsdk.callback.*
 import qk.sdk.mesh.meshsdk.util.Utils
 
 class ConnectTestActivity : BaseMeshActivity() {
@@ -84,14 +77,14 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
 
         switch_mode.setOnCheckedChangeListener { buttonView, isChecked ->
-//            var map = HashMap<String, Any>()
-//            map["LightMode"] = if (isChecked) 1 else 0
-//            MeshSDK.modifyLightStatus(mUUID, map, object :
-//                BooleanCallback {
-//                override fun onResult(boolean: Boolean) {
-//                    Utils.printLog(TAG, "switch_mode result:$boolean")
-//                }
-//            })
+            var map = HashMap<String, Any>()
+            map["LightMode"] = if (isChecked) 1 else 0
+            MeshSDK.modifyLightStatus(mUUID, map, object :
+                BooleanCallback {
+                override fun onResult(boolean: Boolean) {
+                    Utils.printLog(TAG, "switch_mode result:$boolean")
+                }
+            })
 
 //            var ruleMsg = "00010cd85d00080106000282030101"
 //            var meshMsg =
@@ -106,6 +99,14 @@ class ConnectTestActivity : BaseMeshActivity() {
                     Utils.printLog(TAG, "setGenericOnOff result:$boolean")
                 }
             })
+//            var map = HashMap<String, Any>()
+//            map["LightSwitch"] = if (isChecked) 1 else 0
+//            MeshSDK.modifyLightStatus(mUUID, map, object :
+//                BooleanCallback {
+//                override fun onResult(boolean: Boolean) {
+//                    Utils.printLog(TAG, "setGenericOnOff result:$boolean")
+//                }
+//            })
         }
 
         btn_send_vendor.setOnClickListener {
@@ -136,8 +137,8 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
 
         btn_set_publication.setOnClickListener {
-            //            MeshSDK.resetNode(mUUID)
-//            MeshSDK.setPublication(mUUID, Constants.TEST_GROUP, 0xC000, object : MapCallback {
+//                        MeshSDK.resetNode(mUUID)
+//            MeshSDK.setPublication(mUUID, Constants.TEST_GROUP, 0xD000, object : MapCallback {
 //                override fun onResult(result: HashMap<String, Any>) {
 //                    result.forEach { t, u ->
 //                        Utils.printLog(TAG, "set publication 0xC000,key:$t,value:$u")
@@ -160,11 +161,17 @@ class ConnectTestActivity : BaseMeshActivity() {
 
         btn_subscribe.setOnClickListener {
 //            if (MeshHelper.getGroupByName(Constants.TEST_GROUP) == null)
-//            MeshSDK.createGroup(Constants.TEST_GROUP, object : BooleanCallback {
+//            MeshSDK.createGroup("0xD000", object : BooleanCallback {
 //                override fun onResult(boolean: Boolean) {
 //                    Utils.printLog(TAG, "createGroup:$boolean")
 //                }
-//            }, 0xC000)
+//            }, 0xD000)
+
+//            MeshSDK.createGroup("0xC001", object : BooleanCallback {
+//                override fun onResult(boolean: Boolean) {
+//                    Utils.printLog(TAG, "createGroup TEST_GROUP_PIR:$boolean")
+//                }
+//            }, 0xC001)
 //
 //            MeshSDK.createGroup(Constants.TEST_GROUP_PIR, object : BooleanCallback {
 //                override fun onResult(boolean: Boolean) {
@@ -186,7 +193,7 @@ class ConnectTestActivity : BaseMeshActivity() {
 //                    }
 //                }
 //            })
-//            MeshSDK.sendSubscribeMsg(mUUID, 0xC002, object : MapCallback {
+//            MeshSDK.sendSubscribeMsg(mUUID, Constants.TEST_GROUP, object : MapCallback {
 //                override fun onResult(result: HashMap<String, Any>) {
 //                    result.forEach { t, u ->
 //                        Utils.printLog(TAG, "set sendSubscribeMsg,key:$t,value:$u")
@@ -226,6 +233,7 @@ class ConnectTestActivity : BaseMeshActivity() {
 //
 //                }
 //            })
+
 //            MeshSDK.fetchLightCurrentStatus(mUUID, object : MapCallback {
 //                override fun onResult(result: HashMap<String, Any>) {
 //                    result.forEach { t, u ->

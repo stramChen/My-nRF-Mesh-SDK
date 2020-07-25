@@ -26,6 +26,8 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.SparseArray;
 
+import java.util.Arrays;
+
 import no.nordicsemi.android.meshprovisioner.ApplicationKey;
 import no.nordicsemi.android.meshprovisioner.NetworkKey;
 
@@ -273,5 +275,31 @@ abstract class Message implements Parcelable {
             array.put(i, src.createByteArray());
         }
         return array;
+    }
+
+    @Override
+    public String toString() {
+        return "Message{" +
+                "ctl=" + ctl +
+                ", networkLayerPdu=" + networkLayerPdu +
+                ", pduType=" + pduType +
+                ", ttl=" + ttl +
+                ", src=" + src +
+                ", dst=" + dst +
+                ", mSequenceNumber=" + Arrays.toString(mSequenceNumber) +
+                ", deviceKey=" + Arrays.toString(deviceKey) +
+                ", applicationKey=" + applicationKey +
+                ", networkKey=" + networkKey +
+                ", encryptionKey=" + Arrays.toString(encryptionKey) +
+                ", privacyKey=" + Arrays.toString(privacyKey) +
+                ", akf=" + akf +
+                ", aid=" + aid +
+                ", aszmic=" + aszmic +
+                ", opCode=" + opCode +
+                ", parameters=" + Arrays.toString(parameters) +
+                ", companyIdentifier=" + companyIdentifier +
+                ", ivIndex=" + Arrays.toString(ivIndex) +
+                ", segmented=" + segmented +
+                '}';
     }
 }

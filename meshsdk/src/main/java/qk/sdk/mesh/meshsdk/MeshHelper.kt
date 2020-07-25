@@ -3,21 +3,12 @@ package qk.sdk.mesh.meshsdk
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import androidx.lifecycle.LiveData
 import com.joker.api.wrapper.ListenerWrapper
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import no.nordicsemi.android.meshprovisioner.ApplicationKey
-import no.nordicsemi.android.meshprovisioner.Group
-import no.nordicsemi.android.meshprovisioner.MeshNetwork
-import no.nordicsemi.android.meshprovisioner.NetworkKey
-import no.nordicsemi.android.meshprovisioner.models.VendorModel
+import no.nordicsemi.android.meshprovisioner.*
 import no.nordicsemi.android.meshprovisioner.transport.*
 import no.nordicsemi.android.meshprovisioner.utils.AddressArray
 import no.nordicsemi.android.meshprovisioner.utils.MeshAddress
 import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils
-import no.nordicsemi.android.meshprovisioner.utils.ProxyFilterType
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
 import qk.sdk.mesh.meshsdk.callback.*
 import qk.sdk.mesh.meshsdk.service.BaseMeshService
@@ -511,7 +502,7 @@ object MeshHelper {
     ) {
 //        rx.Observable.create<String> {
 //        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
-        Utils.printLog(TAG, "sendMeshPdu，method name：${method}")
+        Utils.printLog(TAG, "===>[mesh] sendMeshPdu，method name：${method}")
         MeshProxyService.mMeshProxyService?.sendMeshPdu(
             method,
             dst,
@@ -555,6 +546,7 @@ object MeshHelper {
 
     fun createGroup(groupName: String, groupAdd: Int = 0): Boolean {
         Utils.printLog(TAG, "groupName:$groupName,groupAdd:$groupAdd")
+        //0xC000是起始地址，小于起始地址我们直接返回
         if (groupAdd != 0 && groupAdd < 0xC000) {
             return false
         }
@@ -567,14 +559,28 @@ object MeshHelper {
             }
 
             val network = MeshProxyService.mMeshProxyService?.getMeshNetwork()
-            group = if (groupAdd == 0) network?.createGroup(
-                network.getSelectedProvisioner(),
-                groupName
-            ) else network?.createGroup(
-                network.getSelectedProvisioner(),
-                groupName,
-                groupAdd
-            )
+            val provisioner = network?.getSelectedProvisioner();
+            //直接给当前provisioner分配最大组播地址0xC000-0FEFF(0FEFF-0FFFF是保留地址不做分配)
+            //因为目前我们只支持一个组网里面只有一个provisioner,所以可以给他直接分配最大地址
+            var range: AllocatedGroupRange? = AllocatedGroupRange("C000".toInt(16),
+                "FEFF".toInt(16))
+            if (range != null) {
+                provisioner?.addRange(range)
+            }
+
+            group = if (groupAdd == 0)
+                provisioner?.let {
+                network?.createGroup(
+                    it,
+                    groupName
+                )
+            } else provisioner?.let {
+                network?.createGroup(
+                    it,
+                    groupName,
+                    groupAdd
+                )
+            }
 
             if (group != null) {
                 if (network?.addGroup(group) ?: false) {
