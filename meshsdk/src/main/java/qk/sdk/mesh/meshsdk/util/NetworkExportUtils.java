@@ -138,7 +138,6 @@ public class NetworkExportUtils {
         @Override
         protected Boolean doInBackground(final Void... voids) {
             final String network = meshManagerApi.exportMeshNetwork();
-            callbacks.onNetworkExported(network);
             if (network == null)
                 return false;
             try {
@@ -154,6 +153,7 @@ public class NetworkExportUtils {
                 br.write(network);
                 br.flush();
                 br.close();
+                callbacks.onNetworkExported(network);
                 return true;
             } catch (IOException e) {
                 error = e.getMessage();

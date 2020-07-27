@@ -87,8 +87,8 @@ public class LogFileUtil {
         if (file != null && files != null && files.length > 0) {
             for (File logFile : files) {
                 String fileName = logFile.getName();
-                String[] names = fileName.split("_");
-                if (names != null && names.length >= 3) {
+                if (fileName.startsWith("mesh_log_")) {
+                    String[] names = fileName.split("_");
                     DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                     try {
                         Date date = formatter.parse(names[2] + " 00:00:00");
