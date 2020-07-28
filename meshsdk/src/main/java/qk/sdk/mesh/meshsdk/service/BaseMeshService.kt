@@ -626,7 +626,7 @@ open class BaseMeshService : LifecycleService() {
                                             "code",
                                             Constants.ConnectState.COMMON_SUCCESS.code
                                         )
-                                        map.forEach { t, u ->
+                                        map.forEach { (t, u) ->
                                             Log.e(TAG, "key:$t,value:$u")
                                         }
                                         (callbackIterator.value as MapCallback).onResult(map)
