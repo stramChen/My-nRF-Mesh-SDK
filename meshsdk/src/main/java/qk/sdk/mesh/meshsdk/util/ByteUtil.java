@@ -6,12 +6,9 @@ import android.util.SparseArray;
 
 import androidx.annotation.Nullable;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 public class ByteUtil {
     static final String TAG = "ByteUtil";
@@ -42,7 +39,7 @@ public class ByteUtil {
         byte[] targets = new byte[2];
         for (int i = 0; i < 2; i++) {
             int offset = (targets.length - 1 - i) * 8;
-            targets[targets.length-1 - i] = (byte) ((number >>> offset) & 0xff);
+            targets[targets.length - 1 - i] = (byte) ((number >>> offset) & 0xff);
         }
         return targets;
     }
@@ -114,20 +111,34 @@ public class ByteUtil {
         return builder.toString().toUpperCase();
     }
 
-    public static int getPIdFromUUID(byte[] uuid) {
-        if (uuid.length < 5) {
-            return 0;
+
+    public static int getDataFromUUID(byte[] srcByte, byte[] desByte, int startIndex) {
+        System.arraycopy(srcByte, startIndex, desByte, 0, desByte.length);
+        return byteArrayToInt(desByte);
+    }
+
+    public static int getPId(byte[] srcByte, byte[] desByte, int startIndex) {
+        System.arraycopy(srcByte, startIndex, desByte, 0, 4);
+        return byteArrayToInt2(desByte);
+    }
+
+    public static int byteArrayToInt2(byte[] bytes) {
+        int value = 0;
+        int byteSize = bytes.length;
+        // 由低位->高位
+        for (int i = 0; i < byteSize; i++) {
+            int shift = (byteSize - 1 - i) * 8;
+            value += (bytes[i] & 0x000000FF) << shift;
         }
-        byte[] pid = new byte[4];
-        System.arraycopy(uuid, 1, pid, 0, 4);
-        return byteArrayToInt(pid);
+        return value;
     }
 
     public static int byteArrayToInt(byte[] bytes) {
         int value = 0;
+        int byteSize = bytes.length;
         // 由高位到低位
-        for (int i = 0; i < 4; i++) {
-            int shift = (4 - 1 - i) * 8;
+        for (int i = 0; i < byteSize; i++) {
+            int shift = i * 8;
             value += (bytes[i] & 0x000000FF) << shift;// 往高位游
         }
         return value;

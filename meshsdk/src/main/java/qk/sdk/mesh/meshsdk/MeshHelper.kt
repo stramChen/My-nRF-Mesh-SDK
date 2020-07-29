@@ -3,10 +3,12 @@ package qk.sdk.mesh.meshsdk
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import com.joker.api.wrapper.ListenerWrapper
 import no.nordicsemi.android.meshprovisioner.*
 import no.nordicsemi.android.meshprovisioner.transport.*
 import no.nordicsemi.android.meshprovisioner.utils.AddressArray
+import no.nordicsemi.android.meshprovisioner.utils.CommonUtil
 import no.nordicsemi.android.meshprovisioner.utils.MeshAddress
 import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
@@ -17,6 +19,7 @@ import rx.android.schedulers.AndroidSchedulers
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
+import kotlin.math.log
 
 object MeshHelper {
     private val TAG = "MeshHelper"
@@ -256,13 +259,13 @@ object MeshHelper {
         timeOut: Boolean,
         retry: Boolean
     ) {
-        var applicationKey: ApplicationKey? = null
-        getAppKeys()?.forEach {
-            if (it.keyIndex == index) {
-                applicationKey = it
-            }
-        }
-//        val applicationKey = getAppKeys()?.get(index)
+//        var applicationKey: ApplicationKey? = null
+//        getAppKeys()?.forEach {
+//            if (it.keyIndex == index) {
+//                applicationKey = it
+//            }
+//        }
+        val applicationKey = getAppKeys()?.get(index)
 
         if (applicationKey == null) {
             Utils.printLog(TAG, "addAppKeys() applicationKey is null!")
@@ -278,9 +281,8 @@ object MeshHelper {
                 Utils.printLog(TAG, "addAppKeys() networkKey is null!")
             } else {
                 val node = getSelectedMeshNode()
-                var isNodeKeyAdd: Boolean
                 if (node != null) {
-                    isNodeKeyAdd = MeshParserUtils.isNodeKeyExists(
+                    val isNodeKeyAdd = MeshParserUtils.isNodeKeyExists(
                         node.addedAppKeys,
                         this.keyIndex
                     )
@@ -562,19 +564,21 @@ object MeshHelper {
             val provisioner = network?.getSelectedProvisioner();
             //直接给当前provisioner分配最大组播地址0xC000-0FEFF(0FEFF-0FFFF是保留地址不做分配)
             //因为目前我们只支持一个组网里面只有一个provisioner,所以可以给他直接分配最大地址
-            var range: AllocatedGroupRange? = AllocatedGroupRange("C000".toInt(16),
-                "FEFF".toInt(16))
+            var range: AllocatedGroupRange? = AllocatedGroupRange(
+                "C000".toInt(16),
+                "FEFF".toInt(16)
+            )
             if (range != null) {
                 provisioner?.addRange(range)
             }
 
             group = if (groupAdd == 0)
                 provisioner?.let {
-                network?.createGroup(
-                    it,
-                    groupName
-                )
-            } else provisioner?.let {
+                    network?.createGroup(
+                        it,
+                        groupName
+                    )
+                } else provisioner?.let {
                 network?.createGroup(
                     it,
                     groupName,
