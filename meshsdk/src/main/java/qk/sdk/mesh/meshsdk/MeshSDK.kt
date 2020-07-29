@@ -53,6 +53,7 @@ object MeshSDK {
     const val ATTR_TYPE_COMMON_GET_STATUS = "0100" //设备上报属性
     const val ATTR_TYPE_COMMON_SET_PROTOCAL_VERSION = "0200" //设置协议版本
     const val ATTR_TYPE_COMMON_GET_QUADRUPLES = "0300" // 获取设备五元组信息
+    const val ATTR_TYPE_REBOOT_GATEWAY = "0600" // 重启设备
 
     /**
      * 灯的attr type
@@ -645,6 +646,9 @@ object MeshSDK {
 //        }
 //    }
 
+    /**
+     * 发送单播消息
+     */
     fun sendMeshMessage(
         uuid: String,
         elementIndex: Int,
@@ -1054,13 +1058,39 @@ object MeshSDK {
     /**
      * 订阅状态上报
      */
-    fun registerDownStreamListener(callback: IDownstreamListener){
-        MeshSDK.createGroup(GROUP_NAME, object : BooleanCallback {
+    fun subscribeDeviceStatus(callback: IDeviceStatusCallBack){
+        createGroup(GROUP_NAME, object : BooleanCallback {
             override fun onResult(boolean: Boolean) {
                 Utils.printLog(TAG, "createGroup:$boolean")
             }
         }, GROUP_NAME_VAL)
         BaseMeshService.mDownStreamCallback = callback
+    }
+
+    /**
+     * 发一次获取所有设备主属性的同步请求，接口通过{@see #subscribeDeviceStatus}的回调统一返回
+     * 因此你在调用此方法的时候，必须进行{@see #subscribeDeviceStatus}订阅操作。
+     */
+    fun getAllDeviceStatus(){
+//        sendMeshMessage(
+//            uuid,
+//            eleIndex,
+//            OPCODE_VENDOR_MSG_ATTR_SET,
+//            "$ATTR_TYPE_LIGHT_ON_OFF${if (onOff) "01" else "00"}",
+//            callback
+//        )
+    }
+
+    /**
+     * 获取设备在线状态
+     */
+    fun isDeviceOnline(uuid: String):Boolean{
+        var status:Int = MeshHelper.MeshProxyService.mMeshProxyService?.mHeartBeatMap?.get(uuid.toUpperCase())?:0
+        var heartCheckTime:Long =  MeshHelper.MeshProxyService.mMeshProxyService?.mHartBeanStatusMarkTime?:0
+        //当设备状态是11或者01,或者10且未超过心态时间的时候，考虑它是在线状态
+        if(status and 1 == 1 || status ==1
+                || (status == 2 && System.currentTimeMillis() - heartCheckTime <30*1000)) return true;
+        return false;
     }
 
     /**

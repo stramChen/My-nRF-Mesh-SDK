@@ -5,7 +5,7 @@ package qk.sdk.mesh.meshsdk.callback
  * @author: chensc@mxchip.com
  * @date: 2020/7/24 4:59 PM
  */
-open interface IDownstreamListener {
+open interface IDeviceStatusCallBack {
     fun onCommand(message: String?)
 //    fun shouldHandle(var1: String?): Boolean4
 }

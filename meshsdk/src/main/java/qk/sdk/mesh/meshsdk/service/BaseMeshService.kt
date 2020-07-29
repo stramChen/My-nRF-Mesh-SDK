@@ -45,13 +45,15 @@ open class BaseMeshService : LifecycleService() {
 
         const val DOWNSTREAM_CALLBACK = "subscribeStatus";
         //状态上报回调用，一个app从头到尾应该只会持有一个这样的回调用
-        var mDownStreamCallback : IDownstreamListener? = null;
+        var mDownStreamCallback : IDeviceStatusCallBack? = null;
     }
-
     private var mHeatBeatSubscription: Subscription? = null;
 
+    //心跳修改状态值记录
+    var mHartBeanStatusMarkTime :Long = 0;
+
     //离线状态value 分为 00，01，10，11，低位为上次状态，高位为本次状态
-    private val mHeartBeatMap: ConcurrentHashMap<String?, Int?> =
+    internal var mHeartBeatMap: ConcurrentHashMap<String?, Int?> =
         ConcurrentHashMap()
 
 
@@ -169,7 +171,7 @@ open class BaseMeshService : LifecycleService() {
                                             mHeartBeatMap[uuid] = heartBeanTag and 0
                                             mDownStreamCallback?.onCommand(
                                                 Gson()
-                                                    .toJson(DeviceNode<Any>(STATUS_OFFLINE, uuid))
+                                                    .toJson(DeviceNode<Any>(DeviceNode.STATUS_OFFLINE, uuid))
                                             )
                                         }
                                         //设备上线了 01，feedback
@@ -179,6 +181,9 @@ open class BaseMeshService : LifecycleService() {
                                         //设备一直在线 11，改为10
                                         else if (heartBeanTag == 3) {
                                             mHeartBeatMap[uuid] = heartBeanTag and 2
+                                            //记录一下修改时间，以鉴别状态为10，但是时间小于30s的时候
+                                            //还是认为是在线状态
+                                            mHartBeanStatusMarkTime = System.currentTimeMillis();
                                         }
 
                                     }
@@ -523,9 +528,9 @@ open class BaseMeshService : LifecycleService() {
                         meshCallback.onReceive(meshMsg)
                     }
 
-                    if(meshMsg is VendorModelMessageStatus && meshMsg.opCode ==OPCODE_HEART_BEAT){
-                        checkDeviceOnline()
-                    }
+                    //因为第一心跳包要在30S左右才能收到，为了尽快让设备上线，这是只要接受到设备的消息就当作上线算
+                    //原本需要---meshMsg.opCode ==OPCODE_HEART_BEAT
+                    checkDeviceOnline()
 
                     var connectCallbacksIterator = MeshSDK.mConnectCallbacks.iterator()
                     while (connectCallbacksIterator.hasNext()) {
@@ -537,23 +542,22 @@ open class BaseMeshService : LifecycleService() {
                                 MeshSDK.ATTR_TYPE_COMMON_GET_QUADRUPLES -> {//获取四元组，pk、ps、dn、ds、pid
                                     Utils.printLog(
                                         TAG,
-                                        "quadruple size:${meshMsg.parameter.size} ,content：${String(
-                                            meshMsg.parameter
+                                        "quadruple size:${parameter.size} ,content：${String(parameter
                                         )}"
                                     )
 
-                                    if (meshMsg.parameter.size >= 40 && callbackIterator.key == MeshSDK.CALLBACK_GET_IDENTITY) {
+                                    if (parameter.size >= 40 && callbackIterator.key == MeshSDK.CALLBACK_GET_IDENTITY) {
                                         var preIndex = 3
                                         var quadrupleIndex = 0
                                         var map = HashMap<String, Any>()
-                                        for (index in 3 until meshMsg.parameter.size) {
-                                            if (meshMsg.parameter[index] == 0x20.toByte() || index == meshMsg.parameter.size - 1) {
+                                        for (index in 3 until parameter.size) {
+                                            if (parameter[index] == 0x20.toByte() || index == parameter.size - 1) {
                                                 when (quadrupleIndex) {
                                                     0 -> {//pk
                                                         var pkBytes =
                                                             ByteArray(index - preIndex)
                                                         System.arraycopy(
-                                                            meshMsg.parameter,
+                                                            parameter,
                                                             preIndex,
                                                             pkBytes,
                                                             0,
@@ -567,7 +571,7 @@ open class BaseMeshService : LifecycleService() {
                                                         var psBytes =
                                                             ByteArray(index - preIndex)
                                                         System.arraycopy(
-                                                            meshMsg.parameter,
+                                                            parameter,
                                                             preIndex,
                                                             psBytes,
                                                             0,
@@ -581,7 +585,7 @@ open class BaseMeshService : LifecycleService() {
                                                         var dnBytes =
                                                             ByteArray(index - preIndex)
                                                         System.arraycopy(
-                                                            meshMsg.parameter,
+                                                            parameter,
                                                             preIndex,
                                                             dnBytes,
                                                             0,
@@ -595,7 +599,7 @@ open class BaseMeshService : LifecycleService() {
                                                         var dsBytes =
                                                             ByteArray(index - preIndex)
                                                         System.arraycopy(
-                                                            meshMsg.parameter,
+                                                            parameter,
                                                             preIndex,
                                                             dsBytes,
                                                             0,
@@ -609,7 +613,7 @@ open class BaseMeshService : LifecycleService() {
                                                         var pidBytes =
                                                             ByteArray(index - preIndex)
                                                         System.arraycopy(
-                                                            meshMsg.parameter,
+                                                            parameter,
                                                             preIndex,
                                                             pidBytes,
                                                             0,
@@ -674,7 +678,7 @@ open class BaseMeshService : LifecycleService() {
             if((mHeartBeatMap[uuid] ?: 0) == 0){
                 mDownStreamCallback?.onCommand(
                     Gson()
-                        .toJson(DeviceNode<Any>(STATUS_ONLINE, uuid))
+                        .toJson(DeviceNode<Any>(DeviceNode.STATUS_ONLINE, uuid))
                 )
             }
             //让高位为1,表示当前它肯定是在线的

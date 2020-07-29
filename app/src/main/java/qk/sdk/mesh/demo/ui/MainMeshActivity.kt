@@ -24,7 +24,6 @@ import qk.sdk.mesh.meshsdk.util.ByteUtil
 import qk.sdk.mesh.meshsdk.util.Constants
 import qk.sdk.mesh.meshsdk.util.LogFileUtil
 import qk.sdk.mesh.meshsdk.util.Utils
-import qk.sdk.mesh.demo.util.Constants as Cons
 
 class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
     private val TAG = "MainMeshActivity"
@@ -66,7 +65,7 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
             override fun onResult(boolean: Boolean) {
                 MeshHelper.getProvisionedNodeByCallback(mNodesCallback)
                 val nodes = getProvisionNode()
-                Utils.printLog(TAG, "mesh====》获取已配网设备:${nodes?.size}")
+                Utils.printLog(TAG, "mesh===>获取已配网设备:${nodes?.size}")
                 if (nodes == null || nodes.size == 0) {
                     return
                 }
@@ -138,7 +137,7 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
                 override fun onResult(result: HashMap<String, Any>) {
                     Utils.printLog(TAG, "connect result:${result.get("code")}")
                     //订阅消息通知
-                    MeshSDK.registerDownStreamListener(object : IDownstreamListener {
+                    MeshSDK.subscribeDeviceStatus(object : IDeviceStatusCallBack {
                         override fun onCommand(message: String?) {
                             Utils.printLog(TAG, "downstream:$message");
                         }
