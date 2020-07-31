@@ -329,7 +329,7 @@ public final class MeshNetwork extends BaseMeshNetwork {
 
             for (int address = range.lowAddress; address < range.getHighAddress(); address++) {
                 //if the address is not in use, return it as the next available address to create a group
-                if (!isGroupAddressInUse(address) && address != 0xC002) {//0xC002 专用于pir传感器，其他设备应避免publish到此group
+                if (!isGroupAddressInUse(address)) {
                     return address;
                 }
             }

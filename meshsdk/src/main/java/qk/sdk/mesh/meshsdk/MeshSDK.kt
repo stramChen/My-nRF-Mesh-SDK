@@ -2,6 +2,7 @@ package qk.sdk.mesh.meshsdk
 
 import android.bluetooth.BluetoothAdapter
 import android.content.Context
+import com.google.gson.Gson
 import me.weyye.hipermission.PermissionCallback
 import no.nordicsemi.android.meshprovisioner.ApplicationKey
 import no.nordicsemi.android.meshprovisioner.UnprovisionedBeacon
@@ -11,6 +12,7 @@ import no.nordicsemi.android.meshprovisioner.transport.*
 import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.bean.CommonErrorMsg
+import qk.sdk.mesh.meshsdk.bean.DeviceConstants
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
 import qk.sdk.mesh.meshsdk.callback.*
 import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
@@ -26,6 +28,7 @@ object MeshSDK {
     private var mExtendedBluetoothDeviceMap = HashMap<String, ExtendedBluetoothDevice>()
 
     const val VENDOR_MODELID = 153223168
+    const val VENDOR_MODEL_COMPANYIDENTIFIER = 2338
 
     var mMeshCallbacks = ArrayList<ConnectCallback?>(5)
 
@@ -34,17 +37,23 @@ object MeshSDK {
     private const val PUBLISH_INTERVAL = 88 //25秒
     private const val PUBLISH_TTL = 5
 
-    //组播订阅地址
-    private const val GROUP_NAME :String = "0xD000";
-    private const val GROUP_NAME_VAL :Int = 0xD000;
+    //设备订阅组播地址
+    private const val SUBSCRIBE_ALL_DEVICE: String = "0xD000";
+    private const val SUBSCRIBE_ALL_DEVICE_ADDR: Int = 0xD000;
+
+    //设备同步组播地址
+    private const val ALL_DEVICE_SYNC: String = "0xD002";
+    private const val ALL_DEVICE_SYNC_ADDR: Int = 0xD002;
 
     /**
      * opcode
      */
-    const val VENDOR_MSG_ATTR_GET = "10"
-    const val OPCODE_VENDOR_MSG_ATTR_SET = "11"
+    const val VENDOR_MSG_OPCODE_ATTR_GET = "10"
+    const val VENDOR_MSG_OPCODE_ATTR_SET = "11"
     const val VENDOR_MSG_ATTR_SET_UNACKED = "12"
-    const val VENDOR_MSG_ATTR_STATUS = "13"
+
+    //同步设备消息
+    const val VENDOR_MSG_ATTR_STATUS = 0x15
     const val VENDOR_MSG_HB = "14"
 
     /**
@@ -55,19 +64,11 @@ object MeshSDK {
     const val ATTR_TYPE_COMMON_GET_QUADRUPLES = "0300" // 获取设备五元组信息
     const val ATTR_TYPE_REBOOT_GATEWAY = "0600" // 重启设备
 
-    /**
-     * 灯的attr type
-     */
-    const val ATTR_TYPE_LIGHT_ON_OFF = "0001" //开关
-    const val ATTR_TYPE_LIGHT_BRIGHTNESS = "2101" //亮度
-    const val ATTR_TYPE_LIGHT_TEMPRETURE = "2201" //色温
-    const val ATTR_TYPE_LIGHT_HSV = "2301" //颜色hsv
-
     //callback name
     const val CALLBACK_GET_IDENTITY = "getDeviceIdentityKeys"
 
     // 初始化 mesh
-    fun init(context: Context, callback: BooleanCallback? =  null) {
+    fun init(context: Context, callback: BooleanCallback? = null) {
         mContext = context
         Utils.mContext = context
         mContext?.apply {
@@ -600,7 +601,7 @@ object MeshSDK {
             sendMeshMessage(
                 uuid,
                 eleIndex,
-                OPCODE_VENDOR_MSG_ATTR_SET,
+                VENDOR_MSG_OPCODE_ATTR_SET,
                 "$ATTR_TYPE_LIGHT_ON_OFF${if (onOff) "01" else "00"}",
                 callback
             )
@@ -844,6 +845,8 @@ object MeshSDK {
         } else if (callback is MapCallback && msg != null) {
             var map = HashMap<String, Any>()
             doMapCallback(map, callback, msg)
+        } else if (callback is StringCallback) {
+            callback.onResultMsg(Gson().toJson(msg))
         }
         return
     }
@@ -856,8 +859,38 @@ object MeshSDK {
         sendMeshMessage(
             uuid,
             0,
-            VENDOR_MSG_ATTR_GET,
+            VENDOR_MSG_OPCODE_ATTR_GET,
             "$ATTR_TYPE_COMMON_GET_QUADRUPLES",
+            callback,
+            CALLBACK_GET_IDENTITY,
+            true,
+            true
+        )
+    }
+
+    /**
+     * 协议v2 .0:获取某个设备的属性
+     * @param uuid 设备唯一id
+     * @param properties 需要获取属性的集合
+     */
+    fun getDeviceCurrentStatus(uuid: String, properties: List<String>, callback: StringCallback) {
+        val productId = MxMeshUtil.getProductIdByUUID(uuid);
+        var param: StringBuilder = StringBuilder();
+        properties.forEach {
+            when (productId) {
+                DeviceConstants.lightCons[DeviceConstants.PRODUCT_ID] -> {
+                    param.append(DeviceConstants.lightCons[it] as String)
+                }
+                DeviceConstants.socketCons[DeviceConstants.PRODUCT_ID] -> {
+                    param.append(DeviceConstants.socketCons[it] as String)
+                }
+            }
+        }
+        sendMeshMessage(
+            uuid,
+            0,
+            VENDOR_MSG_OPCODE_ATTR_GET,
+            param.toString(),
             callback,
             CALLBACK_GET_IDENTITY,
             true,
@@ -1058,12 +1091,18 @@ object MeshSDK {
     /**
      * 订阅状态上报
      */
-    fun subscribeDeviceStatus(callback: IDeviceStatusCallBack){
-        createGroup(GROUP_NAME, object : BooleanCallback {
+    fun subscribeDeviceStatus(callback: IDeviceStatusCallBack) {
+        createGroup(SUBSCRIBE_ALL_DEVICE, object : BooleanCallback {
             override fun onResult(boolean: Boolean) {
                 Utils.printLog(TAG, "createGroup:$boolean")
             }
-        }, GROUP_NAME_VAL)
+        }, SUBSCRIBE_ALL_DEVICE_ADDR)
+        //创建一个组播地址为了同步设备状态
+        createGroup(ALL_DEVICE_SYNC, object : BooleanCallback {
+            override fun onResult(boolean: Boolean) {
+                Utils.printLog(TAG, "createGroup:$boolean")
+            }
+        }, ALL_DEVICE_SYNC_ADDR)
         BaseMeshService.mDownStreamCallback = callback
     }
 
@@ -1071,33 +1110,58 @@ object MeshSDK {
      * 发一次获取所有设备主属性的同步请求，接口通过{@see #subscribeDeviceStatus}的回调统一返回
      * 因此你在调用此方法的时候，必须进行{@see #subscribeDeviceStatus}订阅操作。
      */
-    fun getAllDeviceStatus(){
-//        sendMeshMessage(
-//            uuid,
-//            eleIndex,
-//            OPCODE_VENDOR_MSG_ATTR_SET,
-//            "$ATTR_TYPE_LIGHT_ON_OFF${if (onOff) "01" else "00"}",
-//            callback
-//        )
+    fun getAllDeviceStatus() {
+        MeshHelper.getGroupByAddress(ALL_DEVICE_SYNC_ADDR)?.let { group ->
+            val networkKey =
+                MeshHelper.MeshProxyService.mMeshProxyService?.getCurrentNetworkKeyStr();
+            getAllApplicationKey(networkKey!!, object : ArrayStringCallback {
+                override fun onResult(result: ArrayList<String>) {
+//                    var newParam = ""
+                    var newParam = "0100" + "010100"
+                    //如果消息有参数，消息参数需加上tid，规则：秒级时间戳余255
+                    var timeCuts = System.currentTimeMillis() / 1000 % 255
+                    newParam =
+                        "${ByteUtil.bytesToHexString(byteArrayOf(timeCuts.toByte()))}${newParam}"
+                    var message = MeshHelper.getAppkeyByKeyName(result[0])?.let {
+                        VendorModelMessageUnacked(
+                            it, VENDOR_MODELID, VENDOR_MODEL_COMPANYIDENTIFIER,
+                            VENDOR_MSG_ATTR_STATUS,
+                            ByteUtil.hexStringToBytes(newParam)
+//                        VendorModelMessageUnackedState(
+//                        VendorModelMessageUnackedState(
+//                                    it, VENDOR_MODEL_COMPANYIDENTIFIER)
+                        )
+                    }
+                    if (message != null) {
+                        MeshHelper.sendMessage("", group.address, message, null)
+                    }
+                }
+            })
+
+        }
     }
 
     /**
      * 获取设备在线状态
      */
-    fun isDeviceOnline(uuid: String):Boolean{
-        var status:Int = MeshHelper.MeshProxyService.mMeshProxyService?.mHeartBeatMap?.get(uuid.toUpperCase())?:0
-        var heartCheckTime:Long =  MeshHelper.MeshProxyService.mMeshProxyService?.mHartBeanStatusMarkTime?:0
+    fun isDeviceOnline(uuid: String): Boolean {
+        var status: Int =
+            MeshHelper.MeshProxyService.mMeshProxyService?.mHeartBeatMap?.get(uuid.toUpperCase())
+                ?: 0
+        var heartCheckTime: Long =
+            MeshHelper.MeshProxyService.mMeshProxyService?.mHartBeanStatusMarkTime ?: 0
         //当设备状态是11或者01,或者10且未超过心态时间的时候，考虑它是在线状态
-        if(status and 1 == 1 || status ==1
-                || (status == 2 && System.currentTimeMillis() - heartCheckTime <30*1000)) return true;
+        if (status and 1 == 1 || status == 1
+            || (status == 2 && System.currentTimeMillis() - heartCheckTime < 30 * 1000)
+        ) return true;
         return false;
     }
 
     /**
      * 取消状态上报
      */
-    fun unRegisterDownStreamListener(){
-        MeshHelper.removeGroup(GROUP_NAME);
+    fun unRegisterDownStreamListener() {
+        MeshHelper.removeGroup(SUBSCRIBE_ALL_DEVICE);
     }
 
 
@@ -1363,7 +1427,7 @@ object MeshSDK {
 
     }
 
-//    fun setPublication(uuid: String, groupName: String, groupAddr: Int, callback: MapCallback) {
+    //    fun setPublication(uuid: String, groupName: String, groupAddr: Int, callback: MapCallback) {
 //        var map = HashMap<String, Any>()
 //        if (doProxyCheck(uuid, map, callback)) {
 //            if (MeshHelper.getGroupByAddress(groupAddr) == null) {
@@ -1436,7 +1500,10 @@ object MeshSDK {
 //        }
 //
 //    }
-
+    const val ATTR_TYPE_LIGHT_ON_OFF = "0001" //开关
+    const val ATTR_TYPE_LIGHT_BRIGHTNESS = "2101" //亮度
+    const val ATTR_TYPE_LIGHT_TEMPRETURE = "2201" //色温
+    const val ATTR_TYPE_LIGHT_HSV = "2301" //颜色hsv
 
     /**
      * 协议v2.0：设置灯的hsvbt属性
@@ -1472,7 +1539,7 @@ object MeshSDK {
             sendMeshMessage(
                 uuid,
                 0,
-                OPCODE_VENDOR_MSG_ATTR_SET,
+                VENDOR_MSG_OPCODE_ATTR_SET,
                 "$ATTR_TYPE_LIGHT_HSV${ByteUtil.bytesToHexString(
                     byteArrayOf((if (paramType == 1) (v as Int).toByte() else if (paramType == 2) (v as Double).toByte() else (v as Float).toByte()))
                 )}${ByteUtil.bytesToHexString(
@@ -1490,7 +1557,7 @@ object MeshSDK {
             sendMeshMessage(
                 uuid,
                 0,
-                OPCODE_VENDOR_MSG_ATTR_SET,
+                VENDOR_MSG_OPCODE_ATTR_SET,
                 "$ATTR_TYPE_LIGHT_BRIGHTNESS${ByteUtil.bytesToHexString(
                     ByteUtil.shortToByte(if (briType == 1) (bright as Int).toShort() else if (briType == 2) (bright as Double).toShort() else (bright as Float).toShort())
                 )}",
@@ -1501,7 +1568,7 @@ object MeshSDK {
             sendMeshMessage(
                 uuid,
                 0,
-                OPCODE_VENDOR_MSG_ATTR_SET,
+                VENDOR_MSG_OPCODE_ATTR_SET,
                 "$ATTR_TYPE_LIGHT_TEMPRETURE${ByteUtil.bytesToHexString(
                     ByteUtil.shortToByte((if (temType == 1) (temperature as Int).toShort() else if (temType == 2) (temperature as Double).toShort() else (temperature as Float).toShort()))
                 )}",
@@ -1535,7 +1602,7 @@ object MeshSDK {
         sendMeshMessage(
             uuid,
             0,
-            VENDOR_MSG_ATTR_GET,
+            VENDOR_MSG_OPCODE_ATTR_GET,
             "$ATTR_TYPE_LIGHT_BRIGHTNESS$ATTR_TYPE_LIGHT_TEMPRETURE$ATTR_TYPE_LIGHT_ON_OFF$ATTR_TYPE_LIGHT_HSV",
             callback
         )

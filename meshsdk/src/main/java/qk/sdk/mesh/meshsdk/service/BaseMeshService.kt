@@ -143,7 +143,7 @@ open class BaseMeshService : LifecycleService() {
     }
 
     /**
-     * 开始心跳检查线程，这里只检查离线，在线放在上报的是检查，这样可以加快上线的速度
+     * 开始心跳检查线程，这里只检查离线，在线放在上报的时候检查，这样可以加快上线的速度
      */
     fun startHeartBeatCheck() {
         synchronized(this) {
@@ -207,6 +207,25 @@ open class BaseMeshService : LifecycleService() {
                     mHeartBeatMap[meshNode.uuid.toUpperCase()] = 0;
                 }
             }
+        }
+    }
+
+    /**
+     * 检查设备是否在线
+     */
+    private fun MeshMessage.checkDeviceOnline() {
+        var uuid: String? = MeshHelper
+            .getMeshNetwork()?.getNode(src)?.uuid?.toUpperCase();
+        synchronized(mHearBeanLock) {
+            //设备一直处于离线状态，赶紧通知它上线吧！
+            if((mHeartBeatMap[uuid] ?: 0) == 0){
+                mDownStreamCallback?.onCommand(
+                    Gson()
+                        .toJson(DeviceNode<Any>(DeviceNode.STATUS_ONLINE, uuid))
+                )
+            }
+            //让高位为1,表示当前它肯定是在线的
+            mHeartBeatMap[uuid] = (mHeartBeatMap[uuid] ?: 0) or 1;
         }
     }
 
@@ -536,109 +555,15 @@ open class BaseMeshService : LifecycleService() {
                     while (connectCallbacksIterator.hasNext()) {
                         var callbackIterator = connectCallbacksIterator.next()
 
-                        if (callbackIterator.value is MapCallback && meshMsg is VendorModelMessageStatus) {
+                        if (callbackIterator.value is MapCallback
+                            && meshMsg is VendorModelMessageStatus) {
                             var attrType = ByteUtil.bytesToHexString(byteArrayOf(parameter[1], parameter[2]))
                             when (attrType) {
                                 MeshSDK.ATTR_TYPE_COMMON_GET_QUADRUPLES -> {//获取四元组，pk、ps、dn、ds、pid
-                                    Utils.printLog(
-                                        TAG,
-                                        "quadruple size:${parameter.size} ,content：${String(parameter
-                                        )}"
+                                    decodeDevicePrimaryInfoAndFeedback(
+                                        callbackIterator,
+                                        connectCallbacksIterator
                                     )
-
-                                    if (parameter.size >= 40 && callbackIterator.key == MeshSDK.CALLBACK_GET_IDENTITY) {
-                                        var preIndex = 3
-                                        var quadrupleIndex = 0
-                                        var map = HashMap<String, Any>()
-                                        for (index in 3 until parameter.size) {
-                                            if (parameter[index] == 0x20.toByte() || index == parameter.size - 1) {
-                                                when (quadrupleIndex) {
-                                                    0 -> {//pk
-                                                        var pkBytes =
-                                                            ByteArray(index - preIndex)
-                                                        System.arraycopy(
-                                                            parameter,
-                                                            preIndex,
-                                                            pkBytes,
-                                                            0,
-                                                            pkBytes.size
-                                                        )
-                                                        map.put("pk", String(pkBytes))
-                                                        quadrupleIndex++
-                                                        preIndex = index + 1
-                                                    }
-                                                    1 -> {//ps
-                                                        var psBytes =
-                                                            ByteArray(index - preIndex)
-                                                        System.arraycopy(
-                                                            parameter,
-                                                            preIndex,
-                                                            psBytes,
-                                                            0,
-                                                            psBytes.size
-                                                        )
-                                                        map.put("ps", String(psBytes))
-                                                        quadrupleIndex++
-                                                        preIndex = index + 1
-                                                    }
-                                                    2 -> {//dn
-                                                        var dnBytes =
-                                                            ByteArray(index - preIndex)
-                                                        System.arraycopy(
-                                                            parameter,
-                                                            preIndex,
-                                                            dnBytes,
-                                                            0,
-                                                            dnBytes.size
-                                                        )
-                                                        map.put("dn", String(dnBytes))
-                                                        quadrupleIndex++
-                                                        preIndex = index + 1
-                                                    }
-                                                    3 -> {//ds
-                                                        var dsBytes =
-                                                            ByteArray(index - preIndex)
-                                                        System.arraycopy(
-                                                            parameter,
-                                                            preIndex,
-                                                            dsBytes,
-                                                            0,
-                                                            dsBytes.size
-                                                        )
-                                                        map.put("ds", String(dsBytes))
-                                                        quadrupleIndex++
-                                                        preIndex = index + 1
-                                                    }
-                                                    4 -> {//product_id
-                                                        var pidBytes =
-                                                            ByteArray(index - preIndex)
-                                                        System.arraycopy(
-                                                            parameter,
-                                                            preIndex,
-                                                            pidBytes,
-                                                            0,
-                                                            pidBytes.size
-                                                        )
-                                                        map.put("pid", String(pidBytes))
-                                                        quadrupleIndex++
-                                                        preIndex = index + 1
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        map.put(
-                                            "code",
-                                            Constants.ConnectState.COMMON_SUCCESS.code
-                                        )
-                                        map.forEach { (t, u) ->
-                                            Log.e(TAG, "key:$t,value:$u")
-                                        }
-                                        (callbackIterator.value as MapCallback).onResult(map)
-                                        MeshHandler.removeRunnable(MeshSDK.CALLBACK_GET_IDENTITY)
-                                        connectCallbacksIterator.remove()
-                                    } else {
-                                        //todo log
-                                    }
                                 }
                                 else -> {
                                     var map = HashMap<String, Any>()
@@ -656,7 +581,13 @@ open class BaseMeshService : LifecycleService() {
                                             map["accessPDU"] = ByteUtil.bytesToHexString(pdus)
                                         }
                                     }
-                                    (callbackIterator.value as MapCallback).onResult(map)
+                                    if(callbackIterator.value is MapCallback){
+                                        (callbackIterator.value as MapCallback).onResult(map)
+                                    }
+//                                    if(callbackIterator.value is StringCallback){
+//                                        (callbackIterator.value as StringCallback).onResultMsg(Gson().toJson(map))
+//                                    }
+//                                    MeshHandler.removeRunnable(MeshSDK.CALLBACK_GET_IDENTITY)
                                     connectCallbacksIterator.remove()
                                 }
                             }
@@ -668,21 +599,111 @@ open class BaseMeshService : LifecycleService() {
     }
 
     /**
-     * 检查设备是否在线
+     * 解析四元组
      */
-    private fun MeshMessage.checkDeviceOnline() {
-        var uuid: String? = MeshHelper
-            .getMeshNetwork()?.getNode(src)?.uuid?.toUpperCase();
-        synchronized(mHearBeanLock) {
-            //设备一直处于离线状态，赶紧通知它上线吧！
-            if((mHeartBeatMap[uuid] ?: 0) == 0){
-                mDownStreamCallback?.onCommand(
-                    Gson()
-                        .toJson(DeviceNode<Any>(DeviceNode.STATUS_ONLINE, uuid))
-                )
+    private fun MeshMessage.decodeDevicePrimaryInfoAndFeedback(
+        callbackIterator: MutableMap.MutableEntry<String, Any>,
+        connectCallbacksIterator: MutableIterator<MutableMap.MutableEntry<String, Any>>
+    ) {
+        Utils.printLog(
+            TAG,
+            "quadruple size:${parameter.size} ,content：${String(
+                parameter
+            )}"
+        )
+
+        if (parameter.size >= 40 && callbackIterator.key == MeshSDK.CALLBACK_GET_IDENTITY) {
+            var preIndex = 3
+            var quadrupleIndex = 0
+            var map = HashMap<String, Any>()
+            for (index in 3 until parameter.size) {
+                if (parameter[index] == 0x20.toByte() || index == parameter.size - 1) {
+                    when (quadrupleIndex) {
+                        0 -> {//pk
+                            var pkBytes =
+                                ByteArray(index - preIndex)
+                            System.arraycopy(
+                                parameter,
+                                preIndex,
+                                pkBytes,
+                                0,
+                                pkBytes.size
+                            )
+                            map.put("pk", String(pkBytes))
+                            quadrupleIndex++
+                            preIndex = index + 1
+                        }
+                        1 -> {//ps
+                            var psBytes =
+                                ByteArray(index - preIndex)
+                            System.arraycopy(
+                                parameter,
+                                preIndex,
+                                psBytes,
+                                0,
+                                psBytes.size
+                            )
+                            map.put("ps", String(psBytes))
+                            quadrupleIndex++
+                            preIndex = index + 1
+                        }
+                        2 -> {//dn
+                            var dnBytes =
+                                ByteArray(index - preIndex)
+                            System.arraycopy(
+                                parameter,
+                                preIndex,
+                                dnBytes,
+                                0,
+                                dnBytes.size
+                            )
+                            map.put("dn", String(dnBytes))
+                            quadrupleIndex++
+                            preIndex = index + 1
+                        }
+                        3 -> {//ds
+                            var dsBytes =
+                                ByteArray(index - preIndex)
+                            System.arraycopy(
+                                parameter,
+                                preIndex,
+                                dsBytes,
+                                0,
+                                dsBytes.size
+                            )
+                            map.put("ds", String(dsBytes))
+                            quadrupleIndex++
+                            preIndex = index + 1
+                        }
+                        4 -> {//product_id
+                            var pidBytes =
+                                ByteArray(index - preIndex)
+                            System.arraycopy(
+                                parameter,
+                                preIndex,
+                                pidBytes,
+                                0,
+                                pidBytes.size
+                            )
+                            map.put("pid", String(pidBytes))
+                            quadrupleIndex++
+                            preIndex = index + 1
+                        }
+                    }
+                }
             }
-            //让高位为1,表示当前它肯定是在线的
-            mHeartBeatMap[uuid] = (mHeartBeatMap[uuid] ?: 0) or 1;
+            map.put(
+                "code",
+                Constants.ConnectState.COMMON_SUCCESS.code
+            )
+            map.forEach { (t, u) ->
+                Log.e(TAG, "key:$t,value:$u")
+            }
+            (callbackIterator.value as MapCallback).onResult(map)
+            MeshHandler.removeRunnable(MeshSDK.CALLBACK_GET_IDENTITY)
+            connectCallbacksIterator.remove()
+        } else {
+            //todo log
         }
     }
 
