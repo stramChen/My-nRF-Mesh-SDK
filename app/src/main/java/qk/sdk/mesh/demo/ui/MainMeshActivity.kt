@@ -61,11 +61,11 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
         tv_import.setOnClickListener(this)
         tv_groups.setOnClickListener(this)
         //初始化完成才能去查询设备
-        MeshSDK.init(this, object : BooleanCallback {
+        MeshSDK.init(this, object : BooleanCallback() {
             override fun onResult(boolean: Boolean) {
                 MeshHelper.getProvisionedNodeByCallback(mNodesCallback)
                 val nodes = getProvisionNode()
-                Utils.printLog(TAG, "mesh===>获取已配网设备:${nodes?.size}")
+                Utils.printLog(TAG, "===>[mesh]获取已配网设备:${nodes?.size}")
                 if (nodes == null || nodes.size == 0) {
                     return
                 }
@@ -105,7 +105,7 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
     //                        ?.get(MeshHelper.getAllNetworkKey()!!.size - 1)?.key
     //                ),
                 MeshSDK.connect("A5A052659EA049C4AC2D30D292C0E040",
-                    object : MapCallback {
+                    object : MapCallback() {
                         override fun onResult(result: HashMap<String, Any>) {
                             Utils.printLog(TAG, "connect result:${result.get("code")}")
                             if (MeshHelper.createGroup("01029012901920")) {
@@ -133,13 +133,15 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
         MeshSDK.connect(ByteUtil.bytesToHexString(
             MeshHelper.getAllNetworkKey()?.get(1)?.key
         ),
-            object : MapCallback {
+            object : MapCallback() {
                 override fun onResult(result: HashMap<String, Any>) {
                     Utils.printLog(TAG, "connect result:${result.get("code")}")
                     //订阅消息通知
                     MeshSDK.subscribeDeviceStatus(object : IDeviceStatusCallBack {
                         override fun onCommand(message: String?) {
                             Utils.printLog(TAG, "downstream:$message");
+                            //发起一次同步设备状态的请求
+//                            MeshSDK.getAllDeviceStatus();
                         }
                     })
                 }
@@ -173,7 +175,7 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
             }
             R.id.tv_export -> {
                 Thread(Runnable {
-                    MeshSDK.exportMeshNetwork(object : StringCallback {
+                    MeshSDK.exportMeshNetwork(object : StringCallback() {
                         override fun onResultMsg(msg: String) {
                             meshJson = msg
                             Utils.printLog(TAG, "mesh json:${JsonParser().parse(meshJson)}")
@@ -193,7 +195,7 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
             R.id.tv_import -> {
                 Thread(Runnable {
                     MeshSDK.importMeshNetwork(meshJson, object :
-                        StringCallback {
+                        StringCallback() {
                         override fun onResultMsg(msg: String) {
                             Utils.printLog(TAG, "import result:$msg")
                         }

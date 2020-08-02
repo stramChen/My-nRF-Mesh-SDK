@@ -65,7 +65,7 @@ class ScanTestActivity : BaseMeshActivity(),
 
 
     private fun startScan(type: String, callback: ArrayMapCallback) {
-        MeshSDK.checkPermission(object : StringCallback {
+        MeshSDK.checkPermission(object : StringCallback() {
             override fun onResultMsg(msg: String) {
                 if (msg == Constants.PERMISSION_GRANTED) {
 //                    Thread(Runnable {
@@ -90,7 +90,7 @@ class ScanTestActivity : BaseMeshActivity(),
 //        var netKey = "525E52D87A4511EABF8D0242AC48000A"
         var netKey = "123452D87A4511EABF8D0242AC48000A"
 
-        MeshSDK.getCurrentNetworkKey(object : StringCallback {
+        MeshSDK.getCurrentNetworkKey(object : StringCallback() {
             override fun onResultMsg(msg: String) {
                 if (msg.isEmpty()) {
                     MeshSDK.createNetworkKey(netKey)
@@ -100,11 +100,11 @@ class ScanTestActivity : BaseMeshActivity(),
             }
         })
 
-        MeshSDK.getCurrentNetworkKey(object : StringCallback {
+        MeshSDK.getCurrentNetworkKey(object : StringCallback() {
             override fun onResultMsg(msg: String) {
                 MeshSDK.provision(
                     data.get("uuid") as String, msg,
-                    object : MapCallback {
+                    object : MapCallback() {
                         override fun onResult(msg: HashMap<String, Any>) {
                             tv_status.visibility = View.VISIBLE
                             msg.get("code")?.let { value ->

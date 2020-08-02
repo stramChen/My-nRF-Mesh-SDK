@@ -700,6 +700,7 @@ class NrfMeshManager(
         data: ByteArray
     ) {
         mProvisionedMeshNode = meshNode
+        //设置选中的节点
         mExtendedMeshNode = meshNode
         mUnprovisionedMeshNodeLiveData.postValue(null)
         mProvisionedMeshNodeLiveData.postValue(meshNode)

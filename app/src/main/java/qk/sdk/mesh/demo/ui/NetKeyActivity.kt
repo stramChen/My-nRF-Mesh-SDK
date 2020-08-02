@@ -46,7 +46,7 @@ class NetKeyActivity : BaseMeshActivity() {
         rv_net_key.adapter = adapter
         adapter.setOnItemLongClickListener(object : OnItemLongClickListener<String> {
             override fun onItemLongClick(data: String, position: Int): Boolean {
-                MeshSDK.removeNetworkKey(data, object : MapCallback {
+                MeshSDK.removeNetworkKey(data, object : MapCallback() {
                     override fun onResult(result: HashMap<String, Any>) {
                         Utils.printLog(TAG, "remove net key:${result.get("code")}")
                     }

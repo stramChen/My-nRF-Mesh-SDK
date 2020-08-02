@@ -12,15 +12,18 @@ import no.nordicsemi.android.meshprovisioner.transport.*
 import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.bean.CommonErrorMsg
-import qk.sdk.mesh.meshsdk.bean.DeviceConstants
+import qk.sdk.mesh.meshsdk.bean.DeviceConstantsCode
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
 import qk.sdk.mesh.meshsdk.callback.*
 import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
 import qk.sdk.mesh.meshsdk.service.BaseMeshService
 import qk.sdk.mesh.meshsdk.util.*
 import qk.sdk.mesh.meshsdk.util.Constants.ConnectState
+import java.lang.StringBuilder
 import java.lang.Thread.sleep
 import java.util.concurrent.atomic.AtomicBoolean
+import qk.sdk.mesh.meshsdk.bean.*
+import qk.sdk.mesh.meshsdk.bean.DeviceConstantsCode as DC;
 
 object MeshSDK {
     private val TAG = "MeshSDK"
@@ -37,32 +40,10 @@ object MeshSDK {
     private const val PUBLISH_INTERVAL = 88 //25秒
     private const val PUBLISH_TTL = 5
 
-    //设备订阅组播地址
-    private const val SUBSCRIBE_ALL_DEVICE: String = "0xD000";
-    private const val SUBSCRIBE_ALL_DEVICE_ADDR: Int = 0xD000;
-
-    //设备同步组播地址
-    private const val ALL_DEVICE_SYNC: String = "0xD002";
-    private const val ALL_DEVICE_SYNC_ADDR: Int = 0xD002;
-
-    /**
-     * opcode
-     */
-    const val VENDOR_MSG_OPCODE_ATTR_GET = "10"
-    const val VENDOR_MSG_OPCODE_ATTR_SET = "11"
-    const val VENDOR_MSG_ATTR_SET_UNACKED = "12"
-
     //同步设备消息
     const val VENDOR_MSG_ATTR_STATUS = 0x15
     const val VENDOR_MSG_HB = "14"
 
-    /**
-     * 通用attr type
-     */
-    const val ATTR_TYPE_COMMON_GET_STATUS = "0100" //设备上报属性
-    const val ATTR_TYPE_COMMON_SET_PROTOCAL_VERSION = "0200" //设置协议版本
-    const val ATTR_TYPE_COMMON_GET_QUADRUPLES = "0300" // 获取设备五元组信息
-    const val ATTR_TYPE_REBOOT_GATEWAY = "0600" // 重启设备
 
     //callback name
     const val CALLBACK_GET_IDENTITY = "getDeviceIdentityKeys"
@@ -73,7 +54,7 @@ object MeshSDK {
         Utils.mContext = context
         mContext?.apply {
             if (!Utils.isServiceExisted(this, "qk.sdk.mesh.meshsdk.MeshHelper\$MeshProxyService")) {
-                MeshHelper.restartService(applicationContext, object : MapCallback {
+                MeshHelper.restartService(applicationContext, object : MapCallback() {
                     override fun onResult(result: HashMap<String, Any>) {
                         result.forEach {
                             Utils.printLog(TAG, "key:${it.key},value:${it.value}")
@@ -125,17 +106,17 @@ object MeshSDK {
      * @param callback Callback RN回调callback
      */
     fun startScan(
-        type: String,
-        scanResultCallback: ArrayMapCallback,
-        errCallback: IntCallback
+            type: String,
+            scanResultCallback: ArrayMapCallback,
+            errCallback: IntCallback
     ) {
         Utils.printLog(TAG, "startScan startScan")
         disConnect()
         var scanCallback: ScanCallback = object :
-            ScanCallback {
+                ScanCallback {
             override fun onScanResult(
-                devices: List<ExtendedBluetoothDevice>,
-                updatedIndex: Int?
+                    devices: List<ExtendedBluetoothDevice>,
+                    updatedIndex: Int?
             ) {
                 var resultArray = ArrayList<HashMap<String, Any>>()
                 devices.forEach {
@@ -161,12 +142,12 @@ object MeshSDK {
         }
 
         Utils.printLog(
-            TAG,
-            "startScan uuid:${if (type == Constants.SCAN_UNPROVISIONED) BleMeshManager.MESH_PROVISIONING_UUID else BleMeshManager.MESH_PROXY_UUID}"
+                TAG,
+                "startScan uuid:${if (type == Constants.SCAN_UNPROVISIONED) BleMeshManager.MESH_PROVISIONING_UUID else BleMeshManager.MESH_PROXY_UUID}"
         )
         MeshHelper.startScan(
-            if (type == Constants.SCAN_UNPROVISIONED) BleMeshManager.MESH_PROVISIONING_UUID else BleMeshManager.MESH_PROXY_UUID,
-            scanCallback
+                if (type == Constants.SCAN_UNPROVISIONED) BleMeshManager.MESH_PROVISIONING_UUID else BleMeshManager.MESH_PROXY_UUID,
+                scanCallback
         )
     }
 
@@ -180,15 +161,15 @@ object MeshSDK {
      */
     fun provision(uuid: String, networkKey: String, callback: MapCallback) {
         mContext?.apply {
-            init(this, object : BooleanCallback {
+            init(this, object : BooleanCallback() {
                 override fun onResult(boolean: Boolean) {
                     if (boolean) {
 
                         var map = HashMap<String, Any>()
                         doBaseCheck(uuid, map, callback)
                         if (networkKey.isEmpty() || getAllNetworkKey().size <= 0 || !getAllNetworkKey().contains(
-                                networkKey.toUpperCase()
-                            )
+                                        networkKey.toUpperCase()
+                                )
                         ) {
                             map.put(Constants.KEY_MESSAGE, ConnectState.NET_KEY_IS_NULL.msg)
                             map.put(Constants.KEY_CODE, ConnectState.NET_KEY_IS_NULL.code)
@@ -203,40 +184,40 @@ object MeshSDK {
                         mContext?.let { _ ->
                             mExtendedBluetoothDeviceMap.get(uuid)?.let { extendedBluetoothDevice ->
                                 Utils.printLog(
-                                    TAG,
-                                    "extendedBluetoothDevice:${extendedBluetoothDevice.getAddress()}"
+                                        TAG,
+                                        "extendedBluetoothDevice:${extendedBluetoothDevice.getAddress()}"
                                 )
                                 var connectCallback = object : ConnectCallback {
                                     override fun onConnect() {
                                         //开始启动配置邀请
                                         MeshHelper.startProvision(mExtendedBluetoothDeviceMap[uuid]!!,
-                                            MeshHelper.getCurrentNetworkKey()!!,
-                                            object : BaseCallback {
-                                                override fun onError(msg: CallbackMsg) {
-                                                    map.clear()
-                                                    map.put(Constants.KEY_MESSAGE, msg.msg)
-                                                    map.put(Constants.KEY_CODE, msg.code)
-                                                    callback.onResult(map)
-                                                }
-                                            })
+                                                MeshHelper.getCurrentNetworkKey()!!,
+                                                object : BaseCallback {
+                                                    override fun onError(msg: CallbackMsg) {
+                                                        map.clear()
+                                                        map.put(Constants.KEY_MESSAGE, msg.msg)
+                                                        map.put(Constants.KEY_CODE, msg.code)
+                                                        callback.onResult(map)
+                                                    }
+                                                })
                                     }
 
                                     override fun onConnectStateChange(msg: CallbackMsg) {
                                         Utils.printLog(
-                                            TAG,
-                                            "provision onConnectStateChange code:${msg.code} ,msg:${msg.msg}"
+                                                TAG,
+                                                "provision onConnectStateChange code:${msg.code} ,msg:${msg.msg}"
                                         )
 
                                         when (msg.code) {
                                             ConnectState.PROVISION_SUCCESS.code -> {
                                                 map.clear()
                                                 doMapCallback(
-                                                    map,
-                                                    callback,
-                                                    CallbackMsg(
-                                                        ConnectState.PROVISION_SUCCESS.code,
-                                                        ConnectState.PROVISION_SUCCESS.msg
-                                                    )
+                                                        map,
+                                                        callback,
+                                                        CallbackMsg(
+                                                                ConnectState.PROVISION_SUCCESS.code,
+                                                                ConnectState.PROVISION_SUCCESS.msg
+                                                        )
                                                 )
                                             }
                                             ConnectState.DISCONNECTED.code,
@@ -255,12 +236,12 @@ object MeshSDK {
                                                 } else {
                                                     MeshHelper.unRegisterConnectListener()
                                                     doMapCallback(
-                                                        map,
-                                                        callback,
-                                                        CallbackMsg(
-                                                            ConnectState.PROVISION_FAILED.code,
-                                                            ConnectState.PROVISION_FAILED.msg
-                                                        )
+                                                            map,
+                                                            callback,
+                                                            CallbackMsg(
+                                                                    ConnectState.PROVISION_FAILED.code,
+                                                                    ConnectState.PROVISION_FAILED.msg
+                                                            )
                                                     )
                                                 }
                                             }
@@ -283,8 +264,8 @@ object MeshSDK {
                                     }
                                 }
                                 MeshHelper.connect(
-                                    extendedBluetoothDevice,
-                                    false, connectCallback
+                                        extendedBluetoothDevice,
+                                        false, connectCallback
                                 )
                                 mMeshCallbacks.add(connectCallback)
                             }
@@ -300,18 +281,18 @@ object MeshSDK {
      */
     private fun reConnect(callback: MapCallback) {
         mContext?.apply {
-            init(this.applicationContext, object : BooleanCallback {
+            init(this.applicationContext, object : BooleanCallback() {
                 override fun onResult(boolean: Boolean) {
                     if (boolean) {
                         var map = HashMap<String, Any>()
                         mConnectCallbacks.forEach { connectStateCallback ->
                             if (connectStateCallback is MapCallback) {
                                 doMapCallback(
-                                    map, callback,
-                                    CallbackMsg(
-                                        CommonErrorMsg.DISCONNECTED.code,
-                                        CommonErrorMsg.DISCONNECTED.msg
-                                    )
+                                        map, callback,
+                                        CallbackMsg(
+                                                CommonErrorMsg.DISCONNECTED.code,
+                                                CommonErrorMsg.DISCONNECTED.msg
+                                        )
                                 )
                             } else if (connectStateCallback is BooleanCallback) {
                                 connectStateCallback.onResult(false)
@@ -381,7 +362,7 @@ object MeshSDK {
             var map = HashMap<String, Any>()
             map.put("uuid", it.uuid)
             map.put("name", it.nodeName)
-//            map.put("productId", ByteUtil.getPIdFromUUID(it.beacon!!.getBeaconData()))
+            data.add(map)
         }
         callback.onResult(data)
     }
@@ -390,15 +371,12 @@ object MeshSDK {
         MeshHelper.deleteProvisionNode(MeshHelper.getProvisionedNodeByUUID(uuid))
     }
 
-    const val ADD_APPKEYS = "addAppkeys"
-    const val GET_COMPOSITION_DATA = "getCompositionData"
-
     /**
      * 添加appkey，获取CompositionData并自动绑定所有的element下的所有model
      */
     fun addApplicationKeyForNode(uuid: String, appKey: String, callback: MapCallback) {
         mContext?.apply {
-            init(this, object : BooleanCallback {
+            init(this, object : BooleanCallback() {
                 override fun onResult(boolean: Boolean) {
                     if (boolean) {
                         var map = HashMap<String, Any>()
@@ -413,78 +391,78 @@ object MeshSDK {
 
                             if (MeshHelper.isConnectedToProxy()) {
                                 var meshCallback = object :
-                                    MeshCallback {
+                                        MeshCallback {
                                     override fun onReceive(msg: MeshMessage) {
                                         if (msg is ConfigAppKeyStatus) {
                                             if (msg.isSuccessful) {//添加appkey成功
                                                 Utils.printLog(TAG, "add app key success!")
                                                 MeshHandler.removeRunnable(ADD_APPKEYS)
-                                                if ((MeshHelper.getSelectedMeshNode()?.elements?.size
-                                                        ?: 0) <= 0
-                                                ) {
-                                                    MeshHelper.getCompositionData(
+//                                                if ((MeshHelper.getSelectedMeshNode()?.elements?.size
+//                                                        ?: 0) <= 0
+//                                                ) {
+                                                MeshHelper.getCompositionData(
                                                         GET_COMPOSITION_DATA,
                                                         this
-                                                    )
-                                                }
+                                                )
+//                                                }
                                             } else {
                                                 Utils.printLog(
-                                                    TAG,
-                                                    "add app key failed,because ${msg.statusCodeName}!"
+                                                        TAG,
+                                                        "add app key failed,because ${msg.statusCodeName}!"
                                                 )
                                                 map.clear()
                                                 doMapCallback(
-                                                    map, callback,
-                                                    CallbackMsg(
-                                                        ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.code,
-                                                        msg.statusCodeName
-                                                    )
+                                                        map, callback,
+                                                        CallbackMsg(
+                                                                ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.code,
+                                                                msg.statusCodeName
+                                                        )
                                                 )
                                             }
-                                        } else if (msg is ConfigCompositionDataStatus) {
+                                        } else {
                                             Utils.printLog(TAG, "get getCompositionData success!")
 
                                             //获取到CompositionData之后默认设备端自己已绑定好key，app端自己异步去将本地数据更新
                                             MeshHandler.removeRunnable(GET_COMPOSITION_DATA)
                                             bindKey(applicationKey.keyIndex)
                                             doMapCallback(
-                                                map, callback,
-                                                CallbackMsg(
-                                                    ConnectState.BIND_APP_KEY_SUCCESS.code,
-                                                    ConnectState.BIND_APP_KEY_SUCCESS.msg
-                                                )
+                                                    map, callback,
+                                                    CallbackMsg(
+                                                            ConnectState.BIND_APP_KEY_SUCCESS.code,
+                                                            ConnectState.BIND_APP_KEY_SUCCESS.msg
+                                                    )
                                             )
                                         }
                                     }
 
                                     override fun onError(msg: CallbackMsg) {
                                         doMapCallback(
-                                            map, callback,
-                                            CallbackMsg(
-                                                ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.code,
-                                                ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.msg
-                                            )
+                                                map, callback,
+                                                CallbackMsg(
+                                                        ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.code,
+                                                        ConnectState.BIND_APP_KEY_FOR_NODE_FAILED.msg
+                                                )
                                         )
                                     }
                                 }
 
                                 //添加appkey
                                 MeshHelper.addAppkeys(
-                                    ADD_APPKEYS,
-                                    applicationKey.keyIndex,
-                                    meshCallback,
-                                    true,
-                                    true
+                                        ADD_APPKEYS,
+                                        applicationKey.keyIndex,
+                                        meshCallback,
+                                        true,
+                                        true
                                 )
                             } else {
                                 map.clear()
                                 map.put(
-                                    Constants.KEY_MESSAGE,
-                                    ConnectState.CONNECT_NOT_EXIST.msg
+                                        Constants.KEY_MESSAGE,
+                                        ConnectState.CONNECT_NOT_EXIST.msg
                                 )
                                 map.put(
-                                    Constants.KEY_CODE,
-                                    ConnectState.CONNECT_NOT_EXIST.code
+                                        Constants.KEY_CODE,
+                                        ConnectState.CONNECT_NOT_EXIST.code
                                 )
                             }
                         }
@@ -515,10 +493,10 @@ object MeshSDK {
         clearConnectCallbacks()
         for (callback in mMeshCallbacks)
             callback?.onError(
-                CallbackMsg(
-                    ConnectState.STOP_CONNECT.code,
-                    ConnectState.STOP_CONNECT.msg
-                )
+                    CallbackMsg(
+                            ConnectState.STOP_CONNECT.code,
+                            ConnectState.STOP_CONNECT.msg
+                    )
             )
         mMeshCallbacks.clear()
     }
@@ -528,11 +506,11 @@ object MeshSDK {
             if (connectStateCallback is MapCallback) {
                 var map = HashMap<String, Any>()
                 doMapCallback(
-                    map, connectStateCallback,
-                    CallbackMsg(
-                        CommonErrorMsg.DISCONNECTED.code,
-                        CommonErrorMsg.DISCONNECTED.msg
-                    )
+                        map, connectStateCallback,
+                        CallbackMsg(
+                                CommonErrorMsg.DISCONNECTED.code,
+                                CommonErrorMsg.DISCONNECTED.msg
+                        )
                 )
             } else if (connectStateCallback is BooleanCallback) {
                 connectStateCallback.onResult(false)
@@ -559,12 +537,12 @@ object MeshSDK {
 
         if (null != uuid && mExtendedBluetoothDeviceMap[uuid] == null) {//判断是否存在此设备
             map.put(
-                Constants.KEY_MESSAGE,
-                ConnectState.CANNOT_FIND_DEVICE_BY_MAC.msg
+                    Constants.KEY_MESSAGE,
+                    ConnectState.CANNOT_FIND_DEVICE_BY_MAC.msg
             )
             map.put(
-                Constants.KEY_CODE,
-                ConnectState.CANNOT_FIND_DEVICE_BY_MAC.code
+                    Constants.KEY_CODE,
+                    ConnectState.CANNOT_FIND_DEVICE_BY_MAC.code
             )
             callback.onResult(map)
             return
@@ -575,8 +553,8 @@ object MeshSDK {
      * 协议v2.0：开关
      */
     fun setGenericOnOff(
-        uuid: String, onOff: Boolean,
-        eleIndex: Int, callback: BooleanCallback
+            uuid: String, onOff: Boolean,
+            eleIndex: Int, callback: BooleanCallback
     ) {
         if (!MeshHelper.isConnectedToProxy()) {
             callback.onResult(false)
@@ -594,16 +572,16 @@ object MeshSDK {
             }
 
             MeshHelper.setSelectedModel(
-                MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(eleIndex),
-                MeshHelper.getSelectedElement()?.meshModels?.get(VENDOR_MODELID)
+                    MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(eleIndex),
+                    MeshHelper.getSelectedElement()?.meshModels?.get(VENDOR_MODELID)
             )
 
             sendMeshMessage(
-                uuid,
-                eleIndex,
-                VENDOR_MSG_OPCODE_ATTR_SET,
-                "$ATTR_TYPE_LIGHT_ON_OFF${if (onOff) "01" else "00"}",
-                callback
+                    uuid,
+                    eleIndex,
+                    VENDOR_MSG_OPCODE_ATTR_SET,
+                    listOf(Pair(DC.lightCons[SWITCH], if (onOff) "01" else "00")),
+                    callback
             )
 
             mConnectCallbacks.remove("setGenericOnOff")
@@ -648,36 +626,53 @@ object MeshSDK {
 //    }
 
     /**
+     * 将Type和value结合起来
+     */
+    fun combineAttTypeAndAttValue(params: List<Pair<String?, String?>?>?): String {
+        val res = StringBuilder();
+        params?.forEach {
+            res.append(it?.first ?: "")
+            res.append(it?.second ?: "")
+        }
+        return res.toString();
+    }
+
+    /**
      * 发送单播消息
+     * Pair存在放<attrType,attrValue>
      */
     fun sendMeshMessage(
-        uuid: String,
-        elementIndex: Int,
-        opcode: String,
-        param: String,
-        callback: Any,
-        method: String = "",
-        timeout: Boolean = false,
-        retry: Boolean = false
+            uuid: String,
+            elementIndex: Int,
+            opcode: String,
+            param: List<Pair<String?, String?>?>?,
+            callback: BaseCallback,
+            key: String = "",
+            timeout: Boolean = false,
+            retry: Boolean = false
     ) {
+        //拼接参数
+        val param = combineAttTypeAndAttValue(param);
+        Utils.printLog(TAG,"===>[mesh] 准备发送数据 uuid:${uuid}opCode:${opcode} param:${param}")
+
         mContext?.apply {
-            init(this, object : BooleanCallback {
+            init(this, object : BooleanCallback() {
                 override fun onResult(boolean: Boolean) {
                     if (boolean) {
                         if (!MeshHelper.isConnectedToProxy()) {
                             doVendorCallback(
-                                callback,
-                                false,
-                                CallbackMsg(
-                                    CommonErrorMsg.DISCONNECTED.code,
-                                    CommonErrorMsg.DISCONNECTED.msg
-                                )
+                                    callback,
+                                    false,
+                                    CallbackMsg(
+                                            CommonErrorMsg.DISCONNECTED.code,
+                                            CommonErrorMsg.DISCONNECTED.msg
+                                    )
                             )
                             return
                         }
 
-                        mConnectCallbacks[if (method.isEmpty()) "sendMeshMessage" else method] =
-                            callback
+                        mConnectCallbacks[if (key.isEmpty()) "sendMeshMessage" else key] =
+                                callback
 
                         if (MeshHelper.getSelectedMeshNode()?.uuid != uuid) {
                             MeshHelper.getProvisionNode()?.forEach { node ->
@@ -688,19 +683,19 @@ object MeshSDK {
                         }
 
                         var selElement =
-                            MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(
-                                elementIndex
-                            )
+                                MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(
+                                        elementIndex
+                                )
 //        selElement?.meshModels?.forEach { key, model ->
 //            if (model is VendorModel) {
 //
 //            }
 //        }
                         MeshHelper.setSelectedModel(
-                            selElement,
-                            MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(
-                                elementIndex
-                            )?.meshModels?.get(VENDOR_MODELID)
+                                selElement,
+                                MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(
+                                        elementIndex
+                                )?.meshModels?.get(VENDOR_MODELID)
                         )
 
                         var newParam = ""
@@ -708,7 +703,7 @@ object MeshSDK {
                         if (param.isNotEmpty()) {
                             var timeCuts = System.currentTimeMillis() / 1000 % 255
                             newParam =
-                                "${ByteUtil.bytesToHexString(byteArrayOf(timeCuts.toByte()))}$param"
+                                    "${ByteUtil.bytesToHexString(byteArrayOf(timeCuts.toByte()))}$param"
                         }
 
                         var msgIndex = -1
@@ -722,109 +717,19 @@ object MeshSDK {
                                     val message: MeshMessage
                                     if (appKey != null) {
                                         message = VendorModelMessageUnacked(
-                                            appKey,
-                                            model.modelId,
-                                            model.companyIdentifier,
-                                            //Set the opCode to a 3-bit opCode
-                                            Integer.valueOf(opcode, 16),
-                                            ByteUtil.hexStringToBytes(newParam)
+                                                appKey,
+                                                model.modelId,
+                                                model.companyIdentifier,
+                                                //Set the opCode to a 3-bit opCode
+                                                Integer.valueOf(opcode, 16),
+                                                ByteUtil.hexStringToBytes(newParam)
                                         )
-                                        var meshCallback = object : MeshCallback {
-                                            override fun onReceive(msg: MeshMessage) {
-                                                Utils.printLog(
-                                                    TAG,
-                                                    "vendor msg:${ByteUtil.bytesToHexString(msg.parameter)}"
-                                                )
-                                                if (!MeshHelper.isConnectedToProxy()) {
-                                                    Utils.printLog(
-                                                        TAG,
-                                                        "disconnect"
-                                                    )
-                                                    doVendorCallback(
-                                                        callback, false,
-                                                        CallbackMsg(
-                                                            CommonErrorMsg.DISCONNECTED.code,
-                                                            CommonErrorMsg.DISCONNECTED.msg
-
-                                                        )
-                                                    )
-                                                }
-                                                Utils.printLog(
-                                                    TAG,
-                                                    "send opcode:$opcode,param:${String(msg.parameter)}"
-                                                )
-
-                                                synchronized(msgIndex) {
-                                                    when (opcode) {
-                                                        "02" -> {//重启网关
-                                                            if (callback is BooleanCallback) {
-                                                                callback.onResult(true)
-                                                            }
-
-                                                            mConnectCallbacks.remove(if (method.isEmpty()) "sendMeshMessage" else method)
-                                                        }
-                                                        "04" -> {//set cwrgb
-                                                            if (callback is MapCallback && msg.parameter.size == 5) {
-                                                                var map = HashMap<String, Any>()
-
-                                                                var c = msg.parameter[0].toInt()
-                                                                var w = msg.parameter[1].toInt()
-                                                                var r = msg.parameter[2].toInt()
-                                                                var g = msg.parameter[3].toInt()
-                                                                var b = msg.parameter[4].toInt()
-                                                                map.put("c", c)
-                                                                map.put("w", w)
-                                                                map.put("r", r)
-                                                                map.put("g", g)
-                                                                map.put("b", b)
-                                                                map.put(
-                                                                    "isOn",
-                                                                    if (c == 0 && w == 0 && r == 0 && g == 0 && b == 0) false else true
-                                                                )
-                                                                callback.onResult(map)
-                                                                mConnectCallbacks.remove(if (method.isEmpty()) "sendMeshMessage" else method)
-                                                                msgIndex = 0
-                                                            } else {
-                                                                //todo log
-                                                            }
-                                                        }
-                                                        "05" -> {//get cwrgb
-                                                            if (msgIndex < 0 && callback is BooleanCallback) {
-                                                                callback.onResult(true)
-                                                                mConnectCallbacks.remove(if (method.isEmpty()) "sendMeshMessage" else method)
-                                                                msgIndex = 0
-                                                            } else {
-                                                                //todo log
-                                                            }
-                                                        }
-                                                        "0D", "0E", "0F", "11" -> {//set HSV
-                                                            if (msgIndex < 0 && callback is BooleanCallback) {
-                                                                callback.onResult(true)
-
-                                                                mConnectCallbacks.remove(if (method.isEmpty()) "sendMeshMessage" else method)
-                                                                msgIndex = 0
-                                                            } else {
-                                                                //todo log
-                                                            }
-                                                        }
-                                                        else -> {
-
-                                                        }
-                                                    }
-                                                }
-
-                                            }
-
-                                            override fun onError(msg: CallbackMsg) {
-                                                doVendorCallback(callback, false, msg)
-                                            }
-                                        }
 
                                         MeshHelper.sendMessage(
-                                            method,
-                                            element.elementAddress,
-                                            message,
-                                            meshCallback, timeout, retry
+                                                MeshHelper.generatePrimaryKey(uuid),
+                                                element.elementAddress,
+                                                message,
+                                                callback, timeout, retry
                                         )
                                     }
                                 } else {
@@ -838,6 +743,7 @@ object MeshSDK {
             })
         }
     }
+
 
     private fun doVendorCallback(callback: Any, result: Boolean, msg: CallbackMsg?) {
         if (callback is BooleanCallback) {
@@ -857,14 +763,14 @@ object MeshSDK {
     fun getDeviceQuadruples(uuid: String, callback: MapCallback) {
         Utils.printLog(TAG, "start getDeviceIdentityKeys")
         sendMeshMessage(
-            uuid,
-            0,
-            VENDOR_MSG_OPCODE_ATTR_GET,
-            "$ATTR_TYPE_COMMON_GET_QUADRUPLES",
-            callback,
-            CALLBACK_GET_IDENTITY,
-            true,
-            true
+                uuid,
+                0,
+                VENDOR_MSG_OPCODE_ATTR_GET,
+                listOf(Pair(ATTR_TYPE_COMMON_GET_QUADRUPLES, null)),
+                callback,
+                CALLBACK_GET_IDENTITY,
+                true,
+                true
         )
     }
 
@@ -874,27 +780,27 @@ object MeshSDK {
      * @param properties 需要获取属性的集合
      */
     fun getDeviceCurrentStatus(uuid: String, properties: List<String>, callback: StringCallback) {
-        val productId = MxMeshUtil.getProductIdByUUID(uuid);
-        var param: StringBuilder = StringBuilder();
+        val productId = MxMeshUtil.getProductIdByUUID(uuid).toString();
+        var param: ArrayList<Pair<String?,String?>?>? = ArrayList();
         properties.forEach {
             when (productId) {
-                DeviceConstants.lightCons[DeviceConstants.PRODUCT_ID] -> {
-                    param.append(DeviceConstants.lightCons[it] as String)
+                DC.lightCons[PRODUCT_ID] -> {
+                    param!!.add(Pair(DeviceConstantsCode.lightCons[it],null))
                 }
-                DeviceConstants.socketCons[DeviceConstants.PRODUCT_ID] -> {
-                    param.append(DeviceConstants.socketCons[it] as String)
+                DC.socketCons[PRODUCT_ID] -> {
+                    param!!.add(Pair(DeviceConstantsCode.socketCons[it],null))
                 }
             }
         }
         sendMeshMessage(
-            uuid,
-            0,
-            VENDOR_MSG_OPCODE_ATTR_GET,
-            param.toString(),
-            callback,
-            CALLBACK_GET_IDENTITY,
-            true,
-            true
+                uuid,
+                0,
+                VENDOR_MSG_OPCODE_ATTR_GET,
+                param,
+                callback,
+                CALLBACK_GET_IDENTITY,
+                true,
+                true
         )
     }
 
@@ -907,9 +813,9 @@ object MeshSDK {
 
         val configNodeReset = ConfigNodeReset()
         MeshHelper.sendMessage(
-            "",
-            MeshHelper.getSelectedMeshNode()?.unicastAddress ?: 0,
-            configNodeReset, null
+                "",
+                MeshHelper.getSelectedMeshNode()?.unicastAddress ?: 0,
+                configNodeReset, null
         )
     }
 
@@ -921,7 +827,7 @@ object MeshSDK {
      */
     fun connect(networkKey: String, callback: MapCallback) {
         mContext?.apply {
-            init(this.applicationContext, object : BooleanCallback {
+            init(this.applicationContext, object : BooleanCallback() {
                 override fun onResult(boolean: Boolean) {
                     if (boolean) {
                         var map = HashMap<String, Any>()
@@ -930,40 +836,40 @@ object MeshSDK {
                             Utils.printLog(TAG, "===>[mesh] connect start scan")
                             setCurrentNetworkKey(networkKey)
                             MeshHelper.startScan(BleMeshManager.MESH_PROXY_UUID, object :
-                                ScanCallback {
+                                    ScanCallback {
                                 override fun onScanResult(
-                                    devices: List<ExtendedBluetoothDevice>,
-                                    updatedIndex: Int?
+                                        devices: List<ExtendedBluetoothDevice>,
+                                        updatedIndex: Int?
                                 ) {
                                     if (devices.isNotEmpty()) {
                                         MeshHelper.stopScan()
                                         Utils.printLog(
-                                            TAG,
-                                            "===>[mesh] connect onScanResult:${devices[0].getAddress()}"
+                                                TAG,
+                                                "===>[mesh] connect onScanResult:${devices[0].getAddress()}"
                                         )
                                         var connectCallback = object :
-                                            ConnectCallback {
+                                                ConnectCallback {
                                             override fun onConnect() {
                                                 stopScan()
                                                 doMapCallback(
-                                                    map, callback,
-                                                    CallbackMsg(
-                                                        ConnectState.COMMON_SUCCESS.code,
-                                                        ConnectState.COMMON_SUCCESS.msg
-                                                    )
+                                                        map, callback,
+                                                        CallbackMsg(
+                                                                ConnectState.COMMON_SUCCESS.code,
+                                                                ConnectState.COMMON_SUCCESS.msg
+                                                        )
                                                 )
                                                 isReconnect = AtomicBoolean(false)
                                             }
 
                                             override fun onConnectStateChange(msg: CallbackMsg) {
                                                 Utils.printLog(
-                                                    TAG,
-                                                    "connect onConnectStateChange:${msg.msg},needReconnect:$needReconnect,isReconnect:$isReconnect"
+                                                        TAG,
+                                                        "connect onConnectStateChange:${msg.msg},needReconnect:$needReconnect,isReconnect:$isReconnect"
                                                 )
                                                 if (msg.code == ConnectState.DISCONNECTED.code && needReconnect && !isReconnect.get()) {//连接断开，自动寻找代理节点重连
                                                     Utils.printLog(
-                                                        TAG,
-                                                        "connect onConnectStateChange start reConnect"
+                                                            TAG,
+                                                            "connect onConnectStateChange start reConnect"
                                                     )
                                                     if (!isReconnect.get()) {
                                                         isReconnect = AtomicBoolean(true)
@@ -990,11 +896,11 @@ object MeshSDK {
                             }, networkKey.toUpperCase())
                         } else {
                             doMapCallback(
-                                map, callback,
-                                CallbackMsg(
-                                    ConnectState.COMMON_SUCCESS.code,
-                                    ConnectState.COMMON_SUCCESS.msg
-                                )
+                                    map, callback,
+                                    CallbackMsg(
+                                            ConnectState.COMMON_SUCCESS.code,
+                                            ConnectState.COMMON_SUCCESS.msg
+                                    )
                             )
                         }
                     }
@@ -1092,13 +998,13 @@ object MeshSDK {
      * 订阅状态上报
      */
     fun subscribeDeviceStatus(callback: IDeviceStatusCallBack) {
-        createGroup(SUBSCRIBE_ALL_DEVICE, object : BooleanCallback {
+        createGroup(SUBSCRIBE_ALL_DEVICE, object : BooleanCallback() {
             override fun onResult(boolean: Boolean) {
                 Utils.printLog(TAG, "createGroup:$boolean")
             }
         }, SUBSCRIBE_ALL_DEVICE_ADDR)
         //创建一个组播地址为了同步设备状态
-        createGroup(ALL_DEVICE_SYNC, object : BooleanCallback {
+        createGroup(ALL_DEVICE_SYNC, object : BooleanCallback() {
             override fun onResult(boolean: Boolean) {
                 Utils.printLog(TAG, "createGroup:$boolean")
             }
@@ -1113,7 +1019,7 @@ object MeshSDK {
     fun getAllDeviceStatus() {
         MeshHelper.getGroupByAddress(ALL_DEVICE_SYNC_ADDR)?.let { group ->
             val networkKey =
-                MeshHelper.MeshProxyService.mMeshProxyService?.getCurrentNetworkKeyStr();
+                    MeshHelper.MeshProxyService.mMeshProxyService?.getCurrentNetworkKeyStr();
             getAllApplicationKey(networkKey!!, object : ArrayStringCallback {
                 override fun onResult(result: ArrayList<String>) {
 //                    var newParam = ""
@@ -1121,12 +1027,12 @@ object MeshSDK {
                     //如果消息有参数，消息参数需加上tid，规则：秒级时间戳余255
                     var timeCuts = System.currentTimeMillis() / 1000 % 255
                     newParam =
-                        "${ByteUtil.bytesToHexString(byteArrayOf(timeCuts.toByte()))}${newParam}"
+                            "${ByteUtil.bytesToHexString(byteArrayOf(timeCuts.toByte()))}${newParam}"
                     var message = MeshHelper.getAppkeyByKeyName(result[0])?.let {
                         VendorModelMessageUnacked(
-                            it, VENDOR_MODELID, VENDOR_MODEL_COMPANYIDENTIFIER,
-                            VENDOR_MSG_ATTR_STATUS,
-                            ByteUtil.hexStringToBytes(newParam)
+                                it, VENDOR_MODELID, VENDOR_MODEL_COMPANYIDENTIFIER,
+                                VENDOR_MSG_ATTR_STATUS,
+                                ByteUtil.hexStringToBytes(newParam)
 //                        VendorModelMessageUnackedState(
 //                        VendorModelMessageUnackedState(
 //                                    it, VENDOR_MODEL_COMPANYIDENTIFIER)
@@ -1146,13 +1052,13 @@ object MeshSDK {
      */
     fun isDeviceOnline(uuid: String): Boolean {
         var status: Int =
-            MeshHelper.MeshProxyService.mMeshProxyService?.mHeartBeatMap?.get(uuid.toUpperCase())
-                ?: 0
+                MeshHelper.MeshProxyService.mMeshProxyService?.mHeartBeatMap?.get(uuid.toUpperCase())
+                        ?: 0
         var heartCheckTime: Long =
-            MeshHelper.MeshProxyService.mMeshProxyService?.mHartBeanStatusMarkTime ?: 0
+                MeshHelper.MeshProxyService.mMeshProxyService?.mHartBeanStatusMarkTime ?: 0
         //当设备状态是11或者01,或者10且未超过心态时间的时候，考虑它是在线状态
         if (status and 1 == 1 || status == 1
-            || (status == 2 && System.currentTimeMillis() - heartCheckTime < 30 * 1000)
+                || (status == 2 && System.currentTimeMillis() - heartCheckTime < 30 * 1000)
         ) return true;
         return false;
     }
@@ -1181,12 +1087,12 @@ object MeshSDK {
                     var param = msg.parameter
                     if (param.size == 1) {
                         var eleIndex =
-                            node?.elements?.values?.indexOf(node?.elements?.get(msg.src)) ?: 0
+                                node?.elements?.values?.indexOf(node?.elements?.get(msg.src)) ?: 0
                         switchMap["$eleIndex"] = param[0].toInt()
                         map["OnOffSwitch"] = switchMap
                         Utils.printLog(
-                            TAG,
-                            "onreceive node:${node?.uuid?.toUpperCase()}, eleIndex:$eleIndex,isOn:${switchMap["$eleIndex"]}"
+                                TAG,
+                                "onreceive node:${node?.uuid?.toUpperCase()}, eleIndex:$eleIndex,isOn:${switchMap["$eleIndex"]}"
                         )
                         callback.onResult(map)
                     }
@@ -1194,8 +1100,8 @@ object MeshSDK {
                     if (msg.parameter.size >= 8) {
 //                        parseLightStatus(msg.parameter, callback, map)
                         Utils.printLog(
-                            TAG,
-                            "onreceive node:${node?.uuid?.toUpperCase()}, isOn:${map["isOn"]}"
+                                TAG,
+                                "onreceive node:${node?.uuid?.toUpperCase()}, isOn:${map["isOn"]}"
                         )
                     }
                     when (msg.opCode) {
@@ -1208,12 +1114,12 @@ object MeshSDK {
                             map["OnOffSwitch"] = switchMap
 
                             doMapCallback(
-                                map,
-                                callback,
-                                CallbackMsg(
-                                    ConnectState.COMMON_SUCCESS.code,
-                                    ConnectState.COMMON_SUCCESS.msg
-                                )
+                                    map,
+                                    callback,
+                                    CallbackMsg(
+                                            ConnectState.COMMON_SUCCESS.code,
+                                            ConnectState.COMMON_SUCCESS.msg
+                                    )
                             )
                         }
                     }
@@ -1222,30 +1128,30 @@ object MeshSDK {
                         map.put(ByteUtil.bytesToHexString(sensorData.propertyId), sensorData.value)
 
                         Utils.printLog(
-                            TAG,
-                            "propertyId:${ByteUtil.bytesToHexString(sensorData.propertyId)},value:${ByteUtil.bytesToHexString(
-                                sensorData.value
-                            )}"
+                                TAG,
+                                "propertyId:${ByteUtil.bytesToHexString(sensorData.propertyId)},value:${ByteUtil.bytesToHexString(
+                                        sensorData.value
+                                )}"
                         )
                     }
 
                     doMapCallback(
-                        map,
-                        callback,
-                        CallbackMsg(
-                            ConnectState.COMMON_SUCCESS.code,
-                            ConnectState.COMMON_SUCCESS.msg
-                        )
+                            map,
+                            callback,
+                            CallbackMsg(
+                                    ConnectState.COMMON_SUCCESS.code,
+                                    ConnectState.COMMON_SUCCESS.msg
+                            )
                     )
                 } else if (msg is SensorBatteryStatus) {
                     map.put("battery", msg.battery)
                     doMapCallback(
-                        map,
-                        callback,
-                        CallbackMsg(
-                            ConnectState.COMMON_SUCCESS.code,
-                            ConnectState.COMMON_SUCCESS.msg
-                        )
+                            map,
+                            callback,
+                            CallbackMsg(
+                                    ConnectState.COMMON_SUCCESS.code,
+                                    ConnectState.COMMON_SUCCESS.msg
+                            )
                     )
                 }
             }
@@ -1266,10 +1172,10 @@ object MeshSDK {
      * @param isSubsAll 是否遍历为所有model都添加订阅（默认只添加onOff和vendor两个model的订阅）
      */
     fun sendSubscribeMsg(
-        uuid: String,
-        groupName: String,
-        callback: MapCallback,
-        isSubsAll: Boolean = false
+            uuid: String,
+            groupName: String,
+            callback: MapCallback,
+            isSubsAll: Boolean = false
     ) {
         var map = HashMap<String, Any>()
         if (doProxyCheck(uuid, map, callback)) {
@@ -1277,12 +1183,12 @@ object MeshSDK {
             var group = MeshHelper.getGroupByName(groupName)
             if (group == null) {
                 doMapCallback(
-                    map,
-                    callback,
-                    CallbackMsg(
-                        ConnectState.GROUP_NOT_EXIST.code,
-                        ConnectState.GROUP_NOT_EXIST.msg
-                    )
+                        map,
+                        callback,
+                        CallbackMsg(
+                                ConnectState.GROUP_NOT_EXIST.code,
+                                ConnectState.GROUP_NOT_EXIST.msg
+                        )
                 )
                 return
             }
@@ -1303,24 +1209,24 @@ object MeshSDK {
                             var elementAddress = eleValue.elementAddress
                             if (group.addressLabel == null) {
                                 configModelSubscriptionAdd =
-                                    ConfigModelSubscriptionAdd(
-                                        elementAddress,
-                                        group.address,
-                                        modelIdentifier
-                                    )
+                                        ConfigModelSubscriptionAdd(
+                                                elementAddress,
+                                                group.address,
+                                                modelIdentifier
+                                        )
                             } else {
                                 configModelSubscriptionAdd =
-                                    ConfigModelSubscriptionVirtualAddressAdd(
-                                        elementAddress,
-                                        group.getAddressLabel()!!,
-                                        modelIdentifier
-                                    )
+                                        ConfigModelSubscriptionVirtualAddressAdd(
+                                                elementAddress,
+                                                group.getAddressLabel()!!,
+                                                modelIdentifier
+                                        )
                             }
                             MeshHelper.sendMessage(
-                                "sendSubscribeMsg",
-                                node.unicastAddress,
-                                configModelSubscriptionAdd,
-                                null
+                                    "sendSubscribeMsg",
+                                    node.unicastAddress,
+                                    configModelSubscriptionAdd,
+                                    null
                             )
                         }
                         index++
@@ -1329,12 +1235,12 @@ object MeshSDK {
 
                 if (index == modelTotal) {
                     doMapCallback(
-                        map,
-                        callback,
-                        CallbackMsg(
-                            ConnectState.COMMON_SUCCESS.code,
-                            ConnectState.COMMON_SUCCESS.msg
-                        )
+                            map,
+                            callback,
+                            CallbackMsg(
+                                    ConnectState.COMMON_SUCCESS.code,
+                                    ConnectState.COMMON_SUCCESS.msg
+                            )
                     )
                 }
             }).start()
@@ -1349,9 +1255,9 @@ object MeshSDK {
             var group = MeshHelper.getGroupByName(groupName)
             if (group == null) {
                 doMapCallback(
-                    map,
-                    callback,
-                    CallbackMsg(ConnectState.GROUP_NOT_EXIST.code, ConnectState.GROUP_NOT_EXIST.msg)
+                        map,
+                        callback,
+                        CallbackMsg(ConnectState.GROUP_NOT_EXIST.code, ConnectState.GROUP_NOT_EXIST.msg)
                 )
                 return
             }
@@ -1360,9 +1266,9 @@ object MeshSDK {
             var node = MeshHelper.getProvisionedNodeByUUID(uuid)
             if (node == null) {
                 doMapCallback(
-                    map,
-                    callback,
-                    CallbackMsg(ConnectState.NODE_NOT_EXIST.code, ConnectState.NODE_NOT_EXIST.msg)
+                        map,
+                        callback,
+                        CallbackMsg(ConnectState.NODE_NOT_EXIST.code, ConnectState.NODE_NOT_EXIST.msg)
                 )
                 return
             }
@@ -1377,22 +1283,22 @@ object MeshSDK {
                         if (meshModel.boundAppKeyIndexes?.size ?: 0 > 0 && (meshModel is GenericOnOffServerModel || meshModel is VendorModel)) {
                             sleep(500)
                             var meshMsg = ConfigModelPublicationSet(
-                                eleValue.elementAddress
-                                ,
-                                publishAddress,
-                                meshModel.boundAppKeyIndexes[0],
-                                false,
-                                PUBLISH_TTL,
-                                PUBLISH_INTERVAL,
-                                0,
-                                0,
-                                0,
-                                meshModel.modelId
+                                    eleValue.elementAddress
+                                    ,
+                                    publishAddress,
+                                    meshModel.boundAppKeyIndexes[0],
+                                    false,
+                                    PUBLISH_TTL,
+                                    PUBLISH_INTERVAL,
+                                    0,
+                                    0,
+                                    0,
+                                    meshModel.modelId
                             )
 
                             try {
                                 MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi
-                                    ?.createMeshPdu(node.unicastAddress, meshMsg)
+                                        ?.createMeshPdu(node.unicastAddress, meshMsg)
                                 index++
                             } catch (ex: IllegalArgumentException) {
                                 ex.printStackTrace()
@@ -1405,21 +1311,21 @@ object MeshSDK {
 
                 if (index == modelTotalSize) {
                     doMapCallback(
-                        map,
-                        callback,
-                        CallbackMsg(
-                            ConnectState.COMMON_SUCCESS.code,
-                            ConnectState.COMMON_SUCCESS.msg
-                        )
+                            map,
+                            callback,
+                            CallbackMsg(
+                                    ConnectState.COMMON_SUCCESS.code,
+                                    ConnectState.COMMON_SUCCESS.msg
+                            )
                     )
                 } else {
                     doMapCallback(
-                        map,
-                        callback,
-                        CallbackMsg(
-                            ConnectState.PUBLISH_FAILED.code,
-                            ConnectState.PUBLISH_FAILED.msg
-                        )
+                            map,
+                            callback,
+                            CallbackMsg(
+                                    ConnectState.PUBLISH_FAILED.code,
+                                    ConnectState.PUBLISH_FAILED.msg
+                            )
                     )
                 }
             }).start()
@@ -1500,19 +1406,15 @@ object MeshSDK {
 //        }
 //
 //    }
-    const val ATTR_TYPE_LIGHT_ON_OFF = "0001" //开关
-    const val ATTR_TYPE_LIGHT_BRIGHTNESS = "2101" //亮度
-    const val ATTR_TYPE_LIGHT_TEMPRETURE = "2201" //色温
-    const val ATTR_TYPE_LIGHT_HSV = "2301" //颜色hsv
 
     /**
      * 协议v2.0：设置灯的hsvbt属性
      */
     fun modifyLightStatus(
-        uuid: String,
-        params: HashMap<String, Any>,
-        callback: BooleanCallback,
-        isAcknowledged: Boolean = true
+            uuid: String,
+            params: HashMap<String, Any>,
+            callback: BooleanCallback,
+            isAcknowledged: Boolean = true
     ) {
         var hsv = params["HSVColor"]
         var bright = params["Brightness"]
@@ -1520,8 +1422,8 @@ object MeshSDK {
         var mode = params["LightMode"]
         var onOff = params["LightSwitch"]
         Utils.printLog(
-            TAG,
-            "Brightness:$bright,ColorTemperature:$temperature,mode:$mode,onOff:$onOff"
+                TAG,
+                "Brightness:$bright,ColorTemperature:$temperature,mode:$mode,onOff:$onOff"
         )
 
         if (hsv != null) {// todo mxchip 待调试
@@ -1535,59 +1437,71 @@ object MeshSDK {
                 callback.onResult(false)
                 return
             }
-
-            sendMeshMessage(
-                uuid,
-                0,
-                VENDOR_MSG_OPCODE_ATTR_SET,
-                "$ATTR_TYPE_LIGHT_HSV${ByteUtil.bytesToHexString(
-                    byteArrayOf((if (paramType == 1) (v as Int).toByte() else if (paramType == 2) (v as Double).toByte() else (v as Float).toByte()))
-                )}${ByteUtil.bytesToHexString(
+            var value = "${ByteUtil.bytesToHexString(
+                    byteArrayOf((if (paramType == 1) (v as Int).toByte()
+                    else if (paramType == 2) (v as Double).toByte()
+                    else (v as Float).toByte()))
+            )}${ByteUtil.bytesToHexString(
                     ByteUtil.shortToByte(
-                        if (paramType == 1) (h as Int).toShort() else if (paramType == 2) (h as Double).toShort() else (h as Float).toShort()
+                            if (paramType == 1) (h as Int).toShort()
+                            else if (paramType == 2) (h as Double).toShort()
+                            else (h as Float).toShort()
                     )
-                )}${ByteUtil.bytesToHexString(
-                    byteArrayOf((if (paramType == 1) (s as Int).toByte() else if (paramType == 2) (s as Double).toByte() else (s as Float).toByte()))
-                )}",
-                callback
+            )}${ByteUtil.bytesToHexString(
+                    byteArrayOf((if (paramType == 1) (s as Int).toByte()
+                    else if (paramType == 2) (s as Double).toByte()
+                    else (s as Float).toByte()))
+            )}"
+            sendMeshMessage(
+                    uuid,
+                    0,
+                    VENDOR_MSG_OPCODE_ATTR_SET,
+                    listOf(Pair(DC.lightCons[COLOR], value)),
+                    callback
             )
         } else if (bright != null && Utils.getNumberType(bright) > 0) {
             var briType = Utils.getNumberType(bright)
-
+            var value = ByteUtil.bytesToHexString(
+                    ByteUtil.shortToByte(if (briType == 1) (bright as Int).toShort()
+                    else if (briType == 2) (bright as Double).toShort()
+                    else (bright as Float).toShort())
+            )
             sendMeshMessage(
-                uuid,
-                0,
-                VENDOR_MSG_OPCODE_ATTR_SET,
-                "$ATTR_TYPE_LIGHT_BRIGHTNESS${ByteUtil.bytesToHexString(
-                    ByteUtil.shortToByte(if (briType == 1) (bright as Int).toShort() else if (briType == 2) (bright as Double).toShort() else (bright as Float).toShort())
-                )}",
-                callback
+                    uuid,
+                    0,
+                    VENDOR_MSG_OPCODE_ATTR_SET,
+                    listOf(Pair(DC.lightCons[LIGHTNESS_LEVEL], value)),
+                    callback
             )
         } else if (temperature != null && Utils.getNumberType(temperature) > 0) {
             var temType = Utils.getNumberType(temperature)
+            var temValue = ByteUtil.bytesToHexString(
+                    ByteUtil.shortToByte((if (temType == 1) (temperature as Int).toShort()
+                    else if (temType == 2) (temperature as Double).toShort()
+                    else (temperature as Float).toShort()))
+            )
             sendMeshMessage(
-                uuid,
-                0,
-                VENDOR_MSG_OPCODE_ATTR_SET,
-                "$ATTR_TYPE_LIGHT_TEMPRETURE${ByteUtil.bytesToHexString(
-                    ByteUtil.shortToByte((if (temType == 1) (temperature as Int).toShort() else if (temType == 2) (temperature as Double).toShort() else (temperature as Float).toShort()))
-                )}",
-                callback
+                    uuid,
+                    0,
+                    VENDOR_MSG_OPCODE_ATTR_SET,
+                    listOf(Pair(DC.lightCons[COLOR_TEMPERATURE], temValue)),
+                    callback
             )
         } else if (mode != null) {//TODO mxchip 白/彩灯模式未调试
-            sendMeshMessage(
-                uuid,
-                0,
-                "11",
-                "${ByteUtil.bytesToHexString(
+            var value = ByteUtil.bytesToHexString(
                     byteArrayOf(("$mode".toDouble().toInt()).toByte())
-                )}",
-                callback
+            )
+            sendMeshMessage(
+                    uuid,
+                    0,
+                    "11",
+                    listOf(Pair(null, value)),
+                    callback
             )
         } else if (onOff != null && Utils.getNumberType(onOff) >= 0) {
             var onOffType = Utils.getNumberType(onOff)
             var onOffParam =
-                if (onOffType == 1) onOff as Int else if (onOffType == 2) (onOff as Double).toInt() else (onOff as Float).toInt()
+                    if (onOffType == 1) onOff as Int else if (onOffType == 2) (onOff as Double).toInt() else (onOff as Float).toInt()
             setGenericOnOff(uuid, onOffParam == 0, 0, callback)
         } else {
             callback.onResult(false)
@@ -1600,11 +1514,14 @@ object MeshSDK {
     fun fetchLightCurrentStatus(uuid: String, callback: MapCallback) {
         Utils.printLog(TAG, "fetchLightCurrentStatus")
         sendMeshMessage(
-            uuid,
-            0,
-            VENDOR_MSG_OPCODE_ATTR_GET,
-            "$ATTR_TYPE_LIGHT_BRIGHTNESS$ATTR_TYPE_LIGHT_TEMPRETURE$ATTR_TYPE_LIGHT_ON_OFF$ATTR_TYPE_LIGHT_HSV",
-            callback
+                uuid,
+                0,
+                VENDOR_MSG_OPCODE_ATTR_GET,
+                listOf(Pair(DC.lightCons[LIGHTNESS_LEVEL], null)
+                        , Pair(DC.lightCons[COLOR_TEMPERATURE], null)
+                        , Pair(DC.lightCons[SWITCH], null)
+                        , Pair(DC.lightCons[COLOR], null)),
+                callback
         )
     }
 
@@ -1680,9 +1597,9 @@ object MeshSDK {
 //    }
 
     private fun doMapCallback(
-        map: HashMap<String, Any>,
-        callback: MapCallback,
-        msg: CallbackMsg
+            map: HashMap<String, Any>,
+            callback: MapCallback,
+            msg: CallbackMsg
     ) {
         map.put("code", msg.code)
         map.put("message", msg.msg)
@@ -1690,25 +1607,25 @@ object MeshSDK {
     }
 
     private fun doProxyCheck(
-        uuid: String,
-        map: HashMap<String, Any>,
-        callback: MapCallback
+            uuid: String,
+            map: HashMap<String, Any>,
+            callback: MapCallback
     ): Boolean {
         doBaseCheck(uuid, map, callback)
         var node = MeshHelper.getProvisionedNodeByUUID(uuid)
 
         if (!MeshHelper.isConnectedToProxy()) {
             doMapCallback(
-                map, callback,
-                CallbackMsg(CommonErrorMsg.DISCONNECTED.code, CommonErrorMsg.DISCONNECTED.msg)
+                    map, callback,
+                    CallbackMsg(CommonErrorMsg.DISCONNECTED.code, CommonErrorMsg.DISCONNECTED.msg)
             )
             return false
         }
 
         if (node == null) {
             doMapCallback(
-                map, callback,
-                CallbackMsg(ConnectState.NODE_NOT_EXIST.code, ConnectState.NODE_NOT_EXIST.msg)
+                    map, callback,
+                    CallbackMsg(ConnectState.NODE_NOT_EXIST.code, ConnectState.NODE_NOT_EXIST.msg)
             )
 
             return false
@@ -1746,9 +1663,9 @@ object MeshSDK {
         var node = MeshHelper.getProvisionedNodeByUUID(uuid)
         if (node == null) {
             doMapCallback(
-                map,
-                callback,
-                CallbackMsg(ConnectState.NODE_NOT_EXIST.code, ConnectState.NODE_NOT_EXIST.msg)
+                    map,
+                    callback,
+                    CallbackMsg(ConnectState.NODE_NOT_EXIST.code, ConnectState.NODE_NOT_EXIST.msg)
             )
             return
         }
@@ -1766,6 +1683,9 @@ object MeshSDK {
 //        sendMeshMessage(uuid, 0, "0A", "", callback, "getDeviceVersion")
 //    }
 
+    /**
+     * 虚拟按钮
+     */
     fun sendGroupMsg(groupAddr: Int, vid: Int) {
         MeshHelper.getGroupByAddress(groupAddr)?.let { group ->
             MeshHelper.getMeshNetwork()?.let { network ->
@@ -1774,13 +1694,13 @@ object MeshSDK {
                         model.boundAppKeyIndexes?.let { boundedAppkeys ->
                             if (boundedAppkeys.size == 1) {
                                 val appKey: ApplicationKey =
-                                    network.getAppKey(boundedAppkeys[0])
+                                        network.getAppKey(boundedAppkeys[0])
                                 val message = VendorModelMessageUnacked(
-                                    appKey,
-                                    model.modelId,
-                                    (model as VendorModel).companyIdentifier,
-                                    0x18,
-                                    byteArrayOf(vid.toByte())
+                                        appKey,
+                                        model.modelId,
+                                        (model as VendorModel).companyIdentifier,
+                                        0x18,
+                                        byteArrayOf(vid.toByte())
                                 )
                                 MeshHelper.sendMessage("", group.address, message, null)
                                 return@foreach

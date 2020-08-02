@@ -49,7 +49,7 @@ dependencies {
 
 //    api project(':QKMeshDemo:meshsdk')
     api project(':meshsdk')
-    if(isaar){
+    if(sdkLocalRun){
         api project(':meshprovisioner')
     }
 

@@ -3,12 +3,10 @@ package qk.sdk.mesh.meshsdk
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import com.joker.api.wrapper.ListenerWrapper
 import no.nordicsemi.android.meshprovisioner.*
 import no.nordicsemi.android.meshprovisioner.transport.*
 import no.nordicsemi.android.meshprovisioner.utils.AddressArray
-import no.nordicsemi.android.meshprovisioner.utils.CommonUtil
 import no.nordicsemi.android.meshprovisioner.utils.MeshAddress
 import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils
 import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
@@ -19,7 +17,6 @@ import rx.android.schedulers.AndroidSchedulers
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
-import kotlin.math.log
 
 object MeshHelper {
     private val TAG = "MeshHelper"
@@ -468,15 +465,15 @@ object MeshHelper {
      * @param message 组成：$Opcode$TID$AttrType$AttrValue
      */
     fun sendMessage(
-        method: String,
+        key: String,
         dst: Int,
         message: MeshMessage,
-        callback: MeshCallback?,
+        callback: BaseCallback?,
         timeOut: Boolean = false,
         retry: Boolean = false
     ) {
         try {
-            sendMeshPdu(method, dst, message, callback, timeOut, retry)
+            sendMeshPdu(key, dst, message, callback, timeOut, retry)
         } catch (ex: IllegalArgumentException) {
             ex.printStackTrace()
         }
@@ -495,18 +492,18 @@ object MeshHelper {
     // 传送 mesh 数据包
     // 传递控制参数给 mesh 设备
     fun sendMeshPdu(
-        method: String,
+        key: String,
         dst: Int,
         message: MeshMessage,
-        callback: MeshCallback?,
+        callback: BaseCallback?,
         timeOut: Boolean = false,
         retry: Boolean = false
     ) {
 //        rx.Observable.create<String> {
 //        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
-        Utils.printLog(TAG, "===>[mesh] sendMeshPdu，method name：${method}")
+        Utils.printLog(TAG, "===>[mesh] sendMeshPdu，method name：${key}")
         MeshProxyService.mMeshProxyService?.sendMeshPdu(
-            method,
+            key,
             dst,
             message,
             callback,
@@ -692,6 +689,14 @@ object MeshHelper {
         mMeshProxyServiceCallback = callback
         initMesh(context)
     }
+
+    /**
+     * 生成一个hash键，但有时候它并不唯一，因此后面会优化
+     */
+    fun generatePrimaryKey(
+        uuid: String?=null
+    ) = uuid+""
+
 
     private var mMeshProxyServiceCallback: MapCallback? = null
 

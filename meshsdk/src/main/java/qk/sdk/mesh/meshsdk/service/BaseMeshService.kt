@@ -26,7 +26,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import kotlin.collections.HashMap
-
+import qk.sdk.mesh.meshsdk.bean.DeviceConstantsCode as DC;
 
 open class BaseMeshService : LifecycleService() {
     private val TAG = "BaseMeshService"
@@ -44,13 +44,15 @@ open class BaseMeshService : LifecycleService() {
         private const val OPCODE_HEART_BEAT: Int = 0x14;
 
         const val DOWNSTREAM_CALLBACK = "subscribeStatus";
+
         //状态上报回调用，一个app从头到尾应该只会持有一个这样的回调用
-        var mDownStreamCallback : IDeviceStatusCallBack? = null;
+        var mDownStreamCallback: IDeviceStatusCallBack? = null;
     }
+
     private var mHeatBeatSubscription: Subscription? = null;
 
     //心跳修改状态值记录
-    var mHartBeanStatusMarkTime :Long = 0;
+    var mHartBeanStatusMarkTime: Long = 0;
 
     //离线状态value 分为 00，01，10，11，低位为上次状态，高位为本次状态
     internal var mHeartBeatMap: ConcurrentHashMap<String?, Int?> =
@@ -155,7 +157,7 @@ open class BaseMeshService : LifecycleService() {
                     mHeartBeatMap[meshNode.uuid.toUpperCase()] = 0;
                 }
                 mHeatBeatSubscription =
-                    Observable.interval(0, 30 * 1000 + 100, TimeUnit.MILLISECONDS)
+                    Observable.interval(0, 35 * 1000 + 100, TimeUnit.MILLISECONDS)
                         .subscribeOn(Schedulers.computation())
                         .subscribe {
                             for (uuid in mHeartBeatMap.keys()) {
@@ -171,7 +173,12 @@ open class BaseMeshService : LifecycleService() {
                                             mHeartBeatMap[uuid] = heartBeanTag and 0
                                             mDownStreamCallback?.onCommand(
                                                 Gson()
-                                                    .toJson(DeviceNode<Any>(DeviceNode.STATUS_OFFLINE, uuid))
+                                                    .toJson(
+                                                        DeviceNode<Any>(
+                                                            DeviceNode.STATUS_OFFLINE,
+                                                            uuid
+                                                        )
+                                                    )
                                             )
                                         }
                                         //设备上线了 01，feedback
@@ -218,7 +225,7 @@ open class BaseMeshService : LifecycleService() {
             .getMeshNetwork()?.getNode(src)?.uuid?.toUpperCase();
         synchronized(mHearBeanLock) {
             //设备一直处于离线状态，赶紧通知它上线吧！
-            if((mHeartBeatMap[uuid] ?: 0) == 0){
+            if ((mHeartBeatMap[uuid] ?: 0) == 0) {
                 mDownStreamCallback?.onCommand(
                     Gson()
                         .toJson(DeviceNode<Any>(DeviceNode.STATUS_ONLINE, uuid))
@@ -414,7 +421,7 @@ open class BaseMeshService : LifecycleService() {
         method: String,
         dst: Int,
         message: MeshMessage,
-        callback: MeshCallback?,
+        callback: BaseCallback?,
         timeOut: Boolean = false,
         retry: Boolean = false
     ) {
@@ -543,23 +550,25 @@ open class BaseMeshService : LifecycleService() {
                         TAG, """===>[mesh] meshMessageLiveDataResult:
                         |${meshMsg}""".trimMargin()
                     )
-                    MeshHandler.getAllCallback().forEach { meshCallback ->
-                        meshCallback.onReceive(meshMsg)
-                    }
 
                     //因为第一心跳包要在30S左右才能收到，为了尽快让设备上线，这是只要接受到设备的消息就当作上线算
                     //原本需要---meshMsg.opCode ==OPCODE_HEART_BEAT
                     checkDeviceOnline()
+
+                    //根据opCode分发消息
+                    dispatchMsgByOpCode(meshMsg)
 
                     var connectCallbacksIterator = MeshSDK.mConnectCallbacks.iterator()
                     while (connectCallbacksIterator.hasNext()) {
                         var callbackIterator = connectCallbacksIterator.next()
 
                         if (callbackIterator.value is MapCallback
-                            && meshMsg is VendorModelMessageStatus) {
-                            var attrType = ByteUtil.bytesToHexString(byteArrayOf(parameter[1], parameter[2]))
+                            && meshMsg is VendorModelMessageStatus
+                        ) {
+                            var attrType =
+                                ByteUtil.bytesToHexString(byteArrayOf(parameter[1], parameter[2]))
                             when (attrType) {
-                                MeshSDK.ATTR_TYPE_COMMON_GET_QUADRUPLES -> {//获取四元组，pk、ps、dn、ds、pid
+                                ATTR_TYPE_COMMON_GET_QUADRUPLES -> {//获取四元组，pk、ps、dn、ds、pid
                                     decodeDevicePrimaryInfoAndFeedback(
                                         callbackIterator,
                                         connectCallbacksIterator
@@ -581,13 +590,9 @@ open class BaseMeshService : LifecycleService() {
                                             map["accessPDU"] = ByteUtil.bytesToHexString(pdus)
                                         }
                                     }
-                                    if(callbackIterator.value is MapCallback){
+                                    if (callbackIterator.value is MapCallback) {
                                         (callbackIterator.value as MapCallback).onResult(map)
                                     }
-//                                    if(callbackIterator.value is StringCallback){
-//                                        (callbackIterator.value as StringCallback).onResultMsg(Gson().toJson(map))
-//                                    }
-//                                    MeshHandler.removeRunnable(MeshSDK.CALLBACK_GET_IDENTITY)
                                     connectCallbacksIterator.remove()
                                 }
                             }
@@ -599,115 +604,356 @@ open class BaseMeshService : LifecycleService() {
     }
 
     /**
-     * 解析四元组
+     * 根据 opcode来进行消息分发
      */
-    private fun MeshMessage.decodeDevicePrimaryInfoAndFeedback(
-        callbackIterator: MutableMap.MutableEntry<String, Any>,
-        connectCallbacksIterator: MutableIterator<MutableMap.MutableEntry<String, Any>>
-    ) {
-        Utils.printLog(
-            TAG,
-            "quadruple size:${parameter.size} ,content：${String(
-                parameter
-            )}"
-        )
+    private fun dispatchMsgByOpCode(meshMsg: MeshMessage?) {
+        if (meshMsg is VendorModelMessageStatus &&
+            meshMsg.opCode == VENDOR_MSG_OPCODE_ATTR_RECEIVE.toInt(16)) {
+                    decodeMessageAndFeedBack(meshMsg);
+        }
 
-        if (parameter.size >= 40 && callbackIterator.key == MeshSDK.CALLBACK_GET_IDENTITY) {
-            var preIndex = 3
-            var quadrupleIndex = 0
-            var map = HashMap<String, Any>()
-            for (index in 3 until parameter.size) {
-                if (parameter[index] == 0x20.toByte() || index == parameter.size - 1) {
-                    when (quadrupleIndex) {
-                        0 -> {//pk
-                            var pkBytes =
-                                ByteArray(index - preIndex)
-                            System.arraycopy(
-                                parameter,
-                                preIndex,
-                                pkBytes,
-                                0,
-                                pkBytes.size
-                            )
-                            map.put("pk", String(pkBytes))
-                            quadrupleIndex++
-                            preIndex = index + 1
-                        }
-                        1 -> {//ps
-                            var psBytes =
-                                ByteArray(index - preIndex)
-                            System.arraycopy(
-                                parameter,
-                                preIndex,
-                                psBytes,
-                                0,
-                                psBytes.size
-                            )
-                            map.put("ps", String(psBytes))
-                            quadrupleIndex++
-                            preIndex = index + 1
-                        }
-                        2 -> {//dn
-                            var dnBytes =
-                                ByteArray(index - preIndex)
-                            System.arraycopy(
-                                parameter,
-                                preIndex,
-                                dnBytes,
-                                0,
-                                dnBytes.size
-                            )
-                            map.put("dn", String(dnBytes))
-                            quadrupleIndex++
-                            preIndex = index + 1
-                        }
-                        3 -> {//ds
-                            var dsBytes =
-                                ByteArray(index - preIndex)
-                            System.arraycopy(
-                                parameter,
-                                preIndex,
-                                dsBytes,
-                                0,
-                                dsBytes.size
-                            )
-                            map.put("ds", String(dsBytes))
-                            quadrupleIndex++
-                            preIndex = index + 1
-                        }
-                        4 -> {//product_id
-                            var pidBytes =
-                                ByteArray(index - preIndex)
-                            System.arraycopy(
-                                parameter,
-                                preIndex,
-                                pidBytes,
-                                0,
-                                pidBytes.size
-                            )
-                            map.put("pid", String(pidBytes))
-                            quadrupleIndex++
-                            preIndex = index + 1
-                        }
-                    }
-                }
-            }
-            map.put(
-                "code",
-                Constants.ConnectState.COMMON_SUCCESS.code
-            )
-            map.forEach { (t, u) ->
-                Log.e(TAG, "key:$t,value:$u")
-            }
-            (callbackIterator.value as MapCallback).onResult(map)
-            MeshHandler.removeRunnable(MeshSDK.CALLBACK_GET_IDENTITY)
-            connectCallbacksIterator.remove()
-        } else {
-            //todo log
+        if (meshMsg is ConfigAppKeyStatus &&
+            meshMsg.opCode == VENDOR_MSG_ADD_APP_KEY.toInt(16)
+        ) {
+            (MeshHandler.getCallback(ADD_APPKEYS)
+                    as MeshCallback).onReceive(meshMsg);
+        }
+
+        if (meshMsg is ConfigCompositionDataStatus &&
+            meshMsg.opCode == VENDOR_MSG_GET_COMPOSITION_DATA.toInt(16)
+        ) {
+            (MeshHandler.getCallback(GET_COMPOSITION_DATA)
+                    as MeshCallback).onReceive(meshMsg);
         }
     }
 
-    internal fun clearGatt() {
-        mNrfMeshManager?.clearGatt()
+    fun decodeMessageAndFeedBack(message: VendorModelMessageStatus) {
+        val uuid = MeshHelper.getMeshNetwork()?.getNode(message.src)?.uuid
+        val pid : String? = uuid?.let { MxMeshUtil.getProductIdByUUID(it).toString() }
+        val opCode = message.opCode
+        //TODO 这里要区分一下回的是组播还是单播
+
+        Utils.printLog(
+            TAG, "vendor msg:${ByteUtil.bytesToHexString(message.parameter)}"
+        )
+        //根据产品型号来解码对应的参数，参数以key&valye&key&value形式来区分,key占两个字节，value占k个字节
+        var k = 2;
+        var res = "";
+        when (pid) {
+            DC.lightCons[PRODUCT_ID] -> {
+                val lightBean = LightBean();
+                lightBean.productID = pid
+                lightBean.uuid = uuid
+
+                for (i in 1 until message.parameter.size step 2 + k) {
+
+                    val attrType: String = ByteUtil.bytesToHexString(
+                        byteArrayOf(message.parameter[i], message.parameter[i+1]))
+                    var attrValue: String = ""
+                    when (attrType) {
+                        DC.lightCons[SWITCH] -> {
+                            //开关只占一个字节
+                            attrValue = ByteUtil.bytesToHexString(
+                                byteArrayOf(message.parameter[i+2]))
+
+                            lightBean.switch =
+                                if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
+                            k=1;
+                        }
+                        DC.lightCons[COLOR] -> {
+                            var h = ByteUtil.byteToShort(
+                                byteArrayOf(
+                                    message.parameter[i + 1]
+                                    , message.parameter[i]
+                                )
+                            )
+                            lightBean.color = ""
+                            k = 3;
+                        }
+                        DC.lightCons[LIGHTNESS_LEVEL] -> {
+                            var l = message.parameter[i].toInt()
+                            lightBean.color = ""
+                            k = 2
+                        }
+                        DC.lightCons[COLOR_TEMPERATURE] -> {
+                            var t = message.parameter[i].toInt()
+                            lightBean.colorTemperature = ""
+                            k = 2
+                        }
+                        DC.lightCons[MODE_NUMBER] -> {
+                            var l = message.parameter[i].toInt()
+                            lightBean.modeNumber = ""
+                            k = 2
+                        }
+                        DC.lightCons[EVENT] -> {
+
+                        }
+                    }
+                }
+                res = Gson().toJson(lightBean);
+            }
+            DC.socketCons[PRODUCT_ID] -> {
+                val socketBean = SocketBean();
+                socketBean.productID = pid
+                socketBean.uuid = uuid
+                for (i in message.parameter.indices step 2 + k) {
+                    val attrType: String = message.parameter[i].toString(16);
+                    val attrValue: String = message.parameter[i + 1].toString(16);
+                    when (attrType) {
+                        DC.socketCons[SWITCH] -> {
+                            socketBean.switch =
+                                if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
+                            k = 2
+                        }
+                        DC.socketCons[SWITCH_SECOND] -> {
+                            socketBean.switchSecond =
+                                if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
+                            k = 2
+                        }
+                        DC.socketCons[SWITCH_THIRD] -> {
+                            socketBean.switchThird =
+                                if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
+                            k = 2
+                        }
+                        DC.socketCons[EVENT] -> {
+                            k = 2
+                        }
+                    }
+                }
+                res = Gson().toJson(socketBean);
+            }
+            DC.pirSensorCons[PRODUCT_ID] -> {
+                val pirSensor = PirSensor();
+                pirSensor.productID = pid
+                pirSensor.uuid = uuid
+                for (i in message.parameter.indices step 2 + k) {
+                    val attrType: String = message.parameter[i].toString(16);
+                    val attrValue: String = message.parameter[i + 1].toString(16)
+                    when (attrType) {
+                        DC.pirSensorCons[BIO_SENSER] -> {
+                            pirSensor.bioSenser =
+                                if (attrValue == DC.CODE_SWITCH_ON) BIO_SENSER_ON else BIO_SENSER_OFF
+                            k = 2
+                        }
+                        DC.pirSensorCons[REMAINING_ELECTRICITY] -> {
+                            pirSensor.remainingElectricity = ""
+                            k = 2
+                        }
+                        DC.pirSensorCons[SWITCH_THIRD] -> {
+                            pirSensor.event = ""
+                            k = 2
+                        }
+                        DC.pirSensorCons[EVENT] -> {
+                            k = 2
+                        }
+                    }
+                }
+                res = Gson().toJson(pirSensor);
+            }
+        }
+        val key = MeshHelper.generatePrimaryKey(uuid);
+        val callback = MeshHandler.getCallback(key)
+
+        if(null != callback ){
+            if(callback is StringCallback){
+                callback.onResultMsg(res);
+            }
+            //为了兼容前同事的工作成果，和减少改动，这里暂时保留BoooleanCallBack
+            if(callback is BooleanCallback){
+                callback.onResult(true);
+            }
+            MeshHandler.removeRunnable(key)
+        }
     }
+
+
+//        if (!MeshHelper.isConnectedToProxy()) {
+//            Utils.printLog(TAG, "disconnect")
+//            MeshSDK.doVendorCallback(
+//                callback, false,
+//                CallbackMsg(
+//                    CommonErrorMsg.DISCONNECTED.code,
+//                    CommonErrorMsg.DISCONNECTED.msg
+//                )
+//            )
+//        }
+//        Utils.printLog(
+//            TAG,
+//            "send opcode:$opcode,param:${String(msg.parameter)}"
+//        )
+
+//        when (opcode) {
+//            "02" -> {//重启网关
+//                if (callback is BooleanCallback) {
+//                    callback.onResuslt(true)
+//                }
+//
+//                MeshSDK.mConnectCallbacks.remove(if (key.isEmpty()) "sendMeshMessage" else key)
+//            }
+//            "04" -> {//set cwrgb
+//                if (callback is MapCallback && msg.parameter.size == 5) {
+//                    var map = HashMap<String, Any>()
+//
+//                    var c = msg.parameter[0].toInt()
+//                    var w = msg.parameter[1].toInt()
+//                    var r = msg.parameter[2].toInt()
+//                    var g = msg.parameter[3].toInt()
+//                    var b = msg.parameter[4].toInt()
+//                    map.put("c", c)
+//                    map.put("w", w)
+//                    map.put("r", r)
+//                    map.put("g", g)
+//                    map.put("b", b)
+//                    map.put(
+//                        "isOn",
+//                        if (c == 0 && w == 0 && r == 0 && g == 0 && b == 0) false else true
+//                    )
+//                    g.onResult(map)
+//                    MeshSDK.mConnectCallbacks.remove(if (key.isEmpty()) "sendMeshMessage" else key)
+//                    msgIndex = 0
+//                } else {
+//                    //todo log
+//                }
+//            }
+//            "05" -> {//get cwrgb
+//                if (msgIndex < 0 && callback is BooleanCallback) {
+//                    callback.onResult(true)
+//                    MeshSDK.mConnectCallbacks.remove(if (key.isEmpty()) "sendMeshMessage" else key)
+//                    msgIndex = 0
+//                } else {
+//                    //todo log
+//                }
+//            }
+//            "0D", "0E", "0F", "11" -> {//set HSV
+//                if (msgIndex < 0 && callback is BooleanCallback) {
+//                    callback.onResult(true)
+//
+//                    MeshSDK.mConnectCallbacks.remove(if (key.isEmpty()) "sendMeshMessage" else key)
+//                    msgIndex = 0
+//                } else {
+//                    //todo log
+//                }
+//            }
+//            else -> {
+//
+//            }
+//        }
+
+//            override fun onError(msg: CallbackMsg) {
+//                MeshSDK.doVendorCallback(callback, false, msg)
+//            }
+//}
+
+/**
+ * 解析四元组
+ */
+private fun MeshMessage.decodeDevicePrimaryInfoAndFeedback(
+    callbackIterator: MutableMap.MutableEntry<String, Any>,
+    connectCallbacksIterator: MutableIterator<MutableMap.MutableEntry<String, Any>>
+) {
+    Utils.printLog(
+        TAG,
+        "quadruple size:${parameter.size} ,content：${String(
+            parameter
+        )}"
+    )
+
+    if (parameter.size >= 40 && callbackIterator.key == MeshSDK.CALLBACK_GET_IDENTITY) {
+        var preIndex = 3
+        var quadrupleIndex = 0
+        var map = HashMap<String, Any>()
+        for (index in 3 until parameter.size) {
+            if (parameter[index] == 0x20.toByte() || index == parameter.size - 1) {
+                when (quadrupleIndex) {
+                    0 -> {//pk
+                        var pkBytes =
+                            ByteArray(index - preIndex)
+                        System.arraycopy(
+                            parameter,
+                            preIndex,
+                            pkBytes,
+                            0,
+                            pkBytes.size
+                        )
+                        map.put("pk", String(pkBytes))
+                        quadrupleIndex++
+                        preIndex = index + 1
+                    }
+                    1 -> {//ps
+                        var psBytes =
+                            ByteArray(index - preIndex)
+                        System.arraycopy(
+                            parameter,
+                            preIndex,
+                            psBytes,
+                            0,
+                            psBytes.size
+                        )
+                        map.put("ps", String(psBytes))
+                        quadrupleIndex++
+                        preIndex = index + 1
+                    }
+                    2 -> {//dn
+                        var dnBytes =
+                            ByteArray(index - preIndex)
+                        System.arraycopy(
+                            parameter,
+                            preIndex,
+                            dnBytes,
+                            0,
+                            dnBytes.size
+                        )
+                        map.put("dn", String(dnBytes))
+                        quadrupleIndex++
+                        preIndex = index + 1
+                    }
+                    3 -> {//ds
+                        var dsBytes =
+                            ByteArray(index - preIndex)
+                        System.arraycopy(
+                            parameter,
+                            preIndex,
+                            dsBytes,
+                            0,
+                            dsBytes.size
+                        )
+                        map.put("ds", String(dsBytes))
+                        quadrupleIndex++
+                        preIndex = index + 1
+                    }
+                    4 -> {//product_id
+                        var pidBytes =
+                            ByteArray(index - preIndex)
+                        System.arraycopy(
+                            parameter,
+                            preIndex,
+                            pidBytes,
+                            0,
+                            pidBytes.size
+                        )
+                        map.put("pid", String(pidBytes))
+                        quadrupleIndex++
+                        preIndex = index + 1
+                    }
+                }
+            }
+        }
+        map.put(
+            "code",
+            Constants.ConnectState.COMMON_SUCCESS.code
+        )
+        map.forEach { (t, u) ->
+            Log.e(TAG, "key:$t,value:$u")
+        }
+        (callbackIterator.value as MapCallback).onResult(map)
+        MeshHandler.removeRunnable(MeshSDK.CALLBACK_GET_IDENTITY)
+        connectCallbacksIterator.remove()
+    } else {
+        //todo log
+    }
+}
+
+internal fun clearGatt() {
+    mNrfMeshManager?.clearGatt()
+}
 }

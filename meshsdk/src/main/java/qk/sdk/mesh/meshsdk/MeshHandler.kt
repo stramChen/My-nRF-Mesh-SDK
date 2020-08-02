@@ -5,7 +5,9 @@ import android.os.HandlerThread
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.bean.CommonErrorMsg
 import qk.sdk.mesh.meshsdk.bean.MeshMsgSender
+import qk.sdk.mesh.meshsdk.callback.BaseCallback
 import qk.sdk.mesh.meshsdk.callback.MeshCallback
+import qk.sdk.mesh.meshsdk.callback.StringCallback
 import qk.sdk.mesh.meshsdk.util.Utils
 import java.util.concurrent.ConcurrentHashMap
 
@@ -15,7 +17,7 @@ object MeshHandler {
     private var mHandler: Handler
     private val handlerThread = HandlerThread("BLEMeshModule")
 
-    private val requestMaps = ConcurrentHashMap<String, MeshCallback>(20)
+    private val requestMaps = ConcurrentHashMap<String, BaseCallback>(64)
     private val runnableMaps = ConcurrentHashMap<String, TimeOutRunnable>(20)
     private val TIME_OUT_MILLS = 3 * 1000L
 
@@ -30,24 +32,24 @@ object MeshHandler {
         runnableMaps[method]?.apply {
             mHandler.removeCallbacks(this)
             meshMsgSender.retry = false
-            runnableMaps.remove(meshMsgSender.method)
+            runnableMaps.remove(meshMsgSender.key)
             Utils.printLog(TAG, "removeRunnable:$method")
         }
     }
 
     @Synchronized
     fun addRunnable(meshMsgSender: MeshMsgSender) {
-        if (meshMsgSender.callback == null || meshMsgSender.method.isEmpty())
+        if (meshMsgSender.callback == null || meshMsgSender.key.isEmpty())
             return
 
-        removeRunnable(meshMsgSender.method)
-        requestMaps[meshMsgSender.method] = meshMsgSender.callback!!
+        removeRunnable(meshMsgSender.key)
+        requestMaps[meshMsgSender.key] = meshMsgSender.callback!!
 
         if (meshMsgSender.timeout) {
             val runnable = TimeOutRunnable(meshMsgSender)
-            runnableMaps[meshMsgSender.method] = runnable
+            runnableMaps[meshMsgSender.key] = runnable
             mHandler.postDelayed(runnable, TIME_OUT_MILLS)
-            Utils.printLog(TAG, "addRunnable method:${meshMsgSender.method}")
+            Utils.printLog(TAG, "addRunnable method:${meshMsgSender.key}")
         }
     }
 
@@ -55,7 +57,7 @@ object MeshHandler {
         return requestMaps[method]
     }
 
-    fun getAllCallback(): MutableCollection<MeshCallback> {
+    fun getAllCallback(): MutableCollection<BaseCallback> {
         return requestMaps.values
     }
 
@@ -70,7 +72,7 @@ object MeshHandler {
                         CommonErrorMsg.TIME_OUT.msg
                     )
                 )
-                removeRunnable(meshMsgSender.method)
+                removeRunnable(meshMsgSender.key)
             } else {
                 if (meshMsgSender.message != null)
                     MeshHelper.sendMessage(
@@ -80,7 +82,7 @@ object MeshHandler {
                         null
                     )
                 meshMsgSender.retry = false
-                Utils.printLog(TAG, "retry:${meshMsgSender.method}")
+                Utils.printLog(TAG, "retry:${meshMsgSender.key}")
                 mHandler.postDelayed(this, TIME_OUT_MILLS)
             }
         }

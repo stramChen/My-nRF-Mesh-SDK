@@ -31,7 +31,7 @@ class OnOffMeshActivity : BaseMeshActivity() {
             if (MeshHelper.isConnectedToProxy()) {
                 Thread(Runnable {
                     MeshSDK.getCurrentNetworkKey(object :
-                        StringCallback {
+                        StringCallback() {
                         override fun onResultMsg(msg: String) {
                             MeshSDK.getAllApplicationKey(msg, object :
                                 ArrayStringCallback {
@@ -40,7 +40,7 @@ class OnOffMeshActivity : BaseMeshActivity() {
                                         MeshSDK.addApplicationKeyForNode(
                                             mUUID,
                                             result.get(0),
-                                            object : MapCallback {
+                                            object : MapCallback() {
                                                 override fun onResult(result: HashMap<String, Any>) {
                                                 }
                                             })
@@ -98,7 +98,7 @@ class OnOffMeshActivity : BaseMeshActivity() {
         }
 
         btn_publish.setOnClickListener {
-            MeshSDK.setPublication(mUUID, Constants.TEST_GROUP, object : MapCallback {
+            MeshSDK.setPublication(mUUID, Constants.TEST_GROUP, object : MapCallback() {
                 override fun onResult(result: HashMap<String, Any>) {
                     result.forEach { key, value ->
                         Utils.printLog(TAG, "key:$key,value:$value")
@@ -108,7 +108,7 @@ class OnOffMeshActivity : BaseMeshActivity() {
         }
 
         btn_subscribe.setOnClickListener {
-            MeshSDK.sendSubscribeMsg(mUUID, Constants.TEST_GROUP, object : MapCallback {
+            MeshSDK.sendSubscribeMsg(mUUID, Constants.TEST_GROUP, object : MapCallback() {
                 override fun onResult(result: HashMap<String, Any>) {
                     result.forEach { key, value ->
                         Utils.printLog(TAG, "sendSubscribeMsg result key:$key,value:$value")

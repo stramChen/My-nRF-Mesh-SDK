@@ -5,11 +5,11 @@ import android.view.View
 import kotlinx.android.synthetic.main.activity_connect.*
 import qk.sdk.mesh.demo.R
 import qk.sdk.mesh.demo.base.BaseMeshActivity
-import qk.sdk.mesh.demo.util.Constants
 import qk.sdk.mesh.meshsdk.MeshHelper
 import qk.sdk.mesh.meshsdk.MeshSDK
 import qk.sdk.mesh.meshsdk.callback.*
 import qk.sdk.mesh.meshsdk.util.Utils
+import qk.sdk.mesh.meshsdk.bean.*
 
 class ConnectTestActivity : BaseMeshActivity() {
     private val TAG = "ConnectTestActivity"
@@ -39,7 +39,7 @@ class ConnectTestActivity : BaseMeshActivity() {
         tv_ttl.text = "${MeshHelper.getSelectedMeshNode()?.ttl ?: ""}"
 
         tv_proxy_address.setOnClickListener {
-            MeshSDK.fetchLightCurrentStatus(mUUID, object : MapCallback {
+            MeshSDK.fetchLightCurrentStatus(mUUID, object : MapCallback() {
                 override fun onResult(result: HashMap<String, Any>) {
                     result.forEach { key, value ->
                         Utils.printLog(TAG, "key:$key,value:$value")
@@ -52,7 +52,7 @@ class ConnectTestActivity : BaseMeshActivity() {
             if (MeshHelper.isConnectedToProxy()) {
                 Thread(Runnable {
                     MeshSDK.getCurrentNetworkKey(object :
-                        StringCallback {
+                        StringCallback() {
                         override fun onResultMsg(msg: String) {
                             MeshSDK.getAllApplicationKey(msg, object :
                                 ArrayStringCallback {
@@ -61,7 +61,7 @@ class ConnectTestActivity : BaseMeshActivity() {
                                         MeshSDK.addApplicationKeyForNode(
                                             mUUID,
                                             result.get(0),
-                                            object : MapCallback {
+                                            object : MapCallback() {
                                                 override fun onResult(result: HashMap<String, Any>) {
                                                 }
                                             })
@@ -80,7 +80,7 @@ class ConnectTestActivity : BaseMeshActivity() {
             var map = HashMap<String, Any>()
             map["LightMode"] = if (isChecked) 1 else 0
             MeshSDK.modifyLightStatus(mUUID, map, object :
-                BooleanCallback {
+                BooleanCallback() {
                 override fun onResult(boolean: Boolean) {
                     Utils.printLog(TAG, "switch_mode result:$boolean")
                 }
@@ -94,7 +94,7 @@ class ConnectTestActivity : BaseMeshActivity() {
 
         switch_on_off.setOnCheckedChangeListener { buttonView, isChecked ->
             MeshSDK.setGenericOnOff(mUUID, isChecked, 0, object :
-                BooleanCallback {
+                BooleanCallback() {
                 override fun onResult(boolean: Boolean) {
                     Utils.printLog(TAG, "setGenericOnOff result:$boolean")
                 }
@@ -117,7 +117,7 @@ class ConnectTestActivity : BaseMeshActivity() {
             var t = sb_vendor_b.progress * 192 + 800
             Utils.printLog(TAG, "h:$h,s:$s,v:$v,b:$b,t:$t")
             var map = HashMap<String, Any>()
-            var callback = object : BooleanCallback {
+            var callback = object : BooleanCallback() {
                 override fun onResult(boolean: Boolean) {
                     Utils.printLog(TAG, "modifyLightStatus result:$boolean")
                 }
@@ -160,6 +160,21 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
 
         btn_subscribe.setOnClickListener {
+            MeshSDK.getCurrentNode(object : MapCallback() {
+                override fun onResult(result: HashMap<String, Any>) {
+                    MeshSDK.getDeviceCurrentStatus(result["uuid"] as String,
+                        listOf(SWITCH),
+                        object : StringCallback() {
+                            override fun onResultMsg(msg: String) {
+                                Utils.printLog(TAG, "result:$msg")
+                            }
+                        })
+                }
+            })
+
+
+//            MeshSDK.getAllDeviceStatus();
+
 //            if (MeshHelper.getGroupByName(Constants.TEST_GROUP) == null)
 //            MeshSDK.createGroup("0xD000", object : BooleanCallback {
 //                override fun onResult(boolean: Boolean) {
@@ -214,7 +229,7 @@ class ConnectTestActivity : BaseMeshActivity() {
         }
 
         tv_ping.setOnClickListener {
-            MeshSDK.getDeviceQuadruples(mUUID, object : MapCallback {
+            MeshSDK.getDeviceQuadruples(mUUID, object : MapCallback() {
                 override fun onResult(result: HashMap<String, Any>) {
                     result.forEach { key, value ->
                         Utils.printLog(TAG, "$key:$value")

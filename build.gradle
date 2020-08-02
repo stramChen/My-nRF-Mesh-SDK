@@ -2,7 +2,7 @@
 
 apply from: "config.gradle"
 //本地打aar包
-ext.isaar=false
+ext.sdkLocalRun=false
 buildscript {
     ext.kotlin_version = '1.3.61'
     ext.gradle_version = '4.0.0'

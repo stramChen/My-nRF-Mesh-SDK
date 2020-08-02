@@ -6,8 +6,6 @@ import qk.sdk.mesh.demo.R
 import qk.sdk.mesh.meshsdk.MeshHelper
 import qk.sdk.mesh.meshsdk.MeshSDK
 import qk.sdk.mesh.meshsdk.callback.BooleanCallback
-import qk.sdk.mesh.meshsdk.callback.MapCallback
-import qk.sdk.mesh.meshsdk.util.Utils
 
 class PIRActivity : AppCompatActivity() {
 
@@ -20,7 +18,7 @@ class PIRActivity : AppCompatActivity() {
 
     fun initPIRListener() {
         MeshHelper.getGroupByAddress(0XC002)?.apply {
-            MeshSDK.createGroup("${this.name}", object : BooleanCallback {
+            MeshSDK.createGroup("${this.name}", object : BooleanCallback() {
                 override fun onResult(boolean: Boolean) {
 //                    MeshSDK.subscribeStatus("", object : MapCallback {
 //                        override fun onResult(result: HashMap<String, Any>) {

@@ -307,7 +307,7 @@ public class ConfigCompositionDataStatus extends ConfigStatusMessage implements 
     }
 
     @Override
-    int getOpCode() {
+    public int getOpCode() {
         return OP_CODE;
     }
 

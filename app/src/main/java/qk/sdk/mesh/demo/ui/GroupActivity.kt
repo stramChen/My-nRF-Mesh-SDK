@@ -30,7 +30,7 @@ class GroupActivity : BaseMeshActivity() {
         btn_add_group.setOnClickListener {
             MeshSDK.createGroup(
                 "01029012901920",
-                object : BooleanCallback {
+                object : BooleanCallback() {
                     override fun onResult(boolean: Boolean) {
                         Utils.printLog(TAG, "createGroup result:$boolean")
                     }
