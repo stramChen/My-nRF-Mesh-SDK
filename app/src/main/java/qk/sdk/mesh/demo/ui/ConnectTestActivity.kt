@@ -63,6 +63,7 @@ class ConnectTestActivity : BaseMeshActivity() {
                                             result.get(0),
                                             object : MapCallback() {
                                                 override fun onResult(result: HashMap<String, Any>) {
+                                                    exportConfig()
                                                 }
                                             })
                                     }
@@ -75,6 +76,7 @@ class ConnectTestActivity : BaseMeshActivity() {
                 Utils.printLog(TAG, "isn't Connected To Proxy")
             }
         }
+
 
         switch_mode.setOnCheckedChangeListener { buttonView, isChecked ->
             var map = HashMap<String, Any>()
@@ -275,6 +277,17 @@ class ConnectTestActivity : BaseMeshActivity() {
 //                }
 //            })
         }
+    }
+
+    private fun exportConfig() {
+        Thread{
+            MeshSDK.exportMeshNetwork(object : StringCallback() {
+                override fun onResultMsg(msg: String) {
+                    Utils.printLog(TAG, "mesh rule->$msg")
+                }
+            })
+        }.run()
+
     }
 
     override fun onDestroy() {

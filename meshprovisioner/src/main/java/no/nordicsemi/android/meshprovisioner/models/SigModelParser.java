@@ -217,7 +217,7 @@ public class SigModelParser {
                 return new LightLcClient(modelId);
             default: {
                 Log.v(TAG, "Model ID: " + String.format(Locale.US, "%04X", modelId));
-                return null;
+                return new UnknowModel(modelId);
             }
         }
     }
