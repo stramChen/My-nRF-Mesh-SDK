@@ -13,6 +13,11 @@ const val VENDOR_MSG_OPCODE_ATTR_GET = "10"
 const val VENDOR_MSG_OPCODE_ATTR_SET = "11"
 const val VENDOR_MSG_OPCODE_ATTR_RECEIVE = "13"
 const val VENDOR_MSG_ATTR_SET_UNACKED = "12"
+//同步设备消息
+const val VENDOR_MSG_OPCODE_SYNC = 0x15
+//虚拟按钮
+const val VENDOR_MSG_OPCODE_STATUS = 0x13
+
 //向设备添加APP_KEY
 const val VENDOR_MSG_ADD_APP_KEY = "8003"
 //获取设备的配置信息，如model之类的

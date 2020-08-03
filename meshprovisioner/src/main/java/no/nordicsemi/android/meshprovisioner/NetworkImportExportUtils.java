@@ -275,9 +275,11 @@ class NetworkImportExportUtils {
                     .create();
             return gson.toJson(network);
         } catch (final com.google.gson.JsonSyntaxException ex) {
+            ex.printStackTrace();
             Log.e(TAG, "Error: " + ex.getMessage());
             return null;
         } catch (final Exception e) {
+            e.printStackTrace();
             Log.e(TAG, "Error: " + e.getMessage());
             return null;
         }

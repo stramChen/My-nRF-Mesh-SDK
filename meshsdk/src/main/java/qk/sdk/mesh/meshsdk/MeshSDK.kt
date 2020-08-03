@@ -4,12 +4,10 @@ import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import com.google.gson.Gson
 import me.weyye.hipermission.PermissionCallback
-import no.nordicsemi.android.meshprovisioner.ApplicationKey
 import no.nordicsemi.android.meshprovisioner.UnprovisionedBeacon
 import no.nordicsemi.android.meshprovisioner.models.GenericOnOffServerModel
 import no.nordicsemi.android.meshprovisioner.models.VendorModel
 import no.nordicsemi.android.meshprovisioner.transport.*
-import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.bean.CommonErrorMsg
 import qk.sdk.mesh.meshsdk.bean.DeviceConstantsCode
@@ -40,8 +38,6 @@ object MeshSDK {
     private const val PUBLISH_INTERVAL = 88 //25秒
     private const val PUBLISH_TTL = 5
 
-    //同步设备消息
-    const val VENDOR_MSG_ATTR_STATUS = 0x15
     const val VENDOR_MSG_HB = "14"
 
 
@@ -1031,7 +1027,7 @@ object MeshSDK {
                     var message = MeshHelper.getAppkeyByKeyName(result[0])?.let {
                         VendorModelMessageUnacked(
                                 it, VENDOR_MODELID, VENDOR_MODEL_COMPANYIDENTIFIER,
-                                VENDOR_MSG_ATTR_STATUS,
+                                VENDOR_MSG_OPCODE_SYNC,
                                 ByteUtil.hexStringToBytes(newParam)
 //                        VendorModelMessageUnackedState(
 //                        VendorModelMessageUnackedState(
@@ -1043,7 +1039,6 @@ object MeshSDK {
                     }
                 }
             })
-
         }
     }
 
@@ -1686,29 +1681,64 @@ object MeshSDK {
     /**
      * 虚拟按钮
      */
+//    fun sendGroupMsg(groupAddr: Int, vid: Int) {
+//        MeshHelper.getGroupByAddress(groupAddr)?.let { group ->
+//            MeshHelper.getMeshNetwork()?.let { network ->
+//                network.getModels()
+//                network.getModels(group)?.forEach foreach@{ model ->
+//                    if (MeshParserUtils.isVendorModel(model.modelId)) {
+//                        model.boundAppKeyIndexes?.let { boundedAppkeys ->
+//                            if (boundedAppkeys.size == 1) {
+//                                val appKey: ApplicationKey =
+//                                        network.getAppKey(boundedAppkeys[0])
+//                                val message = VendorModelMessageUnacked(
+//                                        appKey,
+//                                        model.modelId,
+//                                        (model as VendorModel).companyIdentifier,
+//                                        0x18,
+//                                        byteArrayOf(vid.toByte())
+//                                )
+//                                MeshHelper.sendMessage("", group.address, message, null)
+//                                return@foreach
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+
+    /**
+     * 虚拟按钮
+     */
     fun sendGroupMsg(groupAddr: Int, vid: Int) {
-        MeshHelper.getGroupByAddress(groupAddr)?.let { group ->
-            MeshHelper.getMeshNetwork()?.let { network ->
-                network.getModels(group)?.forEach foreach@{ model ->
-                    if (MeshParserUtils.isVendorModel(model.modelId)) {
-                        model.boundAppKeyIndexes?.let { boundedAppkeys ->
-                            if (boundedAppkeys.size == 1) {
-                                val appKey: ApplicationKey =
-                                        network.getAppKey(boundedAppkeys[0])
-                                val message = VendorModelMessageUnacked(
-                                        appKey,
-                                        model.modelId,
-                                        (model as VendorModel).companyIdentifier,
-                                        0x18,
-                                        byteArrayOf(vid.toByte())
-                                )
-                                MeshHelper.sendMessage("", group.address, message, null)
-                                return@foreach
-                            }
-                        }
+        MeshHelper.getGroupByAddress(ALL_DEVICE_SYNC_ADDR)?.let { group ->
+            val networkKey =
+                MeshHelper.MeshProxyService.mMeshProxyService?.getCurrentNetworkKeyStr();
+            getAllApplicationKey(networkKey!!, object : ArrayStringCallback {
+                override fun onResult(result: ArrayList<String>) {
+//                    var newParam = ""
+                    var newParam = ByteUtil.bytesToHexString(byteArrayOf(vid.toByte()))
+                    //如果消息有参数，消息参数需加上tid，规则：秒级时间戳余255
+                    var timeCuts = System.currentTimeMillis() / 1000 % 255
+                    newParam =
+                        "${ByteUtil.bytesToHexString(byteArrayOf(timeCuts.toByte()))}${newParam}"
+                    var message = MeshHelper.getAppkeyByKeyName(result[0])?.let {
+                        VendorModelMessageUnacked(
+                            it, VENDOR_MODELID
+                            , VENDOR_MODEL_COMPANYIDENTIFIER
+                            , VENDOR_MSG_OPCODE_STATUS
+                            , ByteUtil.hexStringToBytes(newParam)
+//                        VendorModelMessageUnackedState(
+//                        VendorModelMessageUnackedState(
+//                                    it, VENDOR_MODEL_COMPANYIDENTIFIER)
+                        )
+                    }
+                    if (message != null) {
+                        MeshHelper.sendMessage("", group.address, message, null)
                     }
                 }
-            }
+            })
         }
     }
 
