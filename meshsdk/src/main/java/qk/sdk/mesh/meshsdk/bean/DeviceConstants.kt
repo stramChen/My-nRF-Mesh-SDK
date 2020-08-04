@@ -32,7 +32,7 @@ package qk.sdk.mesh.meshsdk.bean
 /*************************************灯****************************************/
 
     //亮度
-    const val COLOR = "Color";
+    const val COLOR = "color";
 
     //颜色
     const val LIGHTNESS_LEVEL = "lightness_level";

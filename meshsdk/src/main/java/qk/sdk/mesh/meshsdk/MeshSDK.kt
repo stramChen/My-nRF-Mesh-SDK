@@ -646,7 +646,8 @@ object MeshSDK {
     ) {
         //拼接参数
         val param = combineAttTypeAndAttValue(param);
-        Utils.printLog(TAG,"===>[mesh] 准备发送数据 uuid:${uuid}opCode:${opcode} param:${param}")
+        Utils.printLog(TAG,"===>[mesh] 准备发送数据 uuid:${uuid}" +
+                "===opCode:${opcode}===param:${param}")
 
         mContext?.apply {
             init(this, object : BooleanCallback() {
@@ -1494,16 +1495,16 @@ object MeshSDK {
             var onOffType = Utils.getNumberType(onOff)
             var onOffParam =
                     if (onOffType == 1) onOff as Int else if (onOffType == 2) (onOff as Double).toInt() else (onOff as Float).toInt()
-            setGenericOnOff(uuid, onOffParam == 0, 0, callback)
+            setGenericOnOff(uuid, onOffParam == 1, 0, callback)
         } else {
             callback.onResult(false)
         }
     }
 
     /**
-     * 获取设备当前状态:亮度、色温、开关、颜色
+     * 获取设备当前状态:亮度、色温、开关
      */
-    fun fetchLightCurrentStatus(uuid: String, callback: MapCallback) {
+    fun fetchLightCurrentStatus(uuid: String, callback: StringCallback) {
         Utils.printLog(TAG, "fetchLightCurrentStatus")
         sendMeshMessage(
                 uuid,
@@ -1511,9 +1512,8 @@ object MeshSDK {
                 VENDOR_MSG_OPCODE_ATTR_GET,
                 listOf(Pair(DC.lightCons[LIGHTNESS_LEVEL], null)
                         , Pair(DC.lightCons[COLOR_TEMPERATURE], null)
-                        , Pair(DC.lightCons[SWITCH], null)
-                        , Pair(DC.lightCons[COLOR], null)),
-                callback
+                        , Pair(DC.lightCons[SWITCH], null))
+                        ,callback
         )
     }
 
@@ -1522,73 +1522,7 @@ object MeshSDK {
         MeshHelper.unSubscribeLightStatus()
     }
 
-//    fun parseLightStatus(
-//        params: ByteArray,
-//        callback: MapCallback,
-//        map: HashMap<String, Any>
-//    ) {
-//        var modeByte = params[0]
-//        var modeBits = ByteUtil.byteTobitArray(modeByte)
-//        var modeBitString = ByteUtil.byteTobitString(modeByte)
-//        Utils.printLog(
-//            TAG,
-//            "mode Int:${modeByte.toInt()},modeBitString:$modeBitString,statuHex:${ByteUtil.bytesToHexString(
-//                params
-//            )}"
-//        )
-//        var mode = ByteUtil.byteToShort(byteArrayOf(modeBits[6], modeBits[5])).toInt()
-//        var isOn = modeBits[7].toInt()
-//
-//        var h = ByteUtil.byteToShort(
-//            byteArrayOf(
-//                params[2],
-//                params[1]
-//            )
-//        )
-//        var s = params[3].toInt()
-//        var v = params[4].toInt()
-//        var b = params[5].toInt()
-//        var t = ByteUtil.byteArrayToInt(
-//            byteArrayOf(
-//                0x00,
-//                0x00,
-//                params[6],
-//                params[7]
-//            )
-//        )
-//        Utils.printLog(TAG, "h:$h,s:$s,v:$v,b:$b,t:$t")
-//        map["code"] = 200
-//        var lightStatus = HashMap<String, Any>()
-//
-//        var switchMap = HashMap<String, Int>()
-//        switchMap["0"] = isOn
-//
-//        lightStatus["LightMode"] = mode
-//        lightStatus["Brightness"] = b
-//        lightStatus["ColorTemperature"] = t
-//        lightStatus["OnOffSwitch"] = switchMap
-//
-//        var HSVColor = HashMap<String, Int>()
-//        HSVColor["Hue"] = h.toInt()
-//        HSVColor["Saturation"] = s
-//        HSVColor["Value"] = v
-//        lightStatus["HSVColor"] = HSVColor
-//        map["data"] = lightStatus
-//
-//
-//        if (callback is MapCallback) {
-//            doMapCallback(
-//                map,
-//                callback,
-//                CallbackMsg(
-//                    ConnectState.COMMON_SUCCESS.code,
-//                    ConnectState.COMMON_SUCCESS.msg
-//                )
-//            )
-//        }
-//    }
-
-    private fun doMapCallback(
+    fun doMapCallback(
             map: HashMap<String, Any>,
             callback: MapCallback,
             msg: CallbackMsg
