@@ -23,7 +23,6 @@ import rx.Observable
 import rx.Subscription
 import rx.schedulers.Schedulers
 import java.lang.RuntimeException
-import java.nio.ByteBuffer
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
@@ -642,123 +641,16 @@ open class BaseMeshService : LifecycleService() {
                 TAG, "vendor msg:${ByteUtil.bytesToHexString(message.parameter)}"
         )
         //根据产品型号来解码对应的参数，参数以key&value&key&value形式来区分,key占两个字节，value占k个字节
-        var k = 2;
         var res = "";
         when (pid) {
             DC.lightCons[PRODUCT_ID] -> {
-                val lightBean = LightBean();
-                lightBean.productID = pid
-                lightBean.uuid = uuid
-
-                for (i in 1 until message.parameter.size step 2 + k) {
-                    val attrType: String = ByteUtil.bytesToHexString(
-                            byteArrayOf(message.parameter[i], message.parameter[i + 1]))
-                    var attrValue: String = ""
-                    when (attrType) {
-                        DC.lightCons[SWITCH] -> {
-                            //开关只占一个字节
-                            attrValue = ByteUtil.bytesToHexString(
-                                    byteArrayOf(message.parameter[2 + i]))
-
-                            lightBean.switch =
-                                    if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
-                            k = 1;
-                        }
-                        DC.lightCons[COLOR] -> {
-                            var h = ByteUtil.byteToShort(
-                                    byteArrayOf(
-                                            message.parameter[i + 1]
-                                            , message.parameter[i]
-                                    )
-                            )
-                            lightBean.color = 0
-                            k = 3;
-                        }
-                        DC.lightCons[LIGHTNESS_LEVEL] -> {
-                            lightBean.lightnessLevel = ByteUtil.byteArrayToInt(
-                                    byteArrayOf(
-                                            message.parameter[2 + i],
-                                            message.parameter[2+ i + 1]
-                                    ))
-                            k = 2
-                        }
-                        DC.lightCons[COLOR_TEMPERATURE] -> {
-                            lightBean.colorTemperature = ByteUtil.byteArrayToInt(
-                                    byteArrayOf(
-                                            message.parameter[2+i],
-                                            message.parameter[2+ i + 1]
-                                    ))
-                            k = 2
-                        }
-                        DC.lightCons[MODE_NUMBER] -> {
-                            var l = message.parameter[i].toInt()
-                            lightBean.modeNumber = ""
-                            k = 2
-                        }
-                        DC.lightCons[EVENT] -> {
-
-                        }
-                    }
-                }
-                res = Gson().toJson(lightBean);
+                res = decodeLightParam(pid, uuid, message)
             }
             DC.socketCons[PRODUCT_ID] -> {
-                val socketBean = SocketBean();
-                socketBean.productID = pid
-                socketBean.uuid = uuid
-                for (i in message.parameter.indices step 2 + k) {
-                    val attrType: String = message.parameter[i].toString(16);
-                    val attrValue: String = message.parameter[i + 1].toString(16);
-                    when (attrType) {
-                        DC.socketCons[SWITCH] -> {
-                            socketBean.switch =
-                                    if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
-                            k = 2
-                        }
-                        DC.socketCons[SWITCH_SECOND] -> {
-                            socketBean.switchSecond =
-                                    if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
-                            k = 2
-                        }
-                        DC.socketCons[SWITCH_THIRD] -> {
-                            socketBean.switchThird =
-                                    if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
-                            k = 2
-                        }
-                        DC.socketCons[EVENT] -> {
-                            k = 2
-                        }
-                    }
-                }
-                res = Gson().toJson(socketBean);
+                res = decodeSocketParams(pid, uuid, message)
             }
             DC.pirSensorCons[PRODUCT_ID] -> {
-                val pirSensor = PirSensor();
-                pirSensor.productID = pid
-                pirSensor.uuid = uuid
-                for (i in message.parameter.indices step 2 + k) {
-                    val attrType: String = message.parameter[i].toString(16);
-                    val attrValue: String = message.parameter[i + 1].toString(16)
-                    when (attrType) {
-                        DC.pirSensorCons[BIO_SENSER] -> {
-                            pirSensor.bioSenser =
-                                    if (attrValue == DC.CODE_SWITCH_ON) BIO_SENSER_ON else BIO_SENSER_OFF
-                            k = 2
-                        }
-                        DC.pirSensorCons[REMAINING_ELECTRICITY] -> {
-                            pirSensor.remainingElectricity = ""
-                            k = 2
-                        }
-                        DC.pirSensorCons[SWITCH_THIRD] -> {
-                            pirSensor.event = ""
-                            k = 2
-                        }
-                        DC.pirSensorCons[EVENT] -> {
-                            k = 2
-                        }
-                    }
-                }
-                res = Gson().toJson(pirSensor);
+                res = decodePirSensorParams(pid, uuid, message)
             }
         }
         val key = MeshHelper.generatePrimaryKey(uuid);
@@ -774,6 +666,158 @@ open class BaseMeshService : LifecycleService() {
             }
             MeshHandler.removeRunnable(key)
         }
+    }
+
+    /**
+     * 解析Pir传感器参数
+     */
+    private fun decodePirSensorParams(
+        pid: String?,
+        uuid: String?,
+        message: VendorModelMessageStatus
+    ):String {
+        var res = "";
+        var k = 2;
+        val pirSensor = PirSensor();
+        pirSensor.productID = pid
+        pirSensor.uuid = uuid
+        for (i in message.parameter.indices step 2 + k) {
+            val attrType: String = message.parameter[i].toString(16);
+            val attrValue: String = message.parameter[i + 1].toString(16)
+            when (attrType) {
+                DC.pirSensorCons[BIO_SENSER] -> {
+                    pirSensor.bioSenser =
+                        if (attrValue == DC.CODE_SWITCH_ON) BIO_SENSER_ON else BIO_SENSER_OFF
+                    k = 2
+                }
+                DC.pirSensorCons[REMAINING_ELECTRICITY] -> {
+                    pirSensor.remainingElectricity = ""
+                    k = 2
+                }
+                DC.pirSensorCons[SWITCH_THIRD] -> {
+                    pirSensor.event = ""
+                    k = 2
+                }
+                DC.pirSensorCons[EVENT] -> {
+                    k = 2
+                }
+            }
+        }
+        res = Gson().toJson(pirSensor);
+        return res;
+    }
+
+    /**
+     * 解析插座，开关
+     */
+    private fun decodeSocketParams(
+        pid: String?,
+        uuid: String?,
+        message: VendorModelMessageStatus
+    ):String {
+        var res = "";
+        var k = 2
+        val socketBean = SocketBean();
+        socketBean.productID = pid
+        socketBean.uuid = uuid
+        for (i in message.parameter.indices step 2 + k) {
+            val attrType: String = message.parameter[i].toString(16);
+            val attrValue: String = message.parameter[i + 1].toString(16);
+            when (attrType) {
+                DC.socketCons[SWITCH] -> {
+                    socketBean.switch =
+                        if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
+                    k = 2
+                }
+                DC.socketCons[SWITCH_SECOND] -> {
+                    socketBean.switchSecond =
+                        if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
+                    k = 2
+                }
+                DC.socketCons[SWITCH_THIRD] -> {
+                    socketBean.switchThird =
+                        if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
+                    k = 2
+                }
+                DC.socketCons[EVENT] -> {
+                    k = 2
+                }
+            }
+        }
+        res = Gson().toJson(socketBean);
+        return res;
+    }
+
+    /**
+     * 解析灯的参数
+     */
+    private fun decodeLightParam(
+        pid: String?,
+        uuid: String?,
+        message: VendorModelMessageStatus
+    ): String {
+        var k = 2;
+        var res = "";
+        val lightBean = LightBean();
+        lightBean.productID = pid
+        lightBean.uuid = uuid
+
+        for (i in 1 until message.parameter.size step 2 + k) {
+            val attrType: String = ByteUtil.bytesToHexString(
+                byteArrayOf(message.parameter[i], message.parameter[i + 1])
+            )
+            var attrValue: String = ""
+            when (attrType) {
+                DC.lightCons[SWITCH] -> {
+                    //开关只占一个字节
+                    attrValue = ByteUtil.bytesToHexString(
+                        byteArrayOf(message.parameter[2 + i])
+                    )
+
+                    lightBean.switch =
+                        if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
+                    k = 1;
+                }
+                DC.lightCons[COLOR] -> {
+                    var h = ByteUtil.byteToShort(
+                        byteArrayOf(
+                            message.parameter[i + 1]
+                            , message.parameter[i]
+                        )
+                    )
+                    lightBean.color = 0
+                    k = 3;
+                }
+                DC.lightCons[LIGHTNESS_LEVEL] -> {
+                    lightBean.lightnessLevel = ByteUtil.byteArrayToInt(
+                        byteArrayOf(
+                            message.parameter[2 + i],
+                            message.parameter[2 + i + 1]
+                        )
+                    )
+                    k = 2
+                }
+                DC.lightCons[COLOR_TEMPERATURE] -> {
+                    lightBean.colorTemperature = ByteUtil.byteArrayToInt(
+                        byteArrayOf(
+                            message.parameter[2 + i],
+                            message.parameter[2 + i + 1]
+                        )
+                    )
+                    k = 2
+                }
+                DC.lightCons[MODE_NUMBER] -> {
+                    var l = message.parameter[i].toInt()
+                    lightBean.modeNumber = ""
+                    k = 2
+                }
+                DC.lightCons[EVENT] -> {
+
+                }
+            }
+        }
+        res = Gson().toJson(lightBean);
+        return res
     }
 
     fun parseLightStatus(
