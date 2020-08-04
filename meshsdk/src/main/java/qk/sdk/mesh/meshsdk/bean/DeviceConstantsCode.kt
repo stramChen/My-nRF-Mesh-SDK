@@ -47,6 +47,7 @@ const val ATTR_TYPE_COMMON_GET_STATUS = "0100" //设备上报属性
 const val ATTR_TYPE_COMMON_SET_PROTOCAL_VERSION = "0200" //设置协议版本
 const val ATTR_TYPE_COMMON_GET_QUADRUPLES = "0300" // 获取设备五元组信息
 const val ATTR_TYPE_REBOOT_GATEWAY = "0600" // 重启设备
+const val ATTR_TYPE_VIRTUAL_BUTTON = "0700" // 虚拟按钮
 
 object DeviceConstantsCode {
 

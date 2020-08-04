@@ -20,4 +20,12 @@ object MxMeshUtil {
         }
         return -1
     }
+
+    /**
+     * 生成Tid，后面会作为sequence来标示回唯一的回调
+     */
+    fun generateTid(): Long {
+        var timeCuts = System.currentTimeMillis() / 1000 % 255
+        return timeCuts
+    }
 }

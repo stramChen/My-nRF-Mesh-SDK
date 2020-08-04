@@ -557,7 +557,6 @@ object MeshSDK {
             return
         }
 
-        mConnectCallbacks["setGenericOnOff"] = callback
         try {
             if (MeshHelper.getSelectedMeshNode()?.uuid != uuid) {
                 MeshHelper.getProvisionNode()?.forEach { node ->
@@ -580,8 +579,6 @@ object MeshSDK {
                     callback
             )
 
-            mConnectCallbacks.remove("setGenericOnOff")
-            callback.onResult(true)
         } catch (e: Exception) {
             e.printStackTrace()
             callback.onResult(false)
@@ -697,7 +694,7 @@ object MeshSDK {
                         var newParam = ""
                         //如果消息有参数，消息参数需加上tid，规则：秒级时间戳余255
                         if (param.isNotEmpty()) {
-                            var timeCuts = System.currentTimeMillis() / 1000 % 255
+                            var timeCuts = MxMeshUtil.generateTid()
                             newParam =
                                     "${ByteUtil.bytesToHexString(byteArrayOf(timeCuts.toByte()))}$param"
                         }
@@ -1021,7 +1018,7 @@ object MeshSDK {
 //                    var newParam = ""
                     var newParam = "0100" + "010100"
                     //如果消息有参数，消息参数需加上tid，规则：秒级时间戳余255
-                    var timeCuts = System.currentTimeMillis() / 1000 % 255
+                    var timeCuts = MxMeshUtil.generateTid()
                     newParam =
                             "${ByteUtil.bytesToHexString(byteArrayOf(timeCuts.toByte()))}${newParam}"
                     var message = MeshHelper.getAppkeyByKeyName(result[0])?.let {
@@ -1718,11 +1715,12 @@ object MeshSDK {
             getAllApplicationKey(networkKey!!, object : ArrayStringCallback {
                 override fun onResult(result: ArrayList<String>) {
 //                    var newParam = ""
-                    var newParam = ByteUtil.bytesToHexString(byteArrayOf(vid.toByte()))
+                    var newParam = ATTR_TYPE_VIRTUAL_BUTTON+
+                            ByteUtil.bytesToHexString(byteArrayOf(vid.toByte()))
                     //如果消息有参数，消息参数需加上tid，规则：秒级时间戳余255
-                    var timeCuts = System.currentTimeMillis() / 1000 % 255
-                    newParam =
-                        "${ByteUtil.bytesToHexString(byteArrayOf(timeCuts.toByte()))}${newParam}"
+                    var timeCuts = ByteUtil.bytesToHexString(
+                        byteArrayOf(MxMeshUtil.generateTid().toByte()))
+                    newParam = "${timeCuts}${newParam}"
                     var message = MeshHelper.getAppkeyByKeyName(result[0])?.let {
                         VendorModelMessageUnacked(
                             it, VENDOR_MODELID
