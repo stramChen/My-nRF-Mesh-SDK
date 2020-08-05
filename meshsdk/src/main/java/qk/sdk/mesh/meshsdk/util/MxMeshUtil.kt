@@ -28,14 +28,16 @@ object MxMeshUtil {
 
     /**
      * 生成Tid，后面会作为sequence来标示回唯一的回调
+     * 0做保留sequence，不作为唯一的回调标示
+     * sequence逻辑为1-253作为10s内的唯一标示符，超过10s则从1开始重新计数
      */
     fun generateTid(): Int {
         var res :Int;
         var currentTime:Long = System.currentTimeMillis();
         if(currentTime - lastTime< interval){
-            res =  timeout.incrementAndGet()%254
+            res =  1+timeout.incrementAndGet()%253
         }else{
-            timeout.set(0)
+            timeout.set(1)
             res =  timeout.get()
         }
         lastTime = currentTime;

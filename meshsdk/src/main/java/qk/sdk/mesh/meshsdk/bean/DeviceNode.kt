@@ -9,9 +9,4 @@ package qk.sdk.mesh.meshsdk.bean
 data class DeviceNode<T>(
     var status:String? = null,
     var deviceId:String?  = null,
-    var properties :T? = null){
-    companion object{
-        public const val STATUS_ONLINE   = "Online";
-        public const val STATUS_OFFLINE   = "Offline";
-    }
-}
+    var properties :T? = null)

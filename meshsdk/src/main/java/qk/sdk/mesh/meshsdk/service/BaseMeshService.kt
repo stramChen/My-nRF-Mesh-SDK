@@ -174,7 +174,7 @@ open class BaseMeshService : LifecycleService() {
                                                 else if (heartBeanTag == 2) {
                                                     mHeartBeatMap[uuid] = heartBeanTag and 0
                                                     var subRes = SubscribeBean(TYPE_DEVICE_STATUS
-                                                            ,DeviceNode<Any>(DeviceNode.STATUS_OFFLINE, uuid));
+                                                            ,DeviceNode<Any>(STATUS_OFFLINE, uuid));
                                                     mDownStreamCallback?.onCommand(Gson().toJson(subRes));
                                                 }
                                                 //设备上线了 01，feedback
@@ -223,7 +223,7 @@ open class BaseMeshService : LifecycleService() {
             //设备一直处于离线状态，赶紧通知它上线吧！
             if ((mHeartBeatMap[uuid] ?: 0) == 0) {
                 var subRes = SubscribeBean(TYPE_DEVICE_STATUS
-                        ,DeviceNode<Any>(DeviceNode.STATUS_ONLINE, uuid));
+                        ,DeviceNode<Any>(STATUS_ONLINE, uuid));
                 mDownStreamCallback?.onCommand(Gson().toJson(subRes));
             }
             //让高位为1,表示当前它肯定是在线的
@@ -718,6 +718,14 @@ open class BaseMeshService : LifecycleService() {
             )
             var attrValue: String = ""
             when (attrType) {
+                ATTR_TYPE_GET_VERSION -> {
+                    //解析版本号
+                    attrValue = ByteUtil.bytesToHexString(
+                        byteArrayOf(parameter[2 + i],parameter[2 + i+1],parameter[2 + i+2])
+                    )
+                    pirSensor.version = attrValue
+                    k = 3;
+                }
                 DC.pirSensorCons[BIO_SENSER] -> {
                     //有人无人只占一个字节
                     attrValue = ByteUtil.bytesToHexString(
@@ -763,8 +771,16 @@ open class BaseMeshService : LifecycleService() {
         socketBean.uuid = uuid
         for (i in 1 until parameter.size step 2 + k) {
             val attrType: String = parameter[i].toString(16);
-            val attrValue: String = parameter[i + 1].toString(16);
+            var attrValue: String = ""
             when (attrType) {
+                ATTR_TYPE_GET_VERSION -> {
+                    //解析版本号
+                    attrValue = ByteUtil.bytesToHexString(
+                        byteArrayOf(parameter[2 + i],parameter[2 + i+1],parameter[2 + i+2])
+                    )
+                    socketBean.version = attrValue
+                    k = 3;
+                }
                 DC.socketCons[SWITCH] -> {
                     socketBean.switch =
                             if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
@@ -809,6 +825,14 @@ open class BaseMeshService : LifecycleService() {
             )
             var attrValue: String = ""
             when (attrType) {
+                ATTR_TYPE_GET_VERSION -> {
+                    //解析版本号
+                    attrValue = ByteUtil.bytesToHexString(
+                        byteArrayOf(parameter[2 + i],parameter[2 + i+1],parameter[2 + i+2])
+                    )
+                    lightBean.version = attrValue
+                    k = 3;
+                }
                 DC.lightCons[SWITCH] -> {
                     //开关只占一个字节
                     attrValue = ByteUtil.bytesToHexString(

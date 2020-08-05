@@ -1601,9 +1601,13 @@ object MeshSDK {
     /**
      * 获取设备版本号
      */
-//    fun getDeviceVersion(uuid: String, callback: MapCallback) {
-//        sendMeshMessage(uuid, 0, "0A", "", callback, "getDeviceVersion")
-//    }
+    fun getDeviceVersion(uuid: String, callback: StringCallback) {
+        sendMeshMessage(uuid
+            , 0
+            , VENDOR_MSG_OPCODE_ATTR_GET
+            , listOf(Pair(ATTR_TYPE_GET_VERSION, null))
+            , callback)
+    }
 
     /**
      * 虚拟按钮
