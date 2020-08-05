@@ -50,6 +50,7 @@ const val GET_COMPOSITION_DATA = "getCompositionData"
 const val ATTR_TYPE_COMMON_GET_STATUS = "0100" //设备上报属性
 const val ATTR_TYPE_COMMON_SET_PROTOCAL_VERSION = "0200" //设置协议版本
 const val ATTR_TYPE_COMMON_GET_QUADRUPLES = "0300" // 获取设备五元组信息
+const val ATTR_TYPE_GET_VERSION = "0500" // 获取设备固件版本号
 const val ATTR_TYPE_REBOOT_GATEWAY = "0600" // 重启设备
 const val ATTR_TYPE_VIRTUAL_BUTTON = "0700" // 虚拟按钮
 
@@ -110,7 +111,7 @@ object DeviceConstantsCode {
 
     //内部封装相关操作码
     val MeshGateWayCons: HashMap<String, String> = hashMapOf(
-            PRODUCT_ID to "3808465"
+        PRODUCT_ID to "3808465"
     )
     /*************************************PIR传感器***************************************/
 
