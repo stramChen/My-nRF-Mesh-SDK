@@ -8,20 +8,15 @@ import no.nordicsemi.android.meshprovisioner.UnprovisionedBeacon
 import no.nordicsemi.android.meshprovisioner.models.GenericOnOffServerModel
 import no.nordicsemi.android.meshprovisioner.models.VendorModel
 import no.nordicsemi.android.meshprovisioner.transport.*
-import qk.sdk.mesh.meshsdk.bean.CallbackMsg
-import qk.sdk.mesh.meshsdk.bean.CommonErrorMsg
-import qk.sdk.mesh.meshsdk.bean.DeviceConstantsCode
-import qk.sdk.mesh.meshsdk.bean.ExtendedBluetoothDevice
+import qk.sdk.mesh.meshsdk.bean.*
 import qk.sdk.mesh.meshsdk.callback.*
 import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
 import qk.sdk.mesh.meshsdk.service.BaseMeshService
 import qk.sdk.mesh.meshsdk.util.*
 import qk.sdk.mesh.meshsdk.util.Constants.ConnectState
-import java.lang.StringBuilder
 import java.lang.Thread.sleep
 import java.util.concurrent.atomic.AtomicBoolean
-import qk.sdk.mesh.meshsdk.bean.*
-import qk.sdk.mesh.meshsdk.bean.DeviceConstantsCode as DC;
+import qk.sdk.mesh.meshsdk.bean.DeviceConstantsCode as DC
 
 object MeshSDK {
     private val TAG = "MeshSDK"
@@ -779,10 +774,10 @@ object MeshSDK {
         properties.forEach {
             when (productId) {
                 DC.lightCons[PRODUCT_ID] -> {
-                    param!!.add(Pair(DeviceConstantsCode.lightCons[it],null))
+                    param!!.add(Pair(DC.lightCons[it],null))
                 }
                 DC.socketCons[PRODUCT_ID] -> {
-                    param!!.add(Pair(DeviceConstantsCode.socketCons[it],null))
+                    param!!.add(Pair(DC.socketCons[it],null))
                 }
             }
         }
@@ -1642,7 +1637,7 @@ object MeshSDK {
     /**
      * 虚拟按钮
      */
-    fun sendGroupMsg(groupAddr: Int, vid: Int) {
+    fun sendGroupMsg(vid: Int) {
         MeshHelper.getGroupByAddress(ALL_DEVICE_SYNC_ADDR)?.let { group ->
             val networkKey =
                 MeshHelper.MeshProxyService.mMeshProxyService?.getCurrentNetworkKeyStr();

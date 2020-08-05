@@ -14,22 +14,6 @@ public class ByteUtil {
     static final String TAG = "ByteUtil";
 
     /**
-     * int到字节数组的转换！
-     *
-     * @param number
-     * @return
-     */
-    public static byte[] intToByte(int number) {
-        int temp = number;
-        byte[] b = new byte[4];
-        for (int i = 0; i < b.length; i++) {
-            b[i] = new Integer(temp & 0xff).byteValue();//将最低位保存在最低位
-            temp = temp >> 8; // 向右移8位
-        }
-        return b;
-    }
-
-    /**
      * short到字节数组的转换
      *
      * @param
@@ -42,6 +26,33 @@ public class ByteUtil {
             targets[targets.length - 1 - i] = (byte) ((number >>> offset) & 0xff);
         }
         return targets;
+    }
+
+    /**
+     * 以大端形式，short 转byte[]
+     *
+     * @param number
+     * @return
+     */
+    public static byte[] shortToByteBig(short number) {
+        byte[] targets = new byte[2];
+        for (int i = 0; i < 2; i++) {
+            int offset = (targets.length - 1 - i) * 8;
+            targets[i] = (byte) ((number >> offset) & 0xff);
+        }
+        return targets;
+    }
+
+    /**
+     * 以大端模式将int转成byte[]
+     */
+    public static byte[] intToBytesBig(int value) {
+        byte[] src = new byte[4];
+        for (int i = 0; i < src.length; i++) {
+            int offset = (src.length - 1 - i) * 8;
+            src[i] = (byte) ((value >> offset) & 0xFF);
+        }
+        return src;
     }
 
     public static short byteToShort(byte[] b) {
