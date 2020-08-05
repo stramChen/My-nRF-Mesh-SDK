@@ -5,7 +5,7 @@ package qk.sdk.mesh.meshsdk.bean
  * @author: chensc@mxchip.com
  * @date: 2020/8/1 11:30 AM
  */
-data class PirSensor(var bioSenser:String? =null,
-                     var remainingElectricity:String? =null,
-                     var event:String? =null) :
+data class PirSensorBean(var bioSenser:String? =null,
+                         var remainingElectricity:String? =null,
+                         var event:String? =null) :
     DeviceBaseProperty()

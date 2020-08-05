@@ -689,10 +689,11 @@ object MeshSDK {
 
                         var newParam = ""
                         //如果消息有参数，消息参数需加上tid，规则：秒级时间戳余255
+                        var sequence:Int = 0;
                         if (param.isNotEmpty()) {
-                            var timeCuts = MxMeshUtil.generateTid()
+                            sequence = MxMeshUtil.generateTid()
                             newParam =
-                                    "${ByteUtil.bytesToHexString(byteArrayOf(timeCuts.toByte()))}$param"
+                                    "${ByteUtil.bytesToHexString(byteArrayOf(sequence.toByte()))}$param"
                         }
 
                         var msgIndex = -1
@@ -715,7 +716,7 @@ object MeshSDK {
                                         )
 
                                         MeshHelper.sendMessage(
-                                                MeshHelper.generatePrimaryKey(uuid),
+                                                MeshHelper.generatePrimaryKey(sequence,uuid),
                                                 element.elementAddress,
                                                 message,
                                                 callback, timeout, retry
@@ -989,13 +990,13 @@ object MeshSDK {
     fun subscribeDeviceStatus(callback: IDeviceStatusCallBack) {
         createGroup(SUBSCRIBE_ALL_DEVICE, object : BooleanCallback() {
             override fun onResult(boolean: Boolean) {
-                Utils.printLog(TAG, "createGroup:$boolean")
+                Utils.printLog(TAG, "===>[mesh] createGroup:$SUBSCRIBE_ALL_DEVICE:$boolean")
             }
         }, SUBSCRIBE_ALL_DEVICE_ADDR)
         //创建一个组播地址为了同步设备状态
         createGroup(ALL_DEVICE_SYNC, object : BooleanCallback() {
             override fun onResult(boolean: Boolean) {
-                Utils.printLog(TAG, "createGroup:$boolean")
+                Utils.printLog(TAG, "===>[mesh] createGroup:$ALL_DEVICE_SYNC$boolean")
             }
         }, ALL_DEVICE_SYNC_ADDR)
         BaseMeshService.mDownStreamCallback = callback

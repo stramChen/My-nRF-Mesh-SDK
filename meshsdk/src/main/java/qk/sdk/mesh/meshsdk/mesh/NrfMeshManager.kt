@@ -307,7 +307,7 @@ class NrfMeshManager(
         initIsConnectedLiveData()
         Utils.printLog(
             TAG,
-            "post msg:${CONNECTING.msg},bleMeshManager is null:${bleMeshManager == null},state has active observers:${mConnectionState.hasActiveObservers()}"
+            "===>[mesh] post msg:${CONNECTING.msg},bleMeshManager is null:${bleMeshManager == null},state has active observers:${mConnectionState.hasActiveObservers()}"
         )
         if (!mConnectionState.hasActiveObservers()) {
             if (context is BaseMeshService) {

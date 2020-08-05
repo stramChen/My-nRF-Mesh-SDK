@@ -694,8 +694,9 @@ object MeshHelper {
      * 生成一个hash键，但有时候它并不唯一，因此后面会优化
      */
     fun generatePrimaryKey(
-        uuid: String?=null
-    ) = uuid+""
+            sequence:Int?=null,
+            uuid: String?=null
+    ) = sequence.toString()+uuid
 
 
     private var mMeshProxyServiceCallback: MapCallback? = null

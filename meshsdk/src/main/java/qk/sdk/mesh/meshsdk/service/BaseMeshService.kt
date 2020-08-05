@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.Observer
 import com.google.gson.Gson
+import com.google.gson.JsonParser
 import no.nordicsemi.android.meshprovisioner.MeshManagerApi
 import no.nordicsemi.android.meshprovisioner.MeshNetwork
 import no.nordicsemi.android.meshprovisioner.NetworkKey
@@ -172,15 +173,9 @@ open class BaseMeshService : LifecycleService() {
                                                 //设备离线了 10,feedback
                                                 else if (heartBeanTag == 2) {
                                                     mHeartBeatMap[uuid] = heartBeanTag and 0
-                                                    mDownStreamCallback?.onCommand(
-                                                            Gson()
-                                                                    .toJson(
-                                                                            DeviceNode<Any>(
-                                                                                    DeviceNode.STATUS_OFFLINE,
-                                                                                    uuid
-                                                                            )
-                                                                    )
-                                                    )
+                                                    var subRes = SubscribeBean(TYPE_DEVICE_STATUS
+                                                            ,DeviceNode<Any>(DeviceNode.STATUS_OFFLINE, uuid));
+                                                    mDownStreamCallback?.onCommand(Gson().toJson(subRes));
                                                 }
                                                 //设备上线了 01，feedback
                                                 else if (heartBeanTag == 1) {
@@ -227,10 +222,9 @@ open class BaseMeshService : LifecycleService() {
         synchronized(mHearBeanLock) {
             //设备一直处于离线状态，赶紧通知它上线吧！
             if ((mHeartBeatMap[uuid] ?: 0) == 0) {
-                mDownStreamCallback?.onCommand(
-                        Gson()
-                                .toJson(DeviceNode<Any>(DeviceNode.STATUS_ONLINE, uuid))
-                )
+                var subRes = SubscribeBean(TYPE_DEVICE_STATUS
+                        ,DeviceNode<Any>(DeviceNode.STATUS_ONLINE, uuid));
+                mDownStreamCallback?.onCommand(Gson().toJson(subRes));
             }
             //让高位为1,表示当前它肯定是在线的
             mHeartBeatMap[uuid] = (mHeartBeatMap[uuid] ?: 0) or 1;
@@ -251,7 +245,7 @@ open class BaseMeshService : LifecycleService() {
         })
         mNrfMeshManager?.connectionState?.observe(this, Observer {
             mConnectCallback?.onConnectStateChange(it)
-            Utils.printLog(TAG, " mNrfMeshManager?.connectionState:${it.msg}")
+            Utils.printLog(TAG, "===>[mesh] mNrfMeshManager?.connectionState:${it.msg}")
             LogFileUtil.writeLogToInnerFile(
                     this@BaseMeshService,
                     "${it.msg}",
@@ -631,67 +625,114 @@ open class BaseMeshService : LifecycleService() {
     fun decodeMessageAndFeedBack(message: VendorModelMessageStatus) {
         val uuid = MeshHelper.getMeshNetwork()?.getNode(message.src)?.uuid
         val pid: String? = uuid?.let { MxMeshUtil.getProductIdByUUID(it).toString() }
-        val opCode = message.opCode
-        //TODO 这里要区分一下回的是组播还是单播
+        var sequence :Int= message.parameter[0].toInt();
+        var dst = message.dst;
 
-        if (message.parameter.isEmpty() || message.parameter.size < 2) {
+        var res = parseParam(message.parameter, pid, uuid)
+
+        val key = MeshHelper.generatePrimaryKey(sequence,uuid);
+        val callback = MeshHandler.getCallback(key)
+
+        //区分一下是组播消息还是单播消息
+        if (dst == SUBSCRIBE_ALL_DEVICE_ADDR) {
+            var subRes = SubscribeBean(TYPE_PIR_SENSOR,JsonParser().parse(res));
+            mDownStreamCallback?.onCommand(Gson().toJson(subRes));
+        } else {
+            if (null != callback) {
+                if (callback is StringCallback) {
+                    callback.onResultMsg(res);
+                }
+                //为了兼容前同事的工作成果，和减少改动，这里暂时保留BoooleanCallBack
+                if (callback is BooleanCallback) {
+                    callback.onResult(true);
+                }
+                MeshHandler.removeRunnable(key)
+            }
+        }
+    }
+
+    /**
+     * 解析组播消息
+     * @param message VendorModel类型的消息
+     * @param pid productID
+     * @param uuid 设备产品唯一id，详情见(https://mxchip.yuque.com/vbs9010/lggpem/oi12gf)
+     */
+    private fun parseGroupCastParam(
+            message: VendorModelMessageStatus,
+            pid: String?,
+            uuid: String?
+    ) {
+
+    }
+
+    /**
+     * 解析单播消息
+     * @param message VendorModel类型的消息
+     * @param pid productID
+     * @param uuid 设备产品唯一类型，详情见(https://mxchip.yuque.com/vbs9010/lggpem/oi12gf)
+     */
+    private fun parseParam(
+            parameter: ByteArray,
+            pid: String?,
+            uuid: String?
+    ): String {
+        if (parameter.isEmpty() || parameter.size < 2) {
             throw RuntimeException("received message params can not be null")
         }
         Utils.printLog(
-                TAG, "vendor msg:${ByteUtil.bytesToHexString(message.parameter)}"
+                TAG, "vendor msg:${ByteUtil.bytesToHexString(parameter)}"
         )
         //根据产品型号来解码对应的参数，参数以key&value&key&value形式来区分,key占两个字节，value占k个字节
         var res = "";
         when (pid) {
             DC.lightCons[PRODUCT_ID] -> {
-                res = decodeLightParam(pid, uuid, message)
+                res = decodeLightParam(pid, uuid, parameter)
             }
             DC.socketCons[PRODUCT_ID] -> {
-                res = decodeSocketParams(pid, uuid, message)
+                res = decodeSocketParams(pid, uuid, parameter)
             }
             DC.pirSensorCons[PRODUCT_ID] -> {
-                res = decodePirSensorParams(pid, uuid, message)
+                res = decodePirSensorParams(pid, uuid, parameter)
             }
         }
-        val key = MeshHelper.generatePrimaryKey(uuid);
-        val callback = MeshHandler.getCallback(key)
-
-        if (null != callback) {
-            if (callback is StringCallback) {
-                callback.onResultMsg(res);
-            }
-            //为了兼容前同事的工作成果，和减少改动，这里暂时保留BoooleanCallBack
-            if (callback is BooleanCallback) {
-                callback.onResult(true);
-            }
-            MeshHandler.removeRunnable(key)
-        }
+        return res;
     }
+
 
     /**
      * 解析Pir传感器参数
      */
     private fun decodePirSensorParams(
-        pid: String?,
-        uuid: String?,
-        message: VendorModelMessageStatus
-    ):String {
+            pid: String?,
+            uuid: String?,
+            parameter: ByteArray
+    ): String {
         var res = "";
         var k = 2;
-        val pirSensor = PirSensor();
+        val pirSensor = PirSensorBean();
         pirSensor.productID = pid
         pirSensor.uuid = uuid
-        for (i in message.parameter.indices step 2 + k) {
-            val attrType: String = message.parameter[i].toString(16);
-            val attrValue: String = message.parameter[i + 1].toString(16)
+        for (i in 1 until parameter.size step 2 + k) {
+            val attrType: String = ByteUtil.bytesToHexString(
+                    byteArrayOf(parameter[i], parameter[i + 1])
+            )
+            var attrValue: String = ""
             when (attrType) {
                 DC.pirSensorCons[BIO_SENSER] -> {
+                    //有人无人只占一个字节
+                    attrValue = ByteUtil.bytesToHexString(
+                            byteArrayOf(parameter[2 + i])
+                    )
                     pirSensor.bioSenser =
-                        if (attrValue == DC.CODE_SWITCH_ON) BIO_SENSER_ON else BIO_SENSER_OFF
+                            if (attrValue == DC.CODE_SWITCH_ON) BIO_SENSER_ON else BIO_SENSER_OFF
                     k = 2
                 }
                 DC.pirSensorCons[REMAINING_ELECTRICITY] -> {
-                    pirSensor.remainingElectricity = ""
+                    //电量只占一个字节
+                    attrValue = ByteUtil.bytesToHexString(
+                            byteArrayOf(parameter[2 + i])
+                    )
+                    pirSensor.remainingElectricity = attrValue
                     k = 2
                 }
                 DC.pirSensorCons[SWITCH_THIRD] -> {
@@ -711,32 +752,32 @@ open class BaseMeshService : LifecycleService() {
      * 解析插座，开关
      */
     private fun decodeSocketParams(
-        pid: String?,
-        uuid: String?,
-        message: VendorModelMessageStatus
-    ):String {
+            pid: String?,
+            uuid: String?,
+            parameter: ByteArray
+    ): String {
         var res = "";
         var k = 2
         val socketBean = SocketBean();
         socketBean.productID = pid
         socketBean.uuid = uuid
-        for (i in message.parameter.indices step 2 + k) {
-            val attrType: String = message.parameter[i].toString(16);
-            val attrValue: String = message.parameter[i + 1].toString(16);
+        for (i in 1 until parameter.size step 2 + k) {
+            val attrType: String = parameter[i].toString(16);
+            val attrValue: String = parameter[i + 1].toString(16);
             when (attrType) {
                 DC.socketCons[SWITCH] -> {
                     socketBean.switch =
-                        if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
+                            if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
                     k = 2
                 }
                 DC.socketCons[SWITCH_SECOND] -> {
                     socketBean.switchSecond =
-                        if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
+                            if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
                     k = 2
                 }
                 DC.socketCons[SWITCH_THIRD] -> {
                     socketBean.switchThird =
-                        if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
+                            if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
                     k = 2
                 }
                 DC.socketCons[EVENT] -> {
@@ -752,9 +793,9 @@ open class BaseMeshService : LifecycleService() {
      * 解析灯的参数
      */
     private fun decodeLightParam(
-        pid: String?,
-        uuid: String?,
-        message: VendorModelMessageStatus
+            pid: String?,
+            uuid: String?,
+            parameter: ByteArray
     ): String {
         var k = 2;
         var res = "";
@@ -762,52 +803,52 @@ open class BaseMeshService : LifecycleService() {
         lightBean.productID = pid
         lightBean.uuid = uuid
 
-        for (i in 1 until message.parameter.size step 2 + k) {
+        for (i in 1 until parameter.size step 2 + k) {
             val attrType: String = ByteUtil.bytesToHexString(
-                byteArrayOf(message.parameter[i], message.parameter[i + 1])
+                    byteArrayOf(parameter[i], parameter[i + 1])
             )
             var attrValue: String = ""
             when (attrType) {
                 DC.lightCons[SWITCH] -> {
                     //开关只占一个字节
                     attrValue = ByteUtil.bytesToHexString(
-                        byteArrayOf(message.parameter[2 + i])
+                            byteArrayOf(parameter[2 + i])
                     )
 
                     lightBean.switch =
-                        if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
+                            if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
                     k = 1;
                 }
                 DC.lightCons[COLOR] -> {
                     var h = ByteUtil.byteToShort(
-                        byteArrayOf(
-                            message.parameter[i + 1]
-                            , message.parameter[i]
-                        )
+                            byteArrayOf(
+                                    parameter[i + 1]
+                                    , parameter[i]
+                            )
                     )
                     lightBean.color = 0
                     k = 3;
                 }
                 DC.lightCons[LIGHTNESS_LEVEL] -> {
                     lightBean.lightnessLevel = ByteUtil.byteArrayToInt(
-                        byteArrayOf(
-                            message.parameter[2 + i],
-                            message.parameter[2 + i + 1]
-                        )
+                            byteArrayOf(
+                                    parameter[2 + i],
+                                    parameter[2 + i + 1]
+                            )
                     )
                     k = 2
                 }
                 DC.lightCons[COLOR_TEMPERATURE] -> {
                     lightBean.colorTemperature = ByteUtil.byteArrayToInt(
-                        byteArrayOf(
-                            message.parameter[2 + i],
-                            message.parameter[2 + i + 1]
-                        )
+                            byteArrayOf(
+                                    parameter[2 + i],
+                                    parameter[2 + i + 1]
+                            )
                     )
                     k = 2
                 }
                 DC.lightCons[MODE_NUMBER] -> {
-                    var l = message.parameter[i].toInt()
+                    var l = parameter[i].toInt()
                     lightBean.modeNumber = ""
                     k = 2
                 }

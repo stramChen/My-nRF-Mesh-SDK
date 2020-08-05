@@ -1,11 +1,16 @@
 package qk.sdk.mesh.meshsdk.util
 
+import java.util.concurrent.atomic.AtomicInteger
+
 /**
  * @des:
  * @author: chensc@mxchip.com
  * @date: 2020/7/30 4:18 PM
  */
 object MxMeshUtil {
+    var timeout:AtomicInteger = AtomicInteger(0);
+    var interval :Long= 10*1000;
+    var lastTime:Long = 0;
     fun getProductIdByUUID(uuid: String): Int {
         var uuidHex = uuid.replace("-", "")
         var uuidBytes = ByteUtil.hexStringToBytes(uuidHex)
@@ -24,8 +29,16 @@ object MxMeshUtil {
     /**
      * 生成Tid，后面会作为sequence来标示回唯一的回调
      */
-    fun generateTid(): Long {
-        var timeCuts = System.currentTimeMillis() / 1000 % 255
-        return timeCuts
+    fun generateTid(): Int {
+        var res :Int;
+        var currentTime:Long = System.currentTimeMillis();
+        if(currentTime - lastTime< interval){
+            res =  timeout.incrementAndGet()%254
+        }else{
+            timeout.set(0)
+            res =  timeout.get()
+        }
+        lastTime = currentTime;
+        return res;
     }
 }

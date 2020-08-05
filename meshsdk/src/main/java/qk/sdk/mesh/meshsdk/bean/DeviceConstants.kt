@@ -9,6 +9,8 @@ package qk.sdk.mesh.meshsdk.bean
 /*************************************给调用着使用****************************************/
     //产品ID
     const val PRODUCT_ID = "product_id";
+    //产品KEY
+    const val PRODUCT_KEY = "product_key";
 
     //开关
     const val SWITCH = "switch";
