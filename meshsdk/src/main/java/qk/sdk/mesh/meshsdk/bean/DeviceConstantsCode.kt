@@ -67,7 +67,8 @@ object DeviceConstantsCode {
     const val CODE_SWITCH_OFF = "00";
 
     val lightCons: HashMap<String, String> = hashMapOf(
-            PRODUCT_ID to "5494080",
+//            PRODUCT_ID to "5494080",
+            PRODUCT_ID to "3808464",
             SWITCH to "0001",//开关
             COLOR to "2301",//颜色hsv
             LIGHTNESS_LEVEL to "2101",//亮度

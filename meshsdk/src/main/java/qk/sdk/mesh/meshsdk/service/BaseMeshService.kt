@@ -708,14 +708,17 @@ open class BaseMeshService : LifecycleService() {
             parameter: ByteArray
     ): String {
         var res = "";
-        var k = 2;
         val pirSensor = PirSensorBean();
         pirSensor.productID = pid
         pirSensor.uuid = uuid
-        for (i in 1 until parameter.size step 2 + k) {
+        var i = 1;
+        var attrTypeLen = 2;
+        while (i<parameter.size) {
             val attrType: String = ByteUtil.bytesToHexString(
-                    byteArrayOf(parameter[i], parameter[i + 1])
+                byteArrayOf(parameter[i], parameter[i + 1])
             )
+            //这里先不解析五元组
+            if(attrType == ATTR_TYPE_COMMON_GET_QUADRUPLES) return "{}";
             var attrValue: String = ""
             when (attrType) {
                 ATTR_TYPE_GET_VERSION -> {
@@ -723,8 +726,8 @@ open class BaseMeshService : LifecycleService() {
                     attrValue = ByteUtil.bytesToHexString(
                         byteArrayOf(parameter[2 + i],parameter[2 + i+1],parameter[2 + i+2])
                     )
-                    pirSensor.version = attrValue
-                    k = 3;
+                    pirSensor.version = generateVersionName(attrValue)
+                    i += attrTypeLen + 3;
                 }
                 DC.pirSensorCons[BIO_SENSER] -> {
                     //有人无人只占一个字节
@@ -733,7 +736,7 @@ open class BaseMeshService : LifecycleService() {
                     )
                     pirSensor.bioSenser =
                             if (attrValue == DC.CODE_SWITCH_ON) BIO_SENSER_ON else BIO_SENSER_OFF
-                    k = 2
+                    i += attrTypeLen+ 1
                 }
                 DC.pirSensorCons[REMAINING_ELECTRICITY] -> {
                     //电量只占一个字节
@@ -741,14 +744,14 @@ open class BaseMeshService : LifecycleService() {
                             byteArrayOf(parameter[2 + i])
                     )
                     pirSensor.remainingElectricity = attrValue
-                    k = 2
+                    i += attrTypeLen+ 1
                 }
                 DC.pirSensorCons[SWITCH_THIRD] -> {
                     pirSensor.event = ""
-                    k = 2
+                    i += attrTypeLen+ 2
                 }
                 DC.pirSensorCons[EVENT] -> {
-                    k = 2
+                    i += attrTypeLen+ 2
                 }
             }
         }
@@ -765,12 +768,17 @@ open class BaseMeshService : LifecycleService() {
             parameter: ByteArray
     ): String {
         var res = "";
-        var k = 2
         val socketBean = SocketBean();
         socketBean.productID = pid
         socketBean.uuid = uuid
-        for (i in 1 until parameter.size step 2 + k) {
-            val attrType: String = parameter[i].toString(16);
+        var i = 1;
+        var attrLen = 2;
+        while (i <parameter.size) {
+            val attrType: String = ByteUtil.bytesToHexString(
+                byteArrayOf(parameter[i], parameter[i + 1])
+            )
+            //这里先不解析五元组
+            if(attrType == ATTR_TYPE_COMMON_GET_QUADRUPLES) return "{}";
             var attrValue: String = ""
             when (attrType) {
                 ATTR_TYPE_GET_VERSION -> {
@@ -778,26 +786,26 @@ open class BaseMeshService : LifecycleService() {
                     attrValue = ByteUtil.bytesToHexString(
                         byteArrayOf(parameter[2 + i],parameter[2 + i+1],parameter[2 + i+2])
                     )
-                    socketBean.version = attrValue
-                    k = 3;
+                    socketBean.version = generateVersionName(attrValue)
+                    i += attrLen+ 3;
                 }
                 DC.socketCons[SWITCH] -> {
                     socketBean.switch =
                             if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
-                    k = 2
+                    i += attrLen+ 2
                 }
                 DC.socketCons[SWITCH_SECOND] -> {
                     socketBean.switchSecond =
                             if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
-                    k = 2
+                    i += attrLen+ 2
                 }
                 DC.socketCons[SWITCH_THIRD] -> {
                     socketBean.switchThird =
                             if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
-                    k = 2
+                    i += attrLen+ 2
                 }
                 DC.socketCons[EVENT] -> {
-                    k = 2
+                    i += attrLen+ 2
                 }
             }
         }
@@ -813,16 +821,19 @@ open class BaseMeshService : LifecycleService() {
             uuid: String?,
             parameter: ByteArray
     ): String {
-        var k = 2;
         var res = "";
         val lightBean = LightBean();
         lightBean.productID = pid
         lightBean.uuid = uuid
-
-        for (i in 1 until parameter.size step 2 + k) {
+        var i = 1;
+        var attrLen = 2;
+        while (i<parameter.size) {
             val attrType: String = ByteUtil.bytesToHexString(
                     byteArrayOf(parameter[i], parameter[i + 1])
             )
+            //这里先不解析五元组
+            if(attrType == ATTR_TYPE_COMMON_GET_QUADRUPLES) return "{}";
+
             var attrValue: String = ""
             when (attrType) {
                 ATTR_TYPE_GET_VERSION -> {
@@ -830,8 +841,8 @@ open class BaseMeshService : LifecycleService() {
                     attrValue = ByteUtil.bytesToHexString(
                         byteArrayOf(parameter[2 + i],parameter[2 + i+1],parameter[2 + i+2])
                     )
-                    lightBean.version = attrValue
-                    k = 3;
+                    lightBean.version = generateVersionName(attrValue)
+                    i += attrLen+3;
                 }
                 DC.lightCons[SWITCH] -> {
                     //开关只占一个字节
@@ -841,7 +852,7 @@ open class BaseMeshService : LifecycleService() {
 
                     lightBean.switch =
                             if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
-                    k = 1;
+                    i += attrLen+ 1;
                 }
                 DC.lightCons[COLOR] -> {
                     var h = ByteUtil.byteToShort(
@@ -851,7 +862,7 @@ open class BaseMeshService : LifecycleService() {
                             )
                     )
                     lightBean.color = 0
-                    k = 3;
+                    i += attrLen+ 3;
                 }
                 DC.lightCons[LIGHTNESS_LEVEL] -> {
                     lightBean.lightnessLevel = ByteUtil.byteArrayToInt(
@@ -860,7 +871,7 @@ open class BaseMeshService : LifecycleService() {
                                     parameter[2 + i + 1]
                             )
                     )
-                    k = 2
+                    i += attrLen+ 2
                 }
                 DC.lightCons[COLOR_TEMPERATURE] -> {
                     lightBean.colorTemperature = ByteUtil.byteArrayToInt(
@@ -869,12 +880,12 @@ open class BaseMeshService : LifecycleService() {
                                     parameter[2 + i + 1]
                             )
                     )
-                    k = 2
+                    i += attrLen+ 2
                 }
                 DC.lightCons[MODE_NUMBER] -> {
                     var l = parameter[i].toInt()
                     lightBean.modeNumber = ""
-                    k = 2
+                    i += attrLen+ 2
                 }
                 DC.lightCons[EVENT] -> {
 
@@ -883,6 +894,12 @@ open class BaseMeshService : LifecycleService() {
         }
         res = Gson().toJson(lightBean);
         return res
+    }
+
+    private fun generateVersionName(attrValue: String): String {
+        return "" + attrValue.substring(0, 2).toInt() +
+                "." + attrValue.substring(2, 4).toInt() +
+                "." + attrValue.substring(4, 6).toInt()
     }
 
     fun parseLightStatus(

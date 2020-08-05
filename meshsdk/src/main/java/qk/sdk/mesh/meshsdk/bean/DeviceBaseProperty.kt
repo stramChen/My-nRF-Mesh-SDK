@@ -1,7 +1,7 @@
 package qk.sdk.mesh.meshsdk.bean
 
 /**
- * @des:
+ * @des:设备基础类
  * @author: chensc@mxchip.com
  * @date: 2020/8/1 11:30 AM
  */
