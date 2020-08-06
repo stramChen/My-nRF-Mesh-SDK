@@ -292,11 +292,11 @@ object Utils {
 //        if (BuildConfig.DEBUG) {
         Log.d(tag, msg)
 //        }
-        LogFileUtil.writeLogToInnerFile(
-            mContext,
-            "$tag-$msg",
-            LogFileUtil.getInnerFileName(Constants.MESH_LOG_FILE_NAME)
-        )
+//        LogFileUtil.writeLogToInnerFile(
+//            mContext,
+//            "$tag-$msg",
+//            LogFileUtil.getInnerFileName(Constants.MESH_LOG_FILE_NAME)
+//        )
     }
 
     fun getMacFromUUID(uuid: String): String {
