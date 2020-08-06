@@ -159,7 +159,7 @@ open class BaseMeshService : LifecycleService() {
                     mHeartBeatMap[meshNode.uuid.toUpperCase()] = 0;
                 }
                 mHeatBeatSubscription =
-                        Observable.interval(0, 35 * 1000 + 100, TimeUnit.MILLISECONDS)
+                        Observable.interval(0, 50 * 1000 + 100, TimeUnit.MILLISECONDS)
                                 .subscribeOn(Schedulers.computation())
                                 .subscribe {
                                     for (uuid in mHeartBeatMap.keys()) {
@@ -190,6 +190,8 @@ open class BaseMeshService : LifecycleService() {
                                                 }
 
                                             }
+                                            Log.d(TAG,"===>[mesh] heart beat检查结果==uuid:${uuid}" +
+                                                    "==result:${mHeartBeatMap[uuid]}")
                                         }
                                     }
                                     checkUpdateHeartBeatNode();
@@ -710,7 +712,7 @@ open class BaseMeshService : LifecycleService() {
         var res = "";
         val pirSensor = PirSensorBean();
         pirSensor.productID = pid
-        pirSensor.uuid = uuid
+        pirSensor.deviceId = uuid
         var i = 1;
         var attrTypeLen = 2;
         while (i<parameter.size) {
@@ -770,7 +772,7 @@ open class BaseMeshService : LifecycleService() {
         var res = "";
         val socketBean = SocketBean();
         socketBean.productID = pid
-        socketBean.uuid = uuid
+        socketBean.deviceId = uuid
         var i = 1;
         var attrLen = 2;
         while (i <parameter.size) {
@@ -824,7 +826,7 @@ open class BaseMeshService : LifecycleService() {
         var res = "";
         val lightBean = LightBean();
         lightBean.productID = pid
-        lightBean.uuid = uuid
+        lightBean.deviceId = uuid
         var i = 1;
         var attrLen = 2;
         while (i<parameter.size) {
