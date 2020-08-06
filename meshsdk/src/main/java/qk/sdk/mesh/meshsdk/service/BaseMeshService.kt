@@ -716,7 +716,7 @@ open class BaseMeshService : LifecycleService() {
         pirSensor.deviceId = uuid
         var i = 1;
         var attrTypeLen = 2;
-        while (i<parameter.size) {
+        while (i<parameter.size && parameter.size>2) {
             val attrType: String = ByteUtil.bytesToHexString(
                 byteArrayOf(parameter[i], parameter[i + 1])
             )
@@ -756,6 +756,9 @@ open class BaseMeshService : LifecycleService() {
                 DC.pirSensorCons[EVENT] -> {
                     i += attrTypeLen+ 2
                 }
+                else->{
+                    return "{}"
+                }
             }
         }
         res = Gson().toJson(pirSensor);
@@ -776,7 +779,7 @@ open class BaseMeshService : LifecycleService() {
         socketBean.deviceId = uuid
         var i = 1;
         var attrLen = 2;
-        while (i <parameter.size) {
+        while (i <parameter.size && parameter.size>2) {
             val attrType: String = ByteUtil.bytesToHexString(
                 byteArrayOf(parameter[i], parameter[i + 1])
             )
@@ -810,6 +813,9 @@ open class BaseMeshService : LifecycleService() {
                 DC.socketCons[EVENT] -> {
                     i += attrLen+ 2
                 }
+                else->{
+                    return "{}";
+                }
             }
         }
         res = Gson().toJson(socketBean);
@@ -830,7 +836,7 @@ open class BaseMeshService : LifecycleService() {
         lightBean.deviceId = uuid
         var i = 1;
         var attrLen = 2;
-        while (i<parameter.size) {
+        while (i<parameter.size && parameter.size>2) {
             val attrType: String = ByteUtil.bytesToHexString(
                     byteArrayOf(parameter[i], parameter[i + 1])
             )
@@ -892,6 +898,9 @@ open class BaseMeshService : LifecycleService() {
                 }
                 DC.lightCons[EVENT] -> {
 
+                }
+                else->{
+                    return "{}"
                 }
             }
         }
