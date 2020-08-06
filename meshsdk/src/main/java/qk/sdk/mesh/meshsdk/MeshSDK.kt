@@ -2,6 +2,7 @@ package qk.sdk.mesh.meshsdk
 
 import android.bluetooth.BluetoothAdapter
 import android.content.Context
+import android.util.Log
 import com.google.gson.Gson
 import me.weyye.hipermission.PermissionCallback
 import no.nordicsemi.android.meshprovisioner.UnprovisionedBeacon
@@ -692,6 +693,7 @@ object MeshSDK {
                         var sequence:Int = 0;
                         if (param.isNotEmpty()) {
                             sequence = MxMeshUtil.generateTid()
+                            Log.d(TAG,"===>[mesh] 发送数据前 生成的sequence= $sequence")
                             newParam =
                                     "${ByteUtil.bytesToHexString(byteArrayOf(sequence.toByte()))}$param"
                         }

@@ -22,10 +22,10 @@ const val DEVICE_VERSION = "device_version";
 const val SWITCH = "switch";
 
 //开
-const val SWITCH_ON = "ON";
+const val SWITCH_ON = "1";
 
 //关
-const val SWITCH_OFF = "OFF";
+const val SWITCH_OFF = "0";
 
 const val COLOR_H = "color_h";
 

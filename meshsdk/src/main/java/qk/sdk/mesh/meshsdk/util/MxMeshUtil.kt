@@ -11,6 +11,10 @@ object MxMeshUtil {
     var timeout:AtomicInteger = AtomicInteger(0);
     var interval :Long= 10*1000;
     var lastTime:Long = 0;
+
+    /**
+     * 根据UUID获取productID
+     */
     fun getProductIdByUUID(uuid: String): Int {
         var uuidHex = uuid.replace("-", "")
         var uuidBytes = ByteUtil.hexStringToBytes(uuidHex)

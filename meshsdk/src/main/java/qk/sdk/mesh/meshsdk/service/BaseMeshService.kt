@@ -628,6 +628,7 @@ open class BaseMeshService : LifecycleService() {
         val uuid = MeshHelper.getMeshNetwork()?.getNode(message.src)?.uuid
         val pid: String? = uuid?.let { MxMeshUtil.getProductIdByUUID(it).toString() }
         var sequence :Int= message.parameter[0].toInt();
+        Log.d(TAG,"===>[mesh] 收到数据后 得到的sequence= $sequence")
         var dst = message.dst;
 
         var res = parseParam(message.parameter, pid, uuid)
