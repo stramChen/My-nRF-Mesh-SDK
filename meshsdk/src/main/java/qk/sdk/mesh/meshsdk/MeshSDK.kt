@@ -55,14 +55,14 @@ object MeshSDK {
                         result["code"]?.apply {
                             if (this is Int && this == ConnectState.SERVICE_CREATED.code) {
                                 callback?.onResult(true)
-                                MeshHelper.MeshProxyService.mMeshProxyService?.startHeartBeatCheck();
+                                MeshHelper.MeshProxyService.mMeshProxyService?.tryStartHeartBeatCheck();
                             }
                         }
                     }
                 })
             } else {
                 callback?.onResult(true)
-                MeshHelper.MeshProxyService.mMeshProxyService?.startHeartBeatCheck();
+                MeshHelper.MeshProxyService.mMeshProxyService?.tryStartHeartBeatCheck();
             }
             LogFileUtil.deleteLog(mContext)
         }

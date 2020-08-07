@@ -696,7 +696,7 @@ object MeshHelper {
     fun generatePrimaryKey(
             sequence:Int?=null,
             uuid: String?=null
-    ) = sequence.toString()+uuid
+    ) = sequence.toString()+":"+uuid
 
 
     private var mMeshProxyServiceCallback: MapCallback? = null

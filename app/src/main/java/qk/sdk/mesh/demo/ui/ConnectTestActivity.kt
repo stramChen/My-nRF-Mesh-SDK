@@ -10,6 +10,7 @@ import qk.sdk.mesh.meshsdk.MeshSDK
 import qk.sdk.mesh.meshsdk.callback.*
 import qk.sdk.mesh.meshsdk.util.Utils
 import qk.sdk.mesh.meshsdk.bean.*
+import qk.sdk.mesh.meshsdk.util.LongLog
 
 class ConnectTestActivity : BaseMeshActivity() {
     private val TAG = "ConnectTestActivity"
@@ -39,11 +40,9 @@ class ConnectTestActivity : BaseMeshActivity() {
         tv_ttl.text = "${MeshHelper.getSelectedMeshNode()?.ttl ?: ""}"
 
         tv_proxy_address.setOnClickListener {
-            MeshSDK.fetchLightCurrentStatus(mUUID, object : MapCallback() {
-                override fun onResult(result: HashMap<String, Any>) {
-                    result.forEach { key, value ->
-                        Utils.printLog(TAG, "key:$key,value:$value")
-                    }
+            MeshSDK.fetchLightCurrentStatus(mUUID, object : StringCallback() {
+                override fun onResultMsg(msg: String) {
+                        Utils.printLog(TAG, msg)
                 }
             })
         }
@@ -283,7 +282,7 @@ class ConnectTestActivity : BaseMeshActivity() {
         Thread{
             MeshSDK.exportMeshNetwork(object : StringCallback() {
                 override fun onResultMsg(msg: String) {
-                    Utils.printLog(TAG, "mesh rule->$msg")
+                    LongLog.d(TAG, "mesh rule->$msg")
                 }
             })
         }.run()

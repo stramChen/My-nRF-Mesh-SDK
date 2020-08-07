@@ -149,7 +149,7 @@ open class BaseMeshService : LifecycleService() {
     /**
      * 开始心跳检查线程，这里只检查离线，在线放在上报的时候检查，这样可以加快上线的速度
      */
-    fun startHeartBeatCheck() {
+    fun tryStartHeartBeatCheck() {
         synchronized(this) {
             if (mHeatBeatSubscription != null) return;
 

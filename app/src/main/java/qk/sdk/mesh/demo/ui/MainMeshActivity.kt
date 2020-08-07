@@ -20,10 +20,7 @@ import qk.sdk.mesh.meshsdk.MeshHelper.getProvisionNode
 import qk.sdk.mesh.meshsdk.MeshSDK
 import qk.sdk.mesh.meshsdk.bean.CallbackMsg
 import qk.sdk.mesh.meshsdk.callback.*
-import qk.sdk.mesh.meshsdk.util.ByteUtil
-import qk.sdk.mesh.meshsdk.util.Constants
-import qk.sdk.mesh.meshsdk.util.LogFileUtil
-import qk.sdk.mesh.meshsdk.util.Utils
+import qk.sdk.mesh.meshsdk.util.*
 
 class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
     private val TAG = "MainMeshActivity"
@@ -214,6 +211,11 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
 //            }
             R.id.tv_groups -> {
                 startActivity(Intent(this, GroupActivity::class.java))
+//                var s:String = "";
+//                for (i in 1..4*1024){
+//                    s+="好"
+//                }
+//                Log.d("Test",s);
             }
         }
     }
