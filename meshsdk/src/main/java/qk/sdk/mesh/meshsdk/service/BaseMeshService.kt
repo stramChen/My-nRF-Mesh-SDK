@@ -190,7 +190,7 @@ open class BaseMeshService : LifecycleService() {
                                                 }
 
                                             }
-                                            Log.d(TAG,"===>[mesh] heart beat检查结果==uuid:${uuid}" +
+                                            Log.d(TAG,"===>-mesh- heart beat检查结果==uuid:${uuid}" +
                                                     "==result:${mHeartBeatMap[uuid]}")
                                         }
                                     }
@@ -247,7 +247,7 @@ open class BaseMeshService : LifecycleService() {
         })
         mNrfMeshManager?.connectionState?.observe(this, Observer {
             mConnectCallback?.onConnectStateChange(it)
-            Utils.printLog(TAG, "===>[mesh] mNrfMeshManager?.connectionState:${it.msg}")
+            Utils.printLog(TAG, "===>-mesh- mNrfMeshManager?.connectionState:${it.msg}")
             LogFileUtil.writeLogToInnerFile(
                     this@BaseMeshService,
                     "${it.msg}",
@@ -543,7 +543,7 @@ open class BaseMeshService : LifecycleService() {
         mNrfMeshManager?.meshMessageLiveData?.observe(this, Observer { meshMsg ->
             meshMsg?.apply {
                 Utils.printLog(
-                        TAG, """===>[mesh] meshMessageLiveDataResult:
+                        TAG, """===>-mesh- meshMessageLiveDataResult:
                         |${meshMsg}""".trimMargin()
                 )
 
@@ -628,7 +628,7 @@ open class BaseMeshService : LifecycleService() {
         val uuid = MeshHelper.getMeshNetwork()?.getNode(message.src)?.uuid
         val pid: String? = uuid?.let { MxMeshUtil.getProductIdByUUID(it).toString() }
         var sequence :Int= message.parameter[0].toInt();
-        Log.d(TAG,"===>[mesh] 收到数据后 得到的sequence= $sequence")
+        Log.d(TAG,"===>-mesh- 收到数据后 得到的sequence= $sequence")
         var dst = message.dst;
 
         var res = parseParam(message.parameter, pid, uuid)

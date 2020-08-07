@@ -307,7 +307,7 @@ class NrfMeshManager(
         initIsConnectedLiveData()
         Utils.printLog(
             TAG,
-            "===>[mesh] post msg:${CONNECTING.msg},bleMeshManager is null:${bleMeshManager == null},state has active observers:${mConnectionState.hasActiveObservers()}"
+            "===>-mesh- post msg:${CONNECTING.msg},bleMeshManager is null:${bleMeshManager == null},state has active observers:${mConnectionState.hasActiveObservers()}"
         )
         if (!mConnectionState.hasActiveObservers()) {
             if (context is BaseMeshService) {
@@ -1140,7 +1140,7 @@ class NrfMeshManager(
             try {
                 Utils.printLog(
                     TAG,
-                    "===>[mesh] 发现设备 onScanResult: callBackType=${callbackType} result=${result}"
+                    "===>-mesh- 发现设备 onScanResult: callBackType=${callbackType} result=${result}"
                 )
                 if (!mIsScanning)
                     return

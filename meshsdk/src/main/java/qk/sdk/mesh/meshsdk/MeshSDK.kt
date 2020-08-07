@@ -363,6 +363,10 @@ object MeshSDK {
         MeshHelper.deleteProvisionNode(MeshHelper.getProvisionedNodeByUUID(uuid))
     }
 
+    fun removeProvisionedNode(uuid: String, callBack: ProvisionCallback? = null) {
+        MeshHelper.deleteProvisionNode(MeshHelper.getProvisionedNodeByUUID(uuid),callBack)
+    }
+
     /**
      * 添加appkey，获取CompositionData并自动绑定所有的element下的所有model
      */
@@ -642,7 +646,7 @@ object MeshSDK {
     ) {
         //拼接参数
         val param = combineAttTypeAndAttValue(param);
-        Utils.printLog(TAG,"===>[mesh] 准备发送数据 uuid:${uuid}" +
+        Utils.printLog(TAG,"===>-mesh- 准备发送数据 uuid:${uuid}" +
                 "===opCode:${opcode}===param:${param}")
 
         mContext?.apply {
@@ -693,7 +697,7 @@ object MeshSDK {
                         var sequence:Int = 0;
                         if (param.isNotEmpty()) {
                             sequence = MxMeshUtil.generateTid()
-                            Log.d(TAG,"===>[mesh] 发送数据前 生成的sequence= $sequence")
+                            Log.d(TAG,"===>-mesh- 发送数据前 生成的sequence= $sequence")
                             newParam =
                                     "${ByteUtil.bytesToHexString(byteArrayOf(sequence.toByte()))}$param"
                         }
@@ -825,7 +829,7 @@ object MeshSDK {
                         var map = HashMap<String, Any>()
                         doBaseCheck(null, map, callback)
                         if (!MeshHelper.isConnectedToProxy() && MeshHelper.getProvisionNode()?.size ?: 0 > 0) {
-                            Utils.printLog(TAG, "===>[mesh] connect start scan")
+                            Utils.printLog(TAG, "===>-mesh- connect start scan")
                             setCurrentNetworkKey(networkKey)
                             MeshHelper.startScan(BleMeshManager.MESH_PROXY_UUID, object :
                                     ScanCallback {
@@ -837,7 +841,7 @@ object MeshSDK {
                                         MeshHelper.stopScan()
                                         Utils.printLog(
                                                 TAG,
-                                                "===>[mesh] connect onScanResult:${devices[0].getAddress()}"
+                                                "===>-mesh- connect onScanResult:${devices[0].getAddress()}"
                                         )
                                         var connectCallback = object :
                                                 ConnectCallback {
@@ -992,13 +996,13 @@ object MeshSDK {
     fun subscribeDeviceStatus(callback: IDeviceStatusCallBack) {
         createGroup(SUBSCRIBE_ALL_DEVICE, object : BooleanCallback() {
             override fun onResult(boolean: Boolean) {
-                Utils.printLog(TAG, "===>[mesh] createGroup:$SUBSCRIBE_ALL_DEVICE:$boolean")
+                Utils.printLog(TAG, "===>-mesh- createGroup:$SUBSCRIBE_ALL_DEVICE:$boolean")
             }
         }, SUBSCRIBE_ALL_DEVICE_ADDR)
         //创建一个组播地址为了同步设备状态
         createGroup(ALL_DEVICE_SYNC, object : BooleanCallback() {
             override fun onResult(boolean: Boolean) {
-                Utils.printLog(TAG, "===>[mesh] createGroup:$ALL_DEVICE_SYNC$boolean")
+                Utils.printLog(TAG, "===>-mesh- createGroup:$ALL_DEVICE_SYNC$boolean")
             }
         }, ALL_DEVICE_SYNC_ADDR)
         BaseMeshService.mDownStreamCallback = callback
