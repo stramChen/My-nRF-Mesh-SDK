@@ -26,23 +26,24 @@ import android.bluetooth.BluetoothDevice
 import android.os.Parcel
 import android.os.Parcelable
 import no.nordicsemi.android.meshprovisioner.MeshBeacon
+import no.nordicsemi.android.meshprovisioner.UnprovisionedBeacon
 
 import no.nordicsemi.android.support.v18.scanner.ScanResult
 
 @SuppressLint("ParcelCreator")
 class ExtendedBluetoothDevice(
-    var scanResult: ScanResult?,
-    var beacon: MeshBeacon? = null,
-    var device: BluetoothDevice? = scanResult?.device,
-    var name: String? = scanResult?.scanRecord?.deviceName,
-    var rssi: Int? = scanResult?.rssi
+        var scanResult: ScanResult?,
+        var beacon: MeshBeacon? = null,
+        var device: BluetoothDevice? = scanResult?.device,
+        var name: String? = scanResult?.scanRecord?.deviceName,
+        var rssi: Int? = scanResult?.rssi
 ) : Parcelable {
     constructor(source: Parcel) : this(
-        source.readParcelable<ScanResult>(ScanResult::class.java.classLoader),
-        source.readParcelable<MeshBeacon>(MeshBeacon::class.java.classLoader),
-        source.readParcelable<BluetoothDevice>(BluetoothDevice::class.java.classLoader),
-        source.readString(),
-        source.readInt()
+            source.readParcelable<ScanResult>(ScanResult::class.java.classLoader),
+            source.readParcelable<MeshBeacon>(MeshBeacon::class.java.classLoader),
+            source.readParcelable<BluetoothDevice>(BluetoothDevice::class.java.classLoader),
+            source.readString(),
+            source.readInt()
     )
 
     override fun describeContents() = 0
@@ -58,17 +59,28 @@ class ExtendedBluetoothDevice(
     companion object {
         @JvmField
         val CREATOR: Parcelable.Creator<ExtendedBluetoothDevice> =
-            object : Parcelable.Creator<ExtendedBluetoothDevice> {
-                override fun createFromParcel(source: Parcel): ExtendedBluetoothDevice =
-                    ExtendedBluetoothDevice(source)
+                object : Parcelable.Creator<ExtendedBluetoothDevice> {
+                    override fun createFromParcel(source: Parcel): ExtendedBluetoothDevice =
+                            ExtendedBluetoothDevice(source)
 
-                override fun newArray(size: Int): Array<ExtendedBluetoothDevice?> =
-                    arrayOfNulls(size)
-            }
+                    override fun newArray(size: Int): Array<ExtendedBluetoothDevice?> =
+                            arrayOfNulls(size)
+                }
     }
 
     fun matches(scanResult: ScanResult): Boolean {
         return device?.address == scanResult.device.address
+    }
+
+    /**
+     * match with address and uuid
+     */
+    fun matches(scanResult: ScanResult, resultBeacon: MeshBeacon?): Boolean {
+        var deviceUUID = beacon?.beaconData?.let { UnprovisionedBeacon(it).uuid.toString() }
+        var resultDeviceUUID = resultBeacon?.beaconData?.let { UnprovisionedBeacon(it).uuid.toString() }
+        return device?.address == scanResult.device.address
+                && deviceUUID == resultDeviceUUID
+
     }
 
 //    override fun equals(o: Any?): Boolean {

@@ -89,8 +89,8 @@ class ScannerLiveData internal constructor() : LiveData<ScannerLiveData>() {
 
     internal fun deviceDiscovered(result: ScanResult, beacon: MeshBeacon?): ScannerLiveData {
         var device: ExtendedBluetoothDevice
-
-        val index = indexOf(result)
+        //原来是只根据address来校验是否相等，现在增加uuid的判断
+        val index = indexOf(result,beacon)
         Utils.printLog(
             "ScannerLiveData",
             "beacon is UnprovisionedBeacon:${beacon is UnprovisionedBeacon}，index：$index"
@@ -123,6 +123,23 @@ class ScannerLiveData internal constructor() : LiveData<ScannerLiveData>() {
         var i = 0
         for (device in mDevices) {
             if (device.matches(result))
+                return i
+            i++
+        }
+        return -1
+    }
+
+    /**
+     * Finds the index of existing devices on the scan results list.
+     *
+     * @param result scan result
+     * @param beacon beacon
+     * @return index of -1 if not found
+     */
+    private fun indexOf(result: ScanResult,beacon: MeshBeacon?): Int {
+        var i = 0
+        for (device in mDevices) {
+            if (device.matches(result,beacon))
                 return i
             i++
         }
