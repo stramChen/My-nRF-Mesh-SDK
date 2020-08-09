@@ -314,13 +314,6 @@ class NrfMeshManager(
                 context.setConnectObserver()
             }
         }
-
-        mConnectionState.postValue(
-            CallbackMsg(
-                CONNECTING.code,
-                CONNECTING.msg
-            )
-        )
         //Added a 1 second delay for connection, mostly to wait for a disconnection to complete before connecting.
         if (bluetoothDevice != null) {
             mHandler.postDelayed({
@@ -453,11 +446,11 @@ class NrfMeshManager(
 
     override fun onDataReceived(bluetoothDevice: BluetoothDevice, mtu: Int, pdu: ByteArray) {
         meshManagerApi.handleNotifications(mtu, pdu)
-        Utils.printLog(TAG, "onDataReceived:${ByteUtil.bytesToHexString(pdu)}")
+        Utils.printLog(TAG, "===>-mesh-onDataReceived:${ByteUtil.bytesToHexString(pdu)}")
     }
 
     override fun onDataSent(device: BluetoothDevice, mtu: Int, pdu: ByteArray) {
-        Utils.printLog(TAG, "onDataSent")
+        Utils.printLog(TAG, "===>-mesh-onDataSent")
         meshManagerApi.handleWriteCallbacks(mtu, pdu)
     }
 
@@ -484,7 +477,7 @@ class NrfMeshManager(
     override fun onDeviceDisconnecting(device: BluetoothDevice) {
         Utils.printLog(
             TAG,
-            "Disconnecting...，connect devicd:${mConnectDevice?.getAddress()},disConnect device:${device.address}"
+            "===>-mesh-Disconnecting...，connect devicd:${mConnectDevice?.getAddress()},disConnect device:${device.address}"
         )
         mIsConnectedToProxy.postValue(false)
         mIsConnected = false
@@ -506,7 +499,7 @@ class NrfMeshManager(
     }
 
     override fun onDeviceDisconnected(device: BluetoothDevice) {
-        Utils.printLog(TAG, "Disconnected")
+        Utils.printLog(TAG, "===>-mesh-Disconnected")
         mConnectionState.postValue(
             CallbackMsg(
                 DISCONNECTED.code,
@@ -533,7 +526,7 @@ class NrfMeshManager(
     }
 
     override fun onLinkLossOccurred(device: BluetoothDevice) {
-        Utils.printLog(TAG, "Link loss occurred")
+        Utils.printLog(TAG, "===>-mesh-Link loss occurred")
         mIsConnected = false
     }
 
@@ -548,6 +541,7 @@ class NrfMeshManager(
 
     override fun onDeviceReady(device: BluetoothDevice) {
         mOnDeviceReady.postValue(null)
+        Log.d(TAG, "===>-mesh- gatt 蓝牙设备代理已连接成功")
         mConnectionState.postValue(CallbackMsg(COMMON_SUCCESS.code, COMMON_SUCCESS.msg))
 
         if (bleMeshManager?.isProvisioningComplete == true) {
@@ -1399,6 +1393,7 @@ class NrfMeshManager(
         networkKey: NetworkKey? = null
     ) {
         try {
+            clearGatt()
             if (mIsScanning) {
                 if (filterUuid.compareTo(mFilterUuid) == 0) {
                     return

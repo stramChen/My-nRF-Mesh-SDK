@@ -234,13 +234,13 @@ open class BaseMeshService : LifecycleService() {
     }
 
     fun setConnectObserver() {
-        Utils.printLog(TAG, "setConnectObserver")
+        Utils.printLog(TAG, "===>-mesh- setConnectObserver")
         mNrfMeshManager?.isDeviceReady?.observe(this, Observer {
             if (mNrfMeshManager?.bleMeshManager?.isDeviceReady == true) {
                 mConnectCallback?.onConnect()
             } else {
                 Utils.printLog(
-                        TAG, "connect result:" +
+                        TAG, "===>-mesh- connect result:" +
                         "${mNrfMeshManager?.bleMeshManager?.isDeviceReady}"
                 )
             }
@@ -627,6 +627,7 @@ open class BaseMeshService : LifecycleService() {
     fun decodeMessageAndFeedBack(message: VendorModelMessageStatus) {
         val uuid = MeshHelper.getMeshNetwork()?.getNode(message.src)?.uuid
         val pid: String? = uuid?.let { MxMeshUtil.getProductIdByUUID(it).toString() }
+        Log.d(TAG,"===>-mesh- 收到数据后 src是${message.src}解包得到的uuid是${uuid},对应的产品pid是${pid}")
         var sequence :Int= message.parameter[0].toInt();
         Log.d(TAG,"===>-mesh- 收到数据后 得到的sequence= $sequence")
         var dst = message.dst;

@@ -25,6 +25,7 @@ package qk.sdk.mesh.meshsdk.mesh
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
+import android.util.Log
 import no.nordicsemi.android.ble.Request
 import no.nordicsemi.android.ble.callback.DataReceivedCallback
 import no.nordicsemi.android.ble.callback.DataSentCallback
@@ -158,6 +159,7 @@ constructor(context: Context) : LoggableBleManager<BleMeshManagerCallbacks>(cont
 
         override fun onDeviceDisconnected() {
             //We reset the MTU to 23 upon disconnection
+            Log.d(TAG, "===>-mesh- 设备断开连接了")
             overrideMtu(MTU_SIZE_DEFAULT)
             isDeviceReady = false
             isProvisioningComplete = false
