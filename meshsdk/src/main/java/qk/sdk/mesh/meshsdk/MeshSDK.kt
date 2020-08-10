@@ -259,13 +259,16 @@ object MeshSDK {
                                         needReconnect = false
                                     }
                                 }
-                                if (!isConnecting.get()) {
-                                    isConnecting.set(true)
-                                    MeshHelper.connect(
-                                        extendedBluetoothDevice,
-                                        false, connectCallback
-                                    )
+                                synchronized(isConnecting){
+                                    if (!isConnecting.get()) {
+                                        isConnecting.set(true)
+                                        MeshHelper.connect(
+                                                extendedBluetoothDevice,
+                                                false, connectCallback
+                                        )
+                                    }
                                 }
+
                             }
                         }
                     }
@@ -372,7 +375,13 @@ object MeshSDK {
     }
 
     fun removeProvisionedNode(uuid: String, callBack: ProvisionCallback? = null) {
-        MeshHelper.deleteProvisionNode(MeshHelper.getProvisionedNodeByUUID(uuid), callBack)
+        var provisionedMeshNode:ProvisionedMeshNode? = MeshHelper.getProvisionedNodeByUUID(uuid);
+        if(null == provisionedMeshNode){
+            Log.d(TAG, "===>-mesh-设备没有找到，直接返回删除成功")
+            callBack?.onNodeDeleted(true,null)
+        }else{
+            MeshHelper.deleteProvisionNode(provisionedMeshNode, callBack)
+        }
     }
 
     /**
@@ -850,11 +859,12 @@ object MeshSDK {
                         if (!mGattConnectCallbacks.contains(callback)) {
                             mGattConnectCallbacks.add(callback)
                         }
+
                         if (!MeshHelper.isConnectedToProxy() && MeshHelper.getProvisionNode()?.size ?: 0 > 0) {
-
-                            if (isConnecting.get()) return
-
-                            isConnecting.set(true)
+                            synchronized(isConnecting){
+                                if (isConnecting.get()) return
+                                isConnecting.set(true)
+                            }
 
                             Utils.printLog(TAG, "===>-mesh- connect start scan")
                             setCurrentNetworkKey(networkKey)
