@@ -1,5 +1,7 @@
 package qk.sdk.mesh.meshsdk.mesh
 
+//import no.nordicsemi.android.log.Logger
+
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.BroadcastReceiver
@@ -15,46 +17,36 @@ import android.os.ParcelUuid
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-
-import java.io.File
-
-//import no.nordicsemi.android.log.Logger
-import no.nordicsemi.android.meshprovisioner.ApplicationKey
-import no.nordicsemi.android.meshprovisioner.Group
-import no.nordicsemi.android.meshprovisioner.MeshManagerApi
-import no.nordicsemi.android.meshprovisioner.MeshManagerCallbacks
-import no.nordicsemi.android.meshprovisioner.MeshNetwork
-import no.nordicsemi.android.meshprovisioner.MeshProvisioningStatusCallbacks
-import no.nordicsemi.android.meshprovisioner.MeshStatusCallbacks
-import no.nordicsemi.android.meshprovisioner.NetworkKey
-import no.nordicsemi.android.meshprovisioner.Provisioner
-import no.nordicsemi.android.meshprovisioner.UnprovisionedBeacon
+import no.nordicsemi.android.meshprovisioner.*
+import no.nordicsemi.android.meshprovisioner.MeshManagerApi.MESH_PROXY_UUID
 import no.nordicsemi.android.meshprovisioner.models.SigModelParser
 import no.nordicsemi.android.meshprovisioner.provisionerstates.ProvisioningState
 import no.nordicsemi.android.meshprovisioner.provisionerstates.UnprovisionedMeshNode
-import no.nordicsemi.android.meshprovisioner.utils.MeshAddress
-import qk.sdk.mesh.meshsdk.bean.provision.ProvisioningStatusLiveData
-import qk.sdk.mesh.meshsdk.bean.provision.TransactionStatus
-
-import no.nordicsemi.android.meshprovisioner.MeshManagerApi.MESH_PROXY_UUID
 import no.nordicsemi.android.meshprovisioner.transport.*
 import no.nordicsemi.android.meshprovisioner.utils.ByteUtil
+import no.nordicsemi.android.meshprovisioner.utils.MeshAddress
 import no.nordicsemi.android.support.v18.scanner.*
 import qk.sdk.mesh.meshsdk.bean.*
+import qk.sdk.mesh.meshsdk.bean.provision.ProvisioningStatusLiveData
+import qk.sdk.mesh.meshsdk.bean.provision.TransactionStatus
 import qk.sdk.mesh.meshsdk.bean.scan.ScannerLiveData
 import qk.sdk.mesh.meshsdk.bean.scan.ScannerStateLiveData
 import qk.sdk.mesh.meshsdk.service.BaseMeshService
-import qk.sdk.mesh.meshsdk.util.*
+import qk.sdk.mesh.meshsdk.util.Constants
 import qk.sdk.mesh.meshsdk.util.Constants.ConnectState.*
+import qk.sdk.mesh.meshsdk.util.NetworkExportUtils
+import qk.sdk.mesh.meshsdk.util.ProvisionerStates
+import qk.sdk.mesh.meshsdk.util.Utils
+import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
 
 class NrfMeshManager(
-    internal var mContext: Context,
-    internal val meshManagerApi: MeshManagerApi,
-    internal var bleMeshManager: BleMeshManager?
+        internal var mContext: Context,
+        internal val meshManagerApi: MeshManagerApi,
+        internal var bleMeshManager: BleMeshManager?
 ) : MeshProvisioningStatusCallbacks, MeshStatusCallbacks, MeshManagerCallbacks,
-    BleMeshManagerCallbacks {
+        BleMeshManagerCallbacks {
     private val TAG = "NrfMeshManager"
 
     // Connection States Connecting, Connected, Disconnecting, Disconnected etc.
@@ -156,7 +148,7 @@ class NrfMeshManager(
      */
     private var mScannerLiveData: ScannerLiveData = ScannerLiveData()
     private var mScannerStateLiveData: ScannerStateLiveData =
-        ScannerStateLiveData(Utils.isBleEnabled, Utils.isLocationEnabled(mContext))
+            ScannerStateLiveData(Utils.isBleEnabled, Utils.isLocationEnabled(mContext))
 
     private var mFilterUuid: UUID? = null
 
@@ -259,6 +251,7 @@ class NrfMeshManager(
         //Initialize the ble manager
 //        this.bleMeshManager = bleMeshManager
         this.bleMeshManager?.setGattCallbacks(this)
+        this.bleMeshManager
         mHandler = Handler()
     }//Initialize the mesh api
 
@@ -291,9 +284,9 @@ class NrfMeshManager(
      * @param connectToNetwork True if connecting to an unprovisioned node or proxy node
      */
     internal fun connect(
-        context: Context,
-        device: ExtendedBluetoothDevice,
-        connectToNetwork: Boolean
+            context: Context,
+            device: ExtendedBluetoothDevice,
+            connectToNetwork: Boolean
     ) {
         meshNetworkLiveData.nodeName = device.name
         isProvisioningComplete = false
@@ -303,12 +296,7 @@ class NrfMeshManager(
         isNetworkRetransmitSetCompleted = false
         mConnectDevice = device
         val bluetoothDevice = device.device
-        Utils.printLog(TAG, "connect $connectToNetwork")
         initIsConnectedLiveData()
-        Utils.printLog(
-            TAG,
-            "===>-mesh- post msg:${CONNECTING.msg},bleMeshManager is null:${bleMeshManager == null},state has active observers:${mConnectionState.hasActiveObservers()}"
-        )
         if (!mConnectionState.hasActiveObservers()) {
             if (context is BaseMeshService) {
                 context.setConnectObserver()
@@ -320,7 +308,7 @@ class NrfMeshManager(
                 bleMeshManager?.connect(bluetoothDevice)?.retry(3, 100)?.enqueue()
             }, 100)
         } else {
-            Utils.printLog(TAG, "bluetoothDevice is null")
+            Utils.printLog(TAG, "===>-mesh-bluetoothDevice is null")
         }
     }
 
@@ -331,11 +319,12 @@ class NrfMeshManager(
      */
     private fun connectToProxy(device: ExtendedBluetoothDevice) {
         initIsConnectedLiveData()
+        Log.d(TAG,"===>-mesh-connectToProxy回调用连接中")
         mConnectionState.postValue(
-            CallbackMsg(
-                CONNECTING.code,
-                CONNECTING.msg
-            )
+                CallbackMsg(
+                        CONNECTING.code,
+                        CONNECTING.msg
+                )
         )
         if (device.device != null) {
             bleMeshManager?.connect(device.device!!)?.retry(3, 200)?.enqueue()
@@ -376,7 +365,7 @@ class NrfMeshManager(
             meshManagerApi.identifyNode(beacon.uuid, ATTENTION_TIMER)
         } else if (device.scanResult != null) {
             val serviceData =
-                Utils.getServiceData(device.scanResult!!, BleMeshManager.MESH_PROVISIONING_UUID)
+                    Utils.getServiceData(device.scanResult!!, BleMeshManager.MESH_PROVISIONING_UUID)
             if (serviceData != null) {
                 val uuid = meshManagerApi.getDeviceUuid(serviceData)
                 meshManagerApi.identifyNode(uuid, ATTENTION_TIMER)
@@ -390,7 +379,7 @@ class NrfMeshManager(
             meshManagerApi.identifyNode(beacon.uuid, ATTENTION_TIMER, networkKey)
         } else {
             val serviceData =
-                Utils.getServiceData(device.scanResult!!, BleMeshManager.MESH_PROVISIONING_UUID)
+                    Utils.getServiceData(device.scanResult!!, BleMeshManager.MESH_PROVISIONING_UUID)
             if (serviceData != null) {
                 val uuid = meshManagerApi.getDeviceUuid(serviceData)
                 meshManagerApi.identifyNode(uuid, ATTENTION_TIMER, networkKey)
@@ -433,7 +422,7 @@ class NrfMeshManager(
      * @param provisioner [Provisioner]
      */
     internal fun setSelectedProvisioner(provisioner: Provisioner) =
-        mSelectedProvisioner.postValue(provisioner)
+            mSelectedProvisioner.postValue(provisioner)
 
     /**
      * Set the selected model to be configured
@@ -455,45 +444,46 @@ class NrfMeshManager(
     }
 
     override fun onDeviceConnecting(device: BluetoothDevice) {
+        Log.d(TAG,"===>-mesh-onDeviceConnecting回调用连接中")
         mConnectionState.postValue(
-            CallbackMsg(
-                CONNECTING.code,
-                CONNECTING.msg
-            )
+                CallbackMsg(
+                        CONNECTING.code,
+                        CONNECTING.msg
+                )
         )
     }
 
     override fun onDeviceConnected(device: BluetoothDevice) {
         mIsConnected = true
         mConnectionState.postValue(
-            CallbackMsg(
-                DEVICE_CONNECTED.code,
-                DEVICE_CONNECTED.msg
-            )
+                CallbackMsg(
+                        DEVICE_CONNECTED.code,
+                        DEVICE_CONNECTED.msg
+                )
         )
         mIsConnectedToProxy.postValue(true)
     }
 
     override fun onDeviceDisconnecting(device: BluetoothDevice) {
         Utils.printLog(
-            TAG,
-            "===>-mesh-Disconnecting...，connect devicd:${mConnectDevice?.getAddress()},disConnect device:${device.address}"
+                TAG,
+                "===>-mesh-Disconnecting...，connect devicd:${mConnectDevice?.getAddress()},disConnect device:${device.address}"
         )
         mIsConnectedToProxy.postValue(false)
         mIsConnected = false
         if (mIsReconnectingFlag) {
             mConnectionState.postValue(
-                CallbackMsg(
-                    RECONNETCING.code,
-                    RECONNETCING.msg
-                )
+                    CallbackMsg(
+                            RECONNETCING.code,
+                            RECONNETCING.msg
+                    )
             )
         } else {
             mConnectionState.postValue(
-                CallbackMsg(
-                    DISCONNECTING.code,
-                    DISCONNECTING.msg
-                )
+                    CallbackMsg(
+                            DISCONNECTING.code,
+                            DISCONNECTING.msg
+                    )
             )
         }
     }
@@ -501,10 +491,10 @@ class NrfMeshManager(
     override fun onDeviceDisconnected(device: BluetoothDevice) {
         Utils.printLog(TAG, "===>-mesh-Disconnected")
         mConnectionState.postValue(
-            CallbackMsg(
-                DISCONNECTED.code,
-                DISCONNECTED.msg
-            )
+                CallbackMsg(
+                        DISCONNECTED.code,
+                        DISCONNECTED.msg
+                )
         )
         if (mIsReconnectingFlag) {
             mIsReconnectingFlag = false
@@ -532,10 +522,10 @@ class NrfMeshManager(
 
     override fun onServicesDiscovered(device: BluetoothDevice, optionalServicesFound: Boolean) {
         mConnectionState.postValue(
-            CallbackMsg(
-                DISCOVERED_SERVICE.code,
-                DISCOVERED_SERVICE.msg
-            )
+                CallbackMsg(
+                        DISCOVERED_SERVICE.code,
+                        DISCOVERED_SERVICE.msg
+                )
         )
     }
 
@@ -571,19 +561,19 @@ class NrfMeshManager(
 
     override fun onBonded(device: BluetoothDevice) {
         mConnectionState.postValue(
-            CallbackMsg(
-                DEVICE_NOT_SUPPORTED.code,
-                DEVICE_NOT_SUPPORTED.msg
-            )
+                CallbackMsg(
+                        DEVICE_NOT_SUPPORTED.code,
+                        DEVICE_NOT_SUPPORTED.msg
+                )
         )
     }
 
     override fun onBondingFailed(device: BluetoothDevice) {
         mConnectionState.postValue(
-            CallbackMsg(
-                DEVICE_NOT_SUPPORTED.code,
-                DEVICE_NOT_SUPPORTED.msg
-            )
+                CallbackMsg(
+                        DEVICE_NOT_SUPPORTED.code,
+                        DEVICE_NOT_SUPPORTED.msg
+                )
         )
     }
 
@@ -597,10 +587,10 @@ class NrfMeshManager(
 
     override fun onDeviceNotSupported(device: BluetoothDevice) {
         mConnectionState.postValue(
-            CallbackMsg(
-                DEVICE_NOT_SUPPORTED.code,
-                DEVICE_NOT_SUPPORTED.msg
-            )
+                CallbackMsg(
+                        DEVICE_NOT_SUPPORTED.code,
+                        DEVICE_NOT_SUPPORTED.msg
+                )
         )
     }
 
@@ -658,15 +648,15 @@ class NrfMeshManager(
 
     @Synchronized
     override fun onProvisioningStateChanged(
-        meshNode: UnprovisionedMeshNode,
-        state: ProvisioningState.States,
-        data: ByteArray
+            meshNode: UnprovisionedMeshNode,
+            state: ProvisioningState.States,
+            data: ByteArray
     ) {
         mUnprovisionedMeshNode = meshNode
         mUnprovisionedMeshNodeLiveData.postValue(meshNode)
         when (state) {
             ProvisioningState.States.PROVISIONING_INVITE -> provisioningState =
-                ProvisioningStatusLiveData()
+                    ProvisioningStatusLiveData()
             ProvisioningState.States.PROVISIONING_FAILED -> isProvisioningComplete = false
             else -> {
             }
@@ -676,9 +666,9 @@ class NrfMeshManager(
     }
 
     override fun onProvisioningFailed(
-        meshNode: UnprovisionedMeshNode,
-        state: ProvisioningState.States,
-        data: ByteArray
+            meshNode: UnprovisionedMeshNode,
+            state: ProvisioningState.States,
+            data: ByteArray
     ) {
         mUnprovisionedMeshNode = meshNode
         mUnprovisionedMeshNodeLiveData.postValue(meshNode)
@@ -689,9 +679,9 @@ class NrfMeshManager(
     }
 
     override fun onProvisioningCompleted(
-        meshNode: ProvisionedMeshNode,
-        state: ProvisioningState.States,
-        data: ByteArray
+            meshNode: ProvisionedMeshNode,
+            state: ProvisioningState.States,
+            data: ByteArray
     ) {
         mProvisionedMeshNode = meshNode
         //设置选中的节点
@@ -727,9 +717,9 @@ class NrfMeshManager(
         mMeshNetwork?.nodes?.apply {
             for (node in this) {
                 if (!node.uuid.equals(
-                        mMeshNetwork?.selectedProvisioner?.provisionerUuid,
-                        ignoreCase = true
-                    )
+                                mMeshNetwork?.selectedProvisioner?.provisionerUuid,
+                                ignoreCase = true
+                        )
                 ) {
                     nodes.add(node)
                 }
@@ -804,8 +794,8 @@ class NrfMeshManager(
     override fun onMeshMessageReceived(src: Int, meshMessage: MeshMessage) {
         val node = mMeshNetwork?.getNode(src)
         Utils.printLog(
-            TAG,
-            "onMeshMessageReceived:${ByteUtil.bytesToHexString(meshMessage.parameter)}"
+                TAG,
+                "onMeshMessageReceived:${ByteUtil.bytesToHexString(meshMessage.parameter)}"
         )
         if (node != null)
             if (meshMessage is ProxyConfigFilterStatus) {
@@ -813,11 +803,11 @@ class NrfMeshManager(
                 setSelectedMeshNode(node)
                 val unicastAddress = meshMessage.src
                 Utils.printLog(
-                    TAG,
-                    "Proxy configuration source: " + MeshAddress.formatAddress(
-                        meshMessage.src,
-                        false
-                    )
+                        TAG,
+                        "Proxy configuration source: " + MeshAddress.formatAddress(
+                                meshMessage.src,
+                                false
+                        )
                 )
                 mConnectedProxyAddress.postValue(unicastAddress)
                 mMeshMessageLiveData.postValue(meshMessage)
@@ -932,7 +922,7 @@ class NrfMeshManager(
                         val element = node.elements[meshMessage.srcAddress]
                         mSelectedElement = element
                         val model =
-                            element?.meshModels?.get(SigModelParser.GENERIC_ON_OFF_SERVER.toInt())
+                                element?.meshModels?.get(SigModelParser.GENERIC_ON_OFF_SERVER.toInt())
                         mSelectedModel = model
                     }
                 }
@@ -943,7 +933,7 @@ class NrfMeshManager(
                         val element = node.elements[meshMessage.srcAddress]
                         mSelectedElement = element
                         val model =
-                            element?.meshModels?.get(SigModelParser.GENERIC_LEVEL_SERVER.toInt())
+                                element?.meshModels?.get(SigModelParser.GENERIC_LEVEL_SERVER.toInt())
                         mSelectedModel = model
                     }
                 }
@@ -1041,14 +1031,14 @@ class NrfMeshManager(
             mIsScanning = true
             // Scanning settings
             val settings = ScanSettings.Builder()
-                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-                // Refresh the devices list every second
-                .setReportDelay(0)
-                // Hardware filtering has some issues on selected devices
-                .setUseHardwareFilteringIfSupported(false)
-                // Samsung S6 and S6 Edge report equal value of RSSI for all devices. In this app we ignore the RSSI.
-                /*.setUseHardwareBatchingIfSupported(false)*/
-                .build()
+                    .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                    // Refresh the devices list every second
+                    .setReportDelay(0)
+                    // Hardware filtering has some issues on selected devices
+                    .setUseHardwareFilteringIfSupported(false)
+                    // Samsung S6 and S6 Edge report equal value of RSSI for all devices. In this app we ignore the RSSI.
+                    /*.setUseHardwareBatchingIfSupported(false)*/
+                    .build()
 
             // Let's use the filter to scan only for Mesh devices
             val filters = ArrayList<ScanFilter>()
@@ -1056,7 +1046,7 @@ class NrfMeshManager(
 
             val scanner = BluetoothLeScannerCompat.getScanner()
             scanner.startScan(filters, settings, mScanCallbacks)
-            Log.v(TAG, "Scan started")
+            Log.v(TAG, "===>-mesh-Scan restarted")
             mHandler.postDelayed(mScannerTimeout, 20000)
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
@@ -1068,7 +1058,7 @@ class NrfMeshManager(
      * stop scanning for bluetooth devices.
      */
     internal fun stopScan() {
-        Utils.printLog(TAG, "stopScan")
+        Utils.printLog(TAG, "===>-mesh- 停止蓝牙扫描")
         mHandler.removeCallbacks(mScannerTimeout)
         var scanner = BluetoothLeScannerCompat.getScanner()
         scanner.stopScan(mScanCallbacks)
@@ -1079,13 +1069,14 @@ class NrfMeshManager(
     }
 
     private fun onProvisionedDeviceFound(
-        node: ProvisionedMeshNode?,
-        device: ExtendedBluetoothDevice
+            node: ProvisionedMeshNode?,
+            device: ExtendedBluetoothDevice
     ) {
         mSetupProvisionedNode = true
         mProvisionedMeshNode = node
         mIsReconnectingFlag = true
         //Added an extra delay to ensure reconnection
+        Utils.printLog(TAG, "===>-mesh- onProvisionedDeviceFound？？？？？")
         mHandler.postDelayed({ connectToProxy(device) }, 2000)
     }
 
@@ -1124,7 +1115,7 @@ class NrfMeshManager(
         val EXPORT_PATH = Environment.getExternalStorageDirectory().absolutePath + File.separator +
                 "mxchip" + File.separator + "nRFMesh" + File.separator
         private val EXPORTED_PATH =
-            "sdcard" + File.separator + "mxchip" + File.separator + "nRFMesh" + File.separator
+                "sdcard" + File.separator + "mxchip" + File.separator + "nRFMesh" + File.separator
     }
 
     /************************ scan ******************************/
@@ -1133,8 +1124,8 @@ class NrfMeshManager(
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             try {
                 Utils.printLog(
-                    TAG,
-                    "===>-mesh- 发现设备 onScanResult: callBackType=${callbackType} result=${result}"
+                        TAG,
+                        "===>-mesh- 发现设备 onScanResult: callBackType=${callbackType} result=${result}"
                 )
                 if (!mIsScanning)
                     return
@@ -1154,12 +1145,12 @@ class NrfMeshManager(
                                 val node = mProvisionedMeshNode
                                 if (meshManagerApi.nodeIdentityMatches(node!!, serviceData)) {
                                     stopScan()
-                                    //TODO
+                                    Utils.printLog(TAG, "===>-mesh-已发待配网现设备")
                                     mConnectionState.postValue(
-                                        CallbackMsg(
-                                            0,
-                                            "Provisioned node found"
-                                        )
+                                            CallbackMsg(
+                                                    0,
+                                                    "Provisioned node found"
+                                            )
                                     )
                                     onProvisionedDeviceFound(node, ExtendedBluetoothDevice(result))
                                     return
@@ -1167,7 +1158,7 @@ class NrfMeshManager(
                             }
                         }
                     } else {
-                        Utils.printLog(TAG, "scanRecord is null")
+                        Utils.printLog(TAG, "===>-mesh-扫描结果为空")
                     }
 
                     if (meshManagerApi.isAdvertisingWithNetworkIdentity(serviceData) && mNetworkId != null) {
@@ -1214,16 +1205,18 @@ class NrfMeshManager(
         override fun onReceive(context: Context, intent: Intent) {
             val state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.STATE_OFF)
             val previousState = intent.getIntExtra(
-                BluetoothAdapter.EXTRA_PREVIOUS_STATE,
-                BluetoothAdapter.STATE_OFF
+                    BluetoothAdapter.EXTRA_PREVIOUS_STATE,
+                    BluetoothAdapter.STATE_OFF
             )
 
             when (state) {
                 BluetoothAdapter.STATE_ON -> mScannerStateLiveData.bluetoothEnabled()
-                BluetoothAdapter.STATE_TURNING_OFF, BluetoothAdapter.STATE_OFF -> if (previousState != BluetoothAdapter.STATE_TURNING_OFF && previousState != BluetoothAdapter.STATE_OFF) {
-                    stopScan()
-                    mScannerStateLiveData.bluetoothDisabled()
-                }
+                BluetoothAdapter.STATE_TURNING_OFF, BluetoothAdapter.STATE_OFF ->
+                    if (previousState != BluetoothAdapter.STATE_TURNING_OFF
+                            && previousState != BluetoothAdapter.STATE_OFF) {
+                        stopScan()
+                        mScannerStateLiveData.bluetoothDisabled()
+                    }
             }
         }
     }
@@ -1241,15 +1234,15 @@ class NrfMeshManager(
         if (scanRecord != null) {
             if (scanRecord.bytes != null) {
                 Utils.printLog(
-                    TAG,
-                    "scanRecord have data,address:${result.device.address}"
+                        TAG,
+                        "scanRecord have data,address:${result.device.address}"
                 )
                 if (mFilterUuid == BleMeshManager.MESH_PROXY_UUID) {
                     mScanDataCallback?.apply {
                         var scannerData = mScannerLiveData.deviceDiscovered(result)
                         this.onScanResult(
-                            scannerData.devices,
-                            scannerData.updatedDeviceIndex
+                                scannerData.devices,
+                                scannerData.updatedDeviceIndex
                         )
                     }
                 } else {
@@ -1258,19 +1251,19 @@ class NrfMeshManager(
                         if (beaconData != null) {
                             mScanDataCallback?.apply {
                                 Utils.printLog(
-                                    TAG,
-                                    "beaconData:${qk.sdk.mesh.meshsdk.util.ByteUtil.bytesToHexString(
-                                        beaconData
-                                    )}"
+                                        TAG,
+                                        "beaconData:${qk.sdk.mesh.meshsdk.util.ByteUtil.bytesToHexString(
+                                                beaconData
+                                        )}"
                                 )
 
                                 var scannerData = mScannerLiveData.deviceDiscovered(
-                                    result,
-                                    meshManagerApi.getMeshBeacon(beaconData)
+                                        result,
+                                        meshManagerApi.getMeshBeacon(beaconData)
                                 )
                                 this.onScanResult(
-                                    scannerData.devices,
-                                    scannerData.updatedDeviceIndex
+                                        scannerData.devices,
+                                        scannerData.updatedDeviceIndex
                                 )
                             }
                         }
@@ -1286,13 +1279,13 @@ class NrfMeshManager(
      */
     internal fun registerBroadcastReceivers() {
         mContext.registerReceiver(
-            mBluetoothStateBroadcastReceiver,
-            IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+                mBluetoothStateBroadcastReceiver,
+                IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
         )
         if (Utils.isMarshmallowOrAbove) {
             mContext.registerReceiver(
-                mLocationProviderChangedReceiver,
-                IntentFilter(LocationManager.MODE_CHANGED_ACTION)
+                    mLocationProviderChangedReceiver,
+                    IntentFilter(LocationManager.MODE_CHANGED_ACTION)
             )
         }
     }
@@ -1317,8 +1310,8 @@ class NrfMeshManager(
      * @param filterUuid UUID to filter scan results with
      */
     fun startScan(
-        filterUuid: UUID,
-        networkKey: NetworkKey? = null
+            filterUuid: UUID,
+            networkKey: NetworkKey? = null
     ) {
         try {
             if (mIsScanning)
@@ -1342,14 +1335,14 @@ class NrfMeshManager(
             mScannerStateLiveData.scanningStarted()
             //Scanning settings
             val settings = ScanSettings.Builder()
-                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-                // Refresh the devices list every second
-                .setReportDelay(0)
-                // Hardware filtering has some issues on selected devices
-                .setUseHardwareFilteringIfSupported(false)
-                // Samsung S6 and S6 Edge report equal value of RSSI for all devices. In this app we ignore the RSSI.
-                /*.setUseHardwareBatchingIfSupported(false)*/
-                .build()
+                    .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                    // Refresh the devices list every second
+                    .setReportDelay(0)
+                    // Hardware filtering has some issues on selected devices
+                    .setUseHardwareFilteringIfSupported(false)
+                    // Samsung S6 and S6 Edge report equal value of RSSI for all devices. In this app we ignore the RSSI.
+                    /*.setUseHardwareBatchingIfSupported(false)*/
+                    .build()
 
             //Let's use the filter to scan only for unprovisioned mesh nodes.
             val filters = ArrayList<ScanFilter>()
@@ -1357,13 +1350,13 @@ class NrfMeshManager(
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {//若版本号小于26，统一都用BluetoothLeScannerImplJB，否则解析不到beacon包
                 //反射修改BluetoothLeScannerCompat.getScanner()
                 var clazz =
-                    Class.forName("no.nordicsemi.android.support.v18.scanner.BluetoothLeScannerCompat")
+                        Class.forName("no.nordicsemi.android.support.v18.scanner.BluetoothLeScannerCompat")
                 Utils.printLog(TAG, "clazz.name:${clazz.simpleName}")
                 var instance = clazz.getDeclaredField("instance")
                 instance.isAccessible = true
                 //反射获取BluetoothLeScannerImplJB实例
                 var JBClazz =
-                    Class.forName("no.nordicsemi.android.support.v18.scanner.BluetoothLeScannerImplJB")
+                        Class.forName("no.nordicsemi.android.support.v18.scanner.BluetoothLeScannerImplJB")
                 var JBConstructor = JBClazz.getDeclaredConstructor()
                 JBConstructor.isAccessible = true
                 instance.set(BluetoothLeScannerCompat.getScanner(), JBConstructor.newInstance())
@@ -1372,7 +1365,7 @@ class NrfMeshManager(
             filters.add(ScanFilter.Builder().setServiceUuid(ParcelUuid(filterUuid)).build())
             val scanner = BluetoothLeScannerCompat.getScanner()
             scanner.startScan(filters, settings, mScanCallbacks)
-            Utils.printLog(TAG, "start scan")
+            Log.v(TAG, "===>-mesh-Scan started")
 //            registerBroadcastReceivers()
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
@@ -1388,18 +1381,13 @@ class NrfMeshManager(
     var mScanDataCallback: qk.sdk.mesh.meshsdk.callback.ScanCallback? = null
 
     fun startScan(
-        filterUuid: UUID,
-        scanCallback: qk.sdk.mesh.meshsdk.callback.ScanCallback,
-        networkKey: NetworkKey? = null
+            filterUuid: UUID,
+            scanCallback: qk.sdk.mesh.meshsdk.callback.ScanCallback,
+            networkKey: NetworkKey? = null
     ) {
         try {
-            clearGatt()
             if (mIsScanning) {
-                if (filterUuid.compareTo(mFilterUuid) == 0) {
-                    return
-                } else {
-                    stopScan()
-                }
+                return
             }
 
             mIsScanning = true
@@ -1420,14 +1408,14 @@ class NrfMeshManager(
             mScannerStateLiveData.scanningStarted()
             //Scanning settings
             val settings = ScanSettings.Builder()
-                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-                // Refresh the devices list every second
-                .setReportDelay(0)
-                // Hardware filtering has some issues on selected devices
-                .setUseHardwareFilteringIfSupported(false)
-                // Samsung S6 and S6 Edge report equal value of RSSI for all devices. In this app we ignore the RSSI.
-                /*.setUseHardwareBatchingIfSupported(false)*/
-                .build()
+                    .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                    // Refresh the devices list every second
+                    .setReportDelay(0)
+                    // Hardware filtering has some issues on selected devices
+                    .setUseHardwareFilteringIfSupported(false)
+                    // Samsung S6 and S6 Edge report equal value of RSSI for all devices. In this app we ignore the RSSI.
+                    /*.setUseHardwareBatchingIfSupported(false)*/
+                    .build()
 
             //Let's use the filter to scan only for unprovisioned mesh nodes.
             val filters = ArrayList<ScanFilter>()
@@ -1435,13 +1423,13 @@ class NrfMeshManager(
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {//若版本号小于26，统一都用BluetoothLeScannerImplJB，否则解析不到beacon包
                 //反射修改BluetoothLeScannerCompat.getScanner()
                 var clazz =
-                    Class.forName("no.nordicsemi.android.support.v18.scanner.BluetoothLeScannerCompat")
+                        Class.forName("no.nordicsemi.android.support.v18.scanner.BluetoothLeScannerCompat")
                 Utils.printLog(TAG, "clazz.name:${clazz.simpleName}")
                 var instance = clazz.getDeclaredField("instance")
                 instance.isAccessible = true
                 //反射获取BluetoothLeScannerImplJB实例
                 var JBClazz =
-                    Class.forName("no.nordicsemi.android.support.v18.scanner.BluetoothLeScannerImplJB")
+                        Class.forName("no.nordicsemi.android.support.v18.scanner.BluetoothLeScannerImplJB")
                 var JBConstructor = JBClazz.getDeclaredConstructor()
                 JBConstructor.isAccessible = true
                 instance.set(BluetoothLeScannerCompat.getScanner(), JBConstructor.newInstance())
@@ -1451,6 +1439,7 @@ class NrfMeshManager(
             val scanner = BluetoothLeScannerCompat.getScanner()
             mScanDataCallback = scanCallback
             scanner.startScan(filters, settings, mScanCallbacks)
+            Log.v(TAG, "===>-mesh-Scan started")
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
             mScannerStateLiveData.bluetoothDisabled()
@@ -1477,10 +1466,10 @@ class NrfMeshManager(
 
     internal fun exportMeshNetwork(callback: NetworkExportUtils.NetworkExportCallbacks) {
         NetworkExportUtils.exportMeshNetwork(
-            meshManagerApi,
-            EXPORT_PATH,
-            "meshJson.json",
-            callback
+                meshManagerApi,
+                EXPORT_PATH,
+                "meshJson.json",
+                callback
         )
     }
 

@@ -4,17 +4,27 @@ import android.content.Context
 import android.content.SharedPreferences
 
 abstract class AbsPreference {
-
+    private var mContext: Context? = null
     private val TAG = "AbsPreference"
+    private var mAppFlag: String = "";
 
     private lateinit var sPreferences: SharedPreferences
 
     fun init(appFlag: String, context: Context) {
+        mContext = context
+        mAppFlag = appFlag;
         sPreferences = context.getSharedPreferences(appFlag, Context.MODE_PRIVATE)
     }
 
     fun getInstance(): SharedPreferences {
+        checkInit()
         return sPreferences
+    }
+
+    fun checkInit() {
+        if (::sPreferences.isInitialized) {
+            sPreferences = mContext?.getSharedPreferences(mAppFlag, Context.MODE_PRIVATE)!!
+        }
     }
 
     /**
@@ -71,4 +81,5 @@ abstract class AbsPreference {
         }
 
     }
+
 }

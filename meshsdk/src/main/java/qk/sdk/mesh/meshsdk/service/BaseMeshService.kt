@@ -234,7 +234,6 @@ open class BaseMeshService : LifecycleService() {
     }
 
     fun setConnectObserver() {
-        Utils.printLog(TAG, "===>-mesh- setConnectObserver")
         mNrfMeshManager?.isDeviceReady?.observe(this, Observer {
             if (mNrfMeshManager?.bleMeshManager?.isDeviceReady == true) {
                 mConnectCallback?.onConnect()
@@ -245,6 +244,7 @@ open class BaseMeshService : LifecycleService() {
                 )
             }
         })
+        Utils.printLog(TAG, "===>-mesh- 开始监听蓝牙连接状态回调用")
         mNrfMeshManager?.connectionState?.observe(this, Observer {
             mConnectCallback?.onConnectStateChange(it)
             Utils.printLog(TAG, "===>-mesh- mNrfMeshManager?.connectionState:${it.msg}")
