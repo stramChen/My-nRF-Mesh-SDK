@@ -60,6 +60,38 @@ open class BaseMeshService : LifecycleService() {
     internal var mHeartBeatMap: ConcurrentHashMap<String?, Int?> =
             ConcurrentHashMap()
 
+    //设备状态监听，一个就好
+    private var mBleConnectStatusObserver = Observer<CallbackMsg>{
+        mConnectCallback?.onConnectStateChange(it)
+        Utils.printLog(TAG, "===>-mesh- mNrfMeshManager?.connectionState:${it.msg}")
+        LogFileUtil.writeLogToInnerFile(
+                this@BaseMeshService,
+                "${it.msg}",
+                LogFileUtil.getInnerFileName(Constants.MESH_LOG_FILE_NAME)
+        )
+    }
+
+    private var mProvisionedNodesStatusObserver = Observer<ProvisionedMeshNode> {
+        mConnectCallback?.onConnectStateChange(
+                CallbackMsg(
+                        CommonErrorMsg.CONNECT_PROVISIONED_NODE_UPDATE.code,
+                        CommonErrorMsg.CONNECT_PROVISIONED_NODE_UPDATE.msg
+                )
+        )
+    }
+
+    private var mDeviceReadySatusObserver = Observer<Void> {
+        if (mNrfMeshManager?.bleMeshManager?.isDeviceReady == true) {
+            Log.d(TAG, "===>-mesh-connect设备已准备就绪")
+            mConnectCallback?.onConnect()
+        } else {
+            Utils.printLog(
+                    TAG, "===>-mesh-connect result:" +
+                    "${mNrfMeshManager?.bleMeshManager?.isDeviceReady}"
+            )
+        }
+    }
+
 
     override fun onBind(intent: Intent): IBinder? {
         super.onBind(intent)
@@ -69,6 +101,7 @@ open class BaseMeshService : LifecycleService() {
     override fun onCreate() {
         super.onCreate()
         mNrfMeshManager = NrfMeshManager(this, MeshManagerApi(this), BleMeshManager(this))
+        //设置监听
         setObserver()
     }
 
@@ -113,7 +146,6 @@ open class BaseMeshService : LifecycleService() {
 
     internal fun stopConnect() {
         mConnectCallback = null
-        mNrfMeshManager?.isDeviceReady?.removeObservers(this)
         mConnectCallback = null
 
     }
@@ -122,7 +154,7 @@ open class BaseMeshService : LifecycleService() {
         return mNrfMeshManager?.mConnectDevice
     }
 
-    internal fun addConnectCallback(callback: ConnectCallback) {
+    internal fun setConnectCallback(callback: ConnectCallback) {
         mConnectCallback = callback
         setConnectObserver()
     }
@@ -234,40 +266,7 @@ open class BaseMeshService : LifecycleService() {
     }
 
     fun setConnectObserver() {
-        mNrfMeshManager?.isDeviceReady?.observe(this, Observer {
-            if (mNrfMeshManager?.bleMeshManager?.isDeviceReady == true) {
-                mConnectCallback?.onConnect()
-            } else {
-                Utils.printLog(
-                        TAG, "===>-mesh- connect result:" +
-                        "${mNrfMeshManager?.bleMeshManager?.isDeviceReady}"
-                )
-            }
-        })
-        Utils.printLog(TAG, "===>-mesh- 开始监听蓝牙连接状态回调用")
-        mNrfMeshManager?.connectionState?.observe(this, Observer {
-            mConnectCallback?.onConnectStateChange(it)
-            Utils.printLog(TAG, "===>-mesh- mNrfMeshManager?.connectionState:${it.msg}")
-            LogFileUtil.writeLogToInnerFile(
-                    this@BaseMeshService,
-                    "${it.msg}",
-                    LogFileUtil.getInnerFileName(Constants.MESH_LOG_FILE_NAME)
-            )
-        })
-
-        Utils.printLog(
-                TAG,
-                " mNrfMeshManager?.connectionState has active observers:${mNrfMeshManager?.connectionState?.hasActiveObservers()}"
-        )
-
-        mNrfMeshManager?.provisionedNodes?.observe(this, Observer {
-            mConnectCallback?.onConnectStateChange(
-                    CallbackMsg(
-                            CommonErrorMsg.CONNECT_PROVISIONED_NODE_UPDATE.code,
-                            CommonErrorMsg.CONNECT_PROVISIONED_NODE_UPDATE.msg
-                    )
-            )
-        })
+        Utils.printLog(TAG, "===>-mesh- 开始监听蓝牙连接状态回调")
     }
 
     internal fun disConnect() {
@@ -504,6 +503,13 @@ open class BaseMeshService : LifecycleService() {
         }
     }
 
+    internal fun deleteCurrentMeshNetwork(callback:BooleanCallback?){
+        mNrfMeshManager?.deleteCurrentMeshNetwort()
+        callback?.let {
+            callback.onResult(true)
+        }
+    }
+
     internal fun exportMeshNetwork(callback: NetworkExportUtils.NetworkExportCallbacks) {
         mNrfMeshManager?.exportMeshNetwork(callback)
     }
@@ -540,11 +546,21 @@ open class BaseMeshService : LifecycleService() {
      */
     internal fun setObserver() {
         //接收到的mesh消息
+        observeReceiverMsg()
+        //蓝牙连接状态监听
+        mNrfMeshManager?.connectionState?.observe(this, mBleConnectStatusObserver)
+        //配网节点监听
+        mNrfMeshManager?.provisionedNodes?.observe(this, mProvisionedNodesStatusObserver)
+        //设备连接成功状态回调
+        mNrfMeshManager?.isDeviceReady?.observe(this, mDeviceReadySatusObserver)
+    }
+
+    private fun observeReceiverMsg() {
         mNrfMeshManager?.meshMessageLiveData?.observe(this, Observer { meshMsg ->
             meshMsg?.apply {
                 Utils.printLog(
                         TAG, """===>-mesh- meshMessageLiveDataResult:
-                        |${meshMsg}""".trimMargin()
+                            |${meshMsg}""".trimMargin()
                 )
 
                 //因为第一心跳包要在30S左右才能收到，为了尽快让设备上线，这是只要接受到设备的消息就当作上线算

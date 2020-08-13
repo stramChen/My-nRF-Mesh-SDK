@@ -102,7 +102,6 @@ object MeshSDK {
             scanResultCallback: ArrayMapCallback,
             errCallback: IntCallback
     ) {
-        Utils.printLog(TAG, "startScan startScan")
         disConnect()
         var scanCallback: ScanCallback = object :
                 ScanCallback {
@@ -135,7 +134,7 @@ object MeshSDK {
 
         Utils.printLog(
                 TAG,
-                "===>-mesh-startScan uuid:${if (type == Constants.SCAN_UNPROVISIONED) BleMeshManager.MESH_PROVISIONING_UUID else BleMeshManager.MESH_PROXY_UUID}"
+                "===>-mesh-开始扫描 startScan uuid:${if (type == Constants.SCAN_UNPROVISIONED) BleMeshManager.MESH_PROVISIONING_UUID else BleMeshManager.MESH_PROXY_UUID}"
         )
         MeshHelper.startScan(
                 if (type == Constants.SCAN_UNPROVISIONED) BleMeshManager.MESH_PROVISIONING_UUID else BleMeshManager.MESH_PROXY_UUID,
@@ -152,6 +151,7 @@ object MeshSDK {
      * 注意：android的networkKey都必须是大写的
      */
     fun provision(uuid: String, networkKey: String, callback: MapCallback) {
+        //有时候
         mContext?.apply {
             init(this, object : BooleanCallback() {
                 override fun onResult(boolean: Boolean) {
@@ -243,7 +243,6 @@ object MeshSDK {
                                                 }
                                             }
                                             else -> {
-                                                Log.d(TAG, "===>-mesh-pair，其它结果")
                                                 hasProvisionStart = true
                                                 doMapCallback(map, callback, msg)
                                             }
@@ -508,6 +507,8 @@ object MeshSDK {
      * 断开gatt连接
      */
     fun disConnect() {
+        Utils.printLog(TAG, "===>-mesh- 先尝试断开蓝牙连接")
+        isConnecting.set(false)
         MeshHelper.disConnect()
         clearAllCallbacks()
     }
@@ -924,7 +925,7 @@ object MeshSDK {
                                             override fun onError(msg: CallbackMsg) {
                                                 isConnecting.set(false)
                                                 Utils.printLog(
-                                                    TAG, "===>-mesh-connect连接出现异常。${msg.code}:${msg.msg}"
+                                                        TAG, "===>-mesh-connect连接出现异常。${msg.code}:${msg.msg}"
                                                 )
                                                 if (msg.code == ConnectState.STOP_CONNECT.code)
                                                     needReconnect = false
@@ -1740,6 +1741,33 @@ object MeshSDK {
                 }
             })
         }
+    }
+
+        /**
+         * 订阅设备消息
+         */
+        fun getAllMeshDeviceStatus(callback: StringCallback) {
+            Utils.printLog(MeshSDK.TAG, "===>-mesh- 开始 获取所有节点状态");
+            MeshSDK.getProvisionedNodes(object : ArrayMapCallback {
+                override fun onResult(result: ArrayList<HashMap<String, Any>>) {
+                    result.forEach {
+                        MeshSDK.getDeviceCurrentStatus(it["uuid"] as String,
+                                listOf(SWITCH), object : StringCallback() {
+                            override fun onResultMsg(msg: String) {
+                                callback.onResultMsg(msg)
+                            }
+                        })
+                    }
+                }
+            })
+        }
+
+    /**
+     * 清除手机所有mesh配置
+     */
+    private fun clearAllMesh(booleanCallback: BooleanCallback?) {
+        stopScan()
+        MeshHelper.MeshProxyService.mMeshProxyService?.deleteCurrentMeshNetwork(booleanCallback)
     }
 
 }

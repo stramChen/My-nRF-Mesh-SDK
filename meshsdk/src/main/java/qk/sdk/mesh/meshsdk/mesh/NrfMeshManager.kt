@@ -168,7 +168,7 @@ class NrfMeshManager(
     /**
      * Returns [SingleLiveData] containing the device ready state.
      */
-    internal val connectionState: LiveData<CallbackMsg>
+    internal val connectionState: MutableLiveData<CallbackMsg>
         get() = mConnectionState
 
     /**
@@ -302,6 +302,7 @@ class NrfMeshManager(
                 context.setConnectObserver()
             }
         }
+        Log.d(TAG,"===>-mesh-connect开始尝试gatt连接")
         //Added a 1 second delay for connection, mostly to wait for a disconnection to complete before connecting.
         if (bluetoothDevice != null) {
             mHandler.postDelayed({
@@ -345,6 +346,7 @@ class NrfMeshManager(
         clearProvisioningLiveData()
         isProvisioningComplete = false
         bleMeshManager?.disconnect()?.enqueue()
+        bleMeshManager?.clearGatt()
     }
 
     internal fun clearProvisioningLiveData() {
@@ -1365,7 +1367,7 @@ class NrfMeshManager(
             filters.add(ScanFilter.Builder().setServiceUuid(ParcelUuid(filterUuid)).build())
             val scanner = BluetoothLeScannerCompat.getScanner()
             scanner.startScan(filters, settings, mScanCallbacks)
-            Log.v(TAG, "===>-mesh-Scan started")
+            Log.v(TAG, "===>-mesh NrfMeshManager Scan started")
 //            registerBroadcastReceivers()
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
@@ -1439,7 +1441,7 @@ class NrfMeshManager(
             val scanner = BluetoothLeScannerCompat.getScanner()
             mScanDataCallback = scanCallback
             scanner.startScan(filters, settings, mScanCallbacks)
-            Log.v(TAG, "===>-mesh-Scan started")
+            Log.v(TAG, "===>-mesh NrfMeshManager Scan started")
         } catch (e: java.lang.Exception) {
             e.printStackTrace()
             mScannerStateLiveData.bluetoothDisabled()
@@ -1471,6 +1473,10 @@ class NrfMeshManager(
                 "meshJson.json",
                 callback
         )
+    }
+
+    internal fun deleteCurrentMeshNetwort(){
+        meshManagerApi.deleteCurrentMeshNetworkFromDb()
     }
 
     internal fun importMeshNetworkJson(json: String) {

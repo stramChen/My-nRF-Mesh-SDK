@@ -934,6 +934,14 @@ public class MeshManagerApi implements MeshMngrApi {
         mMeshNetworkDb.deleteNetwork(mMeshNetworkDao, meshNetwork);
     }
 
+    /**
+     * Deletes an existing mesh network from the local database
+     *
+     */
+    public final void deleteCurrentMeshNetworkFromDb() {
+        mMeshNetworkDb.deleteNetwork(mMeshNetworkDao, mMeshNetwork);
+    }
+
     @Override
     public void createMeshPdu(final int dst, @NonNull final MeshMessage meshMessage) {
         if (!MeshAddress.isAddressInRange(dst)) {
