@@ -307,7 +307,7 @@ class NrfMeshManager(
         if (bluetoothDevice != null) {
             mHandler.postDelayed({
                 bleMeshManager?.connect(bluetoothDevice)?.retry(3, 100)?.enqueue()
-            }, 100)
+            }, 1000)
         } else {
             Utils.printLog(TAG, "===>-mesh-bluetoothDevice is null")
         }

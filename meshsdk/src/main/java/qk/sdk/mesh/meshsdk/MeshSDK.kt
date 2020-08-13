@@ -34,6 +34,8 @@ object MeshSDK {
     private const val PUBLISH_INTERVAL = 88 //25秒
     private const val PUBLISH_TTL = 5
 
+    private var isSubscribeDeviceStatusSuccessfully = false;
+
     const val VENDOR_MSG_HB = "14"
 
 
@@ -509,6 +511,7 @@ object MeshSDK {
     fun disConnect() {
         Utils.printLog(TAG, "===>-mesh- 先尝试断开蓝牙连接")
         isConnecting.set(false)
+        isSubscribeDeviceStatusSuccessfully = false
         MeshHelper.disConnect()
         clearAllCallbacks()
     }
@@ -1046,16 +1049,25 @@ object MeshSDK {
     fun subscribeDeviceStatus(callback: IDeviceStatusCallBack) {
         createGroup(SUBSCRIBE_ALL_DEVICE, object : BooleanCallback() {
             override fun onResult(boolean: Boolean) {
+                isSubscribeDeviceStatusSuccessfully = boolean
                 Utils.printLog(TAG, "===>-mesh- createGroup:$SUBSCRIBE_ALL_DEVICE:$boolean")
             }
         }, SUBSCRIBE_ALL_DEVICE_ADDR)
         //创建一个组播地址为了同步设备状态
         createGroup(ALL_DEVICE_SYNC, object : BooleanCallback() {
             override fun onResult(boolean: Boolean) {
+                isSubscribeDeviceStatusSuccessfully = boolean
                 Utils.printLog(TAG, "===>-mesh- createGroup:$ALL_DEVICE_SYNC$boolean")
             }
         }, ALL_DEVICE_SYNC_ADDR)
         BaseMeshService.mDownStreamCallback = callback
+    }
+
+    /**
+     * 检查是否已经订阅设备状态成功
+     */
+    fun isSubscribleDeviceStatusSuccess():Boolean{
+        return isSubscribeDeviceStatusSuccessfully
     }
 
     /**
