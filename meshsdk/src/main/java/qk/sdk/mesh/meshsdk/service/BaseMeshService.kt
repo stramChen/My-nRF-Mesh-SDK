@@ -23,12 +23,11 @@ import qk.sdk.mesh.meshsdk.util.*
 import rx.Observable
 import rx.Subscription
 import rx.schedulers.Schedulers
-import java.lang.RuntimeException
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import kotlin.collections.HashMap
-import qk.sdk.mesh.meshsdk.bean.DeviceConstantsCode as DC;
+import qk.sdk.mesh.meshsdk.bean.DeviceConstantsCode as DC
 
 open class BaseMeshService : LifecycleService() {
     private val TAG = "BaseMeshService"
@@ -125,7 +124,7 @@ open class BaseMeshService : LifecycleService() {
         var netKey: NetworkKey? = null
         if (networkKey.isNotEmpty()) {
             mNrfMeshManager?.meshManagerApi?.meshNetwork?.netKeys?.forEach {
-                if (ByteUtil.bytesToHexString(it.key) == networkKey)
+                if (ByteUtil.bytesToHexString(it.key).toUpperCase() == networkKey.toUpperCase())
                     netKey = it
             }
         }

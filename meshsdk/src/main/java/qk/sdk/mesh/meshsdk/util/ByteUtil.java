@@ -133,24 +133,30 @@ public class ByteUtil {
         return byteArrayToInt2(desByte);
     }
 
+    /**
+     * 以大端模式将byte[]转成int
+     */
     public static int byteArrayToInt2(byte[] bytes) {
         int value = 0;
         int byteSize = bytes.length;
         // 由低位->高位
         for (int i = 0; i < byteSize; i++) {
             int shift = (byteSize - 1 - i) * 8;
-            value += (bytes[i] & 0x000000FF) << shift;
+            value += (bytes[i] & 0xFF) << shift;
         }
         return value;
     }
 
+    /**
+     * 以小端模式将byte[]转成int
+     */
     public static int byteArrayToInt(byte[] bytes) {
         int value = 0;
         int byteSize = bytes.length;
         // 由高位到低位
         for (int i = 0; i < byteSize; i++) {
             int shift = i * 8;
-            value += (bytes[i] & 0x000000FF) << shift;// 往高位游
+            value += (bytes[i] & 0xFF) << shift;// 往高位游
         }
         return value;
     }

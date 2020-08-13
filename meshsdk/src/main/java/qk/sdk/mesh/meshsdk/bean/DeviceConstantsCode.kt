@@ -56,6 +56,7 @@ const val ATTR_TYPE_VIRTUAL_BUTTON = "0700" // 虚拟按钮
 
 object DeviceConstantsCode {
 
+
     /*************************************灯****************************************/
 
     //内部封装相关操作码
