@@ -63,7 +63,7 @@ dependencies {
         api 'androidx.multidex:multidex:2.0.1'
     } else {
         //打包编译，给smartPlus直接引用
-        api(name: 'meshprovisioner-2.0.1-snapshot', ext: 'aar')
+        api(name: 'meshprovisioner-2.0.3-snapshot', ext: 'aar')
         implementation fileTree(dir: 'libs', include: ['*.jar'], exclude: [])
     }
     api 'no.nordicsemi.android:ble:2.1.1'
@@ -89,7 +89,7 @@ uploadArchives {
             repository(url: "file:///Users/chensichuang/Documents/mxchip/aar/")
             pom.project {
                 name 'meshsdk'
-                version '2.0.1-snapshot'
+                version '2.0.2-snapshot'
                 artifactId 'meshsdk'
                 groupId 'cn.mxchip.mesh.test'
                 packaging 'aar'

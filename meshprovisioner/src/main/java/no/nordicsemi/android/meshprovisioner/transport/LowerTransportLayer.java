@@ -540,7 +540,10 @@ abstract class LowerTransportLayer extends UpperTransportLayer {
      */
     private void handleImmediateBlockAcks(final int seqZero, final int ttl, final int src, final int dst, final int segN) {
         cancelIncompleteTimer();
-        sendBlockAck(seqZero, ttl, src, dst, segN);
+        if (src < 0xC000)
+        {
+            sendBlockAck(seqZero, ttl, src, dst, segN);
+        }
     }
 
     /**
@@ -691,10 +694,12 @@ abstract class LowerTransportLayer extends UpperTransportLayer {
             final int duration = (BLOCK_ACK_TIMER + (50 * ttl));
             Log.v(TAG, "Duration: " + duration);
             mDuration = System.currentTimeMillis() + duration;
-            mHandler.postDelayed(() -> {
-                Log.v(TAG, "Acknowledgement timer expiring");
-                sendBlockAck(seqZero, ttl, src, dst, segN);
-            }, duration);
+            if(src<0xC000){
+                mHandler.postDelayed(() -> {
+                    Log.v(TAG, "Acknowledgement timer expiring");
+                    sendBlockAck(seqZero, ttl, src, dst, segN);
+                }, duration);
+            }
         }
     }
 
