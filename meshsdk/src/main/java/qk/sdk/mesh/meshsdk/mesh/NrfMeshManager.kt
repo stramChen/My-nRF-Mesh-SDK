@@ -346,7 +346,7 @@ class NrfMeshManager(
         clearProvisioningLiveData()
         isProvisioningComplete = false
         bleMeshManager?.disconnect()?.enqueue()
-        bleMeshManager?.clearGatt()
+//        bleMeshManager?.clearGatt()
     }
 
     internal fun clearProvisioningLiveData() {
