@@ -851,7 +851,8 @@ object MeshSDK {
 
     var isReconnect: AtomicBoolean = AtomicBoolean(false)
 
-    //判断是否正在连接
+    //判断是否正在连接,为了避免多个连接请求调用的时候出现连接的问题，当有多个连接同时请求的时候
+    //mGattConnectCallbacks会将请求缓存起来，当连接成功的时候，一并返回
     var isConnecting: AtomicBoolean = AtomicBoolean(false)
     var needReconnect = true
 

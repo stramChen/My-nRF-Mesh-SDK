@@ -654,7 +654,7 @@ open class BaseMeshService : LifecycleService() {
 
         //区分一下是组播消息还是单播消息
         if (dst == SUBSCRIBE_ALL_DEVICE_ADDR) {
-            var subRes = SubscribeBean(TYPE_PIR_SENSOR,JsonParser().parse(res));
+            var subRes = SubscribeBean(TYPE_DEVICE_PROPERTY,JsonParser().parse(res));
             mDownStreamCallback?.onCommand(Gson().toJson(subRes)?:"");
         } else {
             if (null != callback) {
