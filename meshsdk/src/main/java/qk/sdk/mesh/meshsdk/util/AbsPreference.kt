@@ -2,28 +2,30 @@ package qk.sdk.mesh.meshsdk.util
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 
 abstract class AbsPreference {
     private var mContext: Context? = null
     private val TAG = "AbsPreference"
     private var mAppFlag: String = "";
 
-    private lateinit var sPreferences: SharedPreferences
+    private var sPreferences: SharedPreferences? = null
 
     fun init(appFlag: String, context: Context) {
         mContext = context
-        mAppFlag = appFlag;
+        mAppFlag = appFlag
         sPreferences = context.getSharedPreferences(appFlag, Context.MODE_PRIVATE)
     }
 
     fun getInstance(): SharedPreferences {
         checkInit()
-        return sPreferences
+        return sPreferences!!
     }
 
     fun checkInit() {
-        if (::sPreferences.isInitialized) {
-            sPreferences = mContext?.getSharedPreferences(mAppFlag, Context.MODE_PRIVATE)!!
+        Log.d(TAG,"检查SP是否为空，sPreferences:${sPreferences}---mContext${mContext}")
+        if (sPreferences == null) {
+            sPreferences = mContext!!.getSharedPreferences(mAppFlag, Context.MODE_PRIVATE)!!
         }
     }
 
