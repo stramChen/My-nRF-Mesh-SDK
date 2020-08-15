@@ -5,6 +5,7 @@ import android.content.Context
 import android.util.Log
 import com.google.gson.Gson
 import me.weyye.hipermission.PermissionCallback
+import no.nordicsemi.android.meshprovisioner.Group
 import no.nordicsemi.android.meshprovisioner.UnprovisionedBeacon
 import no.nordicsemi.android.meshprovisioner.models.GenericOnOffServerModel
 import no.nordicsemi.android.meshprovisioner.models.VendorModel
@@ -1048,10 +1049,15 @@ object MeshSDK {
 //        }
 //    }
 
+    fun checkOldGroupExist(){
+        MeshHelper.removeGroup("New Group")
+    }
+
     /**
      * 订阅状态上报
      */
     fun subscribeDeviceStatus(callback: IDeviceStatusCallBack) {
+        checkOldGroupExist();
         createGroup(SUBSCRIBE_ALL_DEVICE, object : BooleanCallback() {
             override fun onResult(boolean: Boolean) {
                 isSubscribeDeviceStatusSuccessfully = boolean
@@ -1242,7 +1248,11 @@ object MeshSDK {
         var map = HashMap<String, Any>()
         if (doProxyCheck(uuid, map, callback)) {
             //通过uuid获取group
-            var group = MeshHelper.getGroupByName(groupName)
+            var group :Group?= null
+            var groups  = MeshHelper.getGroupByName(groupName)
+            if(groups.size >0){
+                group = groups[0]
+            }
             if (group == null) {
                 doMapCallback(
                         map,
@@ -1314,7 +1324,11 @@ object MeshSDK {
         var map = HashMap<String, Any>()
         if (doProxyCheck(uuid, map, callback)) {
             //通过groupName获取group
-            var group = MeshHelper.getGroupByName(groupName)
+            var group:Group? = null
+            var groups  = MeshHelper.getGroupByName(groupName)
+            if(groups.size >0){
+                group = groups[0]
+            }
             if (group == null) {
                 doMapCallback(
                         map,
@@ -1764,11 +1778,11 @@ object MeshSDK {
          * 订阅设备消息
          */
         fun getAllMeshDeviceStatus(callback: StringCallback) {
-            Utils.printLog(MeshSDK.TAG, "===>-mesh- 开始 获取所有节点状态");
-            MeshSDK.getProvisionedNodes(object : ArrayMapCallback {
+            Utils.printLog(TAG, "===>-mesh- 开始 获取所有节点状态");
+            getProvisionedNodes(object : ArrayMapCallback {
                 override fun onResult(result: ArrayList<HashMap<String, Any>>) {
                     result.forEach {
-                        MeshSDK.getDeviceCurrentStatus(it["uuid"] as String,
+                        getDeviceCurrentStatus(it["uuid"] as String,
                                 listOf(SWITCH), object : StringCallback() {
                             override fun onResultMsg(msg: String) {
                                 callback.onResultMsg(msg)

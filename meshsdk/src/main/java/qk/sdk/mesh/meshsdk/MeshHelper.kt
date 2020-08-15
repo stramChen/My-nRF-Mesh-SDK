@@ -3,6 +3,7 @@ package qk.sdk.mesh.meshsdk
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import com.joker.api.wrapper.ListenerWrapper
 import no.nordicsemi.android.meshprovisioner.*
 import no.nordicsemi.android.meshprovisioner.transport.*
@@ -44,9 +45,9 @@ object MeshHelper {
 //        rx.Observable.create<String> {
 //        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
         MeshProxyService.mMeshProxyService?.startScan(
-            filterUuid,
-            scanCallback,
-            networkKey.toUpperCase()
+                filterUuid,
+                scanCallback,
+                networkKey.toUpperCase()
         )
 //        }.subscribeOn(AndroidSchedulers.mainThread()).sendSubscribeMsg()
     }
@@ -58,9 +59,9 @@ object MeshHelper {
 
     // 建立连接
     fun connect(
-        device: ExtendedBluetoothDevice,
-        connectToNetwork: Boolean,
-        callback: ConnectCallback?
+            device: ExtendedBluetoothDevice,
+            connectToNetwork: Boolean,
+            callback: ConnectCallback?
     ) {
 //        rx.Observable.create<String> {
 //        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
@@ -85,10 +86,7 @@ object MeshHelper {
 
     // 断开当前蓝牙连接
     fun disConnect() {
-        rx.Observable.create<String> {
-        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
-            MeshProxyService.mMeshProxyService?.disConnect()
-        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
+        MeshProxyService.mMeshProxyService?.disConnect()
     }
 
     // 停止蓝牙连接 - 正在连接的时候
@@ -117,9 +115,9 @@ object MeshHelper {
 
     // 开启启动网络配置
     fun startProvision(
-        device: ExtendedBluetoothDevice,
-        networkKey: NetworkKey,
-        callback: BaseCallback
+            device: ExtendedBluetoothDevice,
+            networkKey: NetworkKey,
+            callback: BaseCallback
     ) {
 //        rx.Observable.create<String> {
 //        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
@@ -195,8 +193,8 @@ object MeshHelper {
 
     // 选择要操作的元素和 model
     fun setSelectedModel(
-        element: Element?,
-        model: MeshModel?
+            element: Element?,
+            model: MeshModel?
     ) {
         MeshProxyService.mMeshProxyService?.setSelectedModel(element, model)
     }
@@ -218,8 +216,8 @@ object MeshHelper {
                     var isNodeKeyAdd: Boolean
                     if (node != null) {
                         isNodeKeyAdd = MeshParserUtils.isNodeKeyExists(
-                            node.addedAppKeys,
-                            applicationKey.keyIndex
+                                node.addedAppKeys,
+                                applicationKey.keyIndex
                         )
                         val meshMessage: MeshMessage
                         if (!isNodeKeyAdd) {
@@ -228,12 +226,12 @@ object MeshHelper {
                             meshMessage = ConfigAppKeyDelete(networkKey, applicationKey)
                         }
                         sendMessage(
-                            "addAppKeys",
-                            node.unicastAddress,
-                            meshMessage,
-                            meshCallback,
-                            true,
-                            true
+                                "addAppKeys",
+                                node.unicastAddress,
+                                meshMessage,
+                                meshCallback,
+                                true,
+                                true
                         )
                     }
                 }
@@ -247,11 +245,11 @@ object MeshHelper {
 
     //给RN用
     fun addAppkeys(
-        method: String,
-        index: Int,
-        meshCallback: MeshCallback?,
-        timeOut: Boolean,
-        retry: Boolean
+            method: String,
+            index: Int,
+            meshCallback: MeshCallback?,
+            timeOut: Boolean,
+            retry: Boolean
     ) {
 //        var applicationKey: ApplicationKey? = null
 //        getAppKeys()?.forEach {
@@ -268,8 +266,8 @@ object MeshHelper {
         applicationKey?.apply {
             val networkKey = getNetworkKey(this.boundNetKeyIndex)
             Utils.printLog(
-                TAG,
-                "networkKey.keyIndex:${networkKey?.keyIndex},applicationKey.boundNetKeyIndex:${this.boundNetKeyIndex}"
+                    TAG,
+                    "networkKey.keyIndex:${networkKey?.keyIndex},applicationKey.boundNetKeyIndex:${this.boundNetKeyIndex}"
             )
             if (networkKey == null || networkKey.keyIndex != this.boundNetKeyIndex) {
                 Utils.printLog(TAG, "addAppKeys() networkKey is null!")
@@ -277,8 +275,8 @@ object MeshHelper {
                 val node = getSelectedMeshNode()
                 if (node != null) {
                     val isNodeKeyAdd = MeshParserUtils.isNodeKeyExists(
-                        node.addedAppKeys,
-                        this.keyIndex
+                            node.addedAppKeys,
+                            this.keyIndex
                     )
                     val meshMessage: MeshMessage
                     if (!isNodeKeyAdd) {
@@ -287,12 +285,12 @@ object MeshHelper {
                         meshMessage = ConfigAppKeyDelete(networkKey, this)
                     }
                     sendMessage(
-                        method,
-                        node.unicastAddress,
-                        meshMessage,
-                        meshCallback,
-                        timeOut,
-                        retry
+                            method,
+                            node.unicastAddress,
+                            meshMessage,
+                            meshCallback,
+                            timeOut,
+                            retry
                     )
                 }
             }
@@ -310,12 +308,12 @@ object MeshHelper {
             val node = getSelectedMeshNode()
             node?.let {
                 sendMessage(
-                    method,
-                    it.unicastAddress,
-                    configCompositionDataGet,
-                    callback,
-                    true,
-                    true
+                        method,
+                        it.unicastAddress,
+                        configCompositionDataGet,
+                        callback,
+                        true,
+                        true
                 )
             }
         }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
@@ -325,12 +323,12 @@ object MeshHelper {
 //        rx.Observable.create<String> {
 //        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
         var netKey =
-            MeshProxyService.mMeshProxyService?.mNrfMeshManager
-                ?.meshManagerApi?.meshNetwork?.createNetworkKey()
+                MeshProxyService.mMeshProxyService?.mNrfMeshManager
+                        ?.meshManagerApi?.meshNetwork?.createNetworkKey()
         netKey?.key = ByteUtil.hexStringToBytes(key)
         netKey?.let {
             MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.addNetKey(
-                netKey
+                    netKey
             )
         }
 //        }.subscribeOn(AndroidSchedulers.mainThread()).sendSubscribeMsg()
@@ -353,8 +351,8 @@ object MeshHelper {
         }
         netKey?.let {
             if (!(MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.removeNetKey(
-                    it
-                ) ?: false)
+                            it
+                    ) ?: false)
             ) {
                 map.put("code", Constants.ConnectState.NET_KEY_DELETE_FAILED.code)
                 map.put("message", Constants.ConnectState.NET_KEY_DELETE_FAILED.msg)
@@ -392,14 +390,14 @@ object MeshHelper {
         getAllNetworkKey()?.forEach { netKey ->
             if (ByteUtil.bytesToHexString(netKey.key) == networkKey.toUpperCase()) {
                 var appKey =
-                    MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.createAppKey()
+                        MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.createAppKey()
                 if (appKey != null) {
                     appKey.boundNetKeyIndex = netKey.keyIndex
                     Utils.printLog(
-                        TAG,
-                        "appKey.boundNetKeyIndex:${appKey.boundNetKeyIndex},appkey:${ByteUtil.bytesToHexString(
-                            appKey.key
-                        )}"
+                            TAG,
+                            "appKey.boundNetKeyIndex:${appKey.boundNetKeyIndex},appkey:${ByteUtil.bytesToHexString(
+                                    appKey.key
+                            )}"
                     )
                     MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.let { network ->
                         network.addAppKey(appKey)
@@ -445,8 +443,8 @@ object MeshHelper {
 
         applicationKey?.let {
             if (!(MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.removeAppKey(
-                    it
-                ) ?: false)
+                            it
+                    ) ?: false)
             ) {
                 callback?.onResultMsg(Constants.ConnectState.APP_KEY_DELETE_FAILED.code)
             } else {
@@ -463,12 +461,12 @@ object MeshHelper {
      * @param message 组成：$Opcode$TID$AttrType$AttrValue
      */
     fun sendMessage(
-        key: String,
-        dst: Int,
-        message: MeshMessage,
-        callback: BaseCallback?,
-        timeOut: Boolean = false,
-        retry: Boolean = false
+            key: String,
+            dst: Int,
+            message: MeshMessage,
+            callback: BaseCallback?,
+            timeOut: Boolean = false,
+            retry: Boolean = false
     ) {
         try {
             sendMeshPdu(key, dst, message, callback, timeOut, retry)
@@ -490,23 +488,23 @@ object MeshHelper {
     // 传送 mesh 数据包
     // 传递控制参数给 mesh 设备
     fun sendMeshPdu(
-        key: String,
-        dst: Int,
-        message: MeshMessage,
-        callback: BaseCallback?,
-        timeOut: Boolean = false,
-        retry: Boolean = false
+            key: String,
+            dst: Int,
+            message: MeshMessage,
+            callback: BaseCallback?,
+            timeOut: Boolean = false,
+            retry: Boolean = false
     ) {
 //        rx.Observable.create<String> {
 //        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
         Utils.printLog(TAG, "===>-mesh- sendMeshPdu，method name：${key}")
         MeshProxyService.mMeshProxyService?.sendMeshPdu(
-            key,
-            dst,
-            message,
-            callback,
-            timeOut,
-            retry
+                key,
+                dst,
+                message,
+                callback,
+                timeOut,
+                retry
         )
 //        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
@@ -549,7 +547,11 @@ object MeshHelper {
         }
 
         try {
-            var group: Group? = getGroupByName(groupName)
+            var group: Group? = null
+            var groups  = getGroupByName(groupName)
+            if(groups.size >0){
+                group = groups[0]
+            }
             if (group != null) {
                 addPoxyFilter(MeshAddress.formatAddress(group.address, false))
                 return true
@@ -560,8 +562,8 @@ object MeshHelper {
             //直接给当前provisioner分配最大组播地址0xC000-0FEFF(0FEFF-0FFFF是保留地址不做分配)
             //因为目前我们只支持一个组网里面只有一个provisioner,所以可以给他直接分配最大地址
             var range: AllocatedGroupRange? = AllocatedGroupRange(
-                "C000".toInt(16),
-                "FEFF".toInt(16)
+                    "C000".toInt(16),
+                    "FEFF".toInt(16)
             )
             if (range != null) {
                 provisioner?.addRange(range)
@@ -570,14 +572,14 @@ object MeshHelper {
             group = if (groupAdd == 0)
                 provisioner?.let {
                     network?.createGroup(
-                        it,
-                        groupName
+                            it,
+                            groupName
                     )
                 } else provisioner?.let {
                 network?.createGroup(
-                    it,
-                    groupName,
-                    groupAdd
+                        it,
+                        groupName,
+                        groupAdd
                 )
             }
 
@@ -594,9 +596,12 @@ object MeshHelper {
     }
 
     fun removeGroup(groupName: String) {
-        getGroupByName(groupName)?.apply {
-            MeshProxyService.mMeshProxyService?.getMeshNetwork()?.let {
-                it.removeGroup(this)
+        getGroupByName(groupName).forEach {
+            it?.apply {
+                MeshProxyService.mMeshProxyService?.getMeshNetwork()?.let {
+                    it.removeGroup(this)
+                    Log.d(TAG,"===>-mesh-删除脏数据成功:${groupName}")
+                }
             }
         }
     }
@@ -606,18 +611,18 @@ object MeshHelper {
         Utils.printLog(TAG, "addPoxyFilter address bytes:${ByteUtil.bytesToHexString(address)}")
 
         val addAddressToFilter = ProxyConfigAddAddressToFilter(
-            arrayListOf(
-                AddressArray(
-                    address[0],
-                    address[1]
+                arrayListOf(
+                        AddressArray(
+                                address[0],
+                                address[1]
+                        )
                 )
-            )
         )
 
         try {
             MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.createMeshPdu(
-                MeshAddress.UNASSIGNED_ADDRESS,
-                addAddressToFilter
+                    MeshAddress.UNASSIGNED_ADDRESS,
+                    addAddressToFilter
             )
             return true
         } catch (ex: IllegalArgumentException) {
@@ -630,13 +635,14 @@ object MeshHelper {
         return MeshProxyService.mMeshProxyService?.mNrfMeshManager?.mGroups?.value ?: ArrayList()
     }
 
-    fun getGroupByName(groupName: String): Group? {
+    fun getGroupByName(groupName: String): ArrayList<Group> {
+        var groups: ArrayList<Group> = ArrayList<Group>();
         getGroup().forEach {
             if (groupName == it.name) {
-                return it
+                groups.add(it)
             }
         }
-        return null
+        return groups
     }
 
     fun getGroupByAddress(groupAddr: Int): Group? {
@@ -692,8 +698,8 @@ object MeshHelper {
      * 生成一个hash键，但有时候它并不唯一，因此后面会优化
      */
     fun generatePrimaryKey(
-        sequence: Int? = null,
-        uuid: String? = null
+            sequence: Int? = null,
+            uuid: String? = null
     ) = sequence.toString() + ":" + uuid?.toUpperCase()
 
 
@@ -711,10 +717,10 @@ object MeshHelper {
 
             mNrfMeshManager?.mNetworkImportState?.observe(this, androidx.lifecycle.Observer {
                 mMeshProxyServiceCallback?.onResult(
-                    hashMapOf(
-                        "code" to Constants.ConnectState.SERVICE_CREATED.code,
-                        "msg" to Constants.ConnectState.SERVICE_CREATED.msg
-                    )
+                        hashMapOf(
+                                "code" to Constants.ConnectState.SERVICE_CREATED.code,
+                                "msg" to Constants.ConnectState.SERVICE_CREATED.msg
+                        )
                 )
             })
 
