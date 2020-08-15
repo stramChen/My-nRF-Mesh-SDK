@@ -1183,6 +1183,10 @@ open class BaseMeshService : LifecycleService() {
         }
     }
 
+    internal fun isScanning(): Boolean? {
+        return mNrfMeshManager?.isScanning()
+    }
+
     internal fun clearGatt() {
         mNrfMeshManager?.clearGatt()
     }

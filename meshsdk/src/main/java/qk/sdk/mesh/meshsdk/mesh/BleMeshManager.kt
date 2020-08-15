@@ -22,6 +22,7 @@
 
 package qk.sdk.mesh.meshsdk.mesh
 
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
@@ -157,6 +158,7 @@ constructor(context: Context) : LoggableBleManager<BleMeshManagerCallbacks>(cont
             return requests
         }
 
+
         override fun onDeviceDisconnected() {
             //We reset the MTU to 23 upon disconnection
             Log.d(TAG, "===>-mesh- 设备断开连接了")
@@ -242,8 +244,14 @@ constructor(context: Context) : LoggableBleManager<BleMeshManagerCallbacks>(cont
     }
 
     fun clearGatt() {
-        mBluetoothGatt?.disconnect()
         mBluetoothGatt?.close()
+    }
+
+    fun getDeviceStatus(bluetoothDevice: BluetoothDevice) {
+//        mBluetoothGatt?.disconnect()
+        Log.d(TAG,"===>-mesh-获取蓝牙连接状态:${mBluetoothGatt
+                ?.getConnectionState(bluetoothDevice)}")
+
     }
 
 }

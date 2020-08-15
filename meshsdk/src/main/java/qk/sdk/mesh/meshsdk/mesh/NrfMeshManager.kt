@@ -116,7 +116,7 @@ class NrfMeshManager(
      */
 //    internal var bleMeshManager: BleMeshManager? = null
 //        private set
-    private val mHandler: Handler
+    private val mHandler: Handler = Handler()
     private var mUnprovisionedMeshNode: UnprovisionedMeshNode? = null
     private var mProvisionedMeshNode: ProvisionedMeshNode? = null
     private var mIsReconnectingFlag: Boolean = false
@@ -157,6 +157,32 @@ class NrfMeshManager(
     private val mScannerTimeout = {
         stopScan()
         mIsReconnecting.postValue(false)
+    }
+
+
+    private val mConnectTimeOut = Runnable {
+//        Log.d(TAG, "===>-mesh-蓝牙层-连接超时,尝试断开连接,并重连")
+//        disconnect()
+//        clearGatt()
+//        if (null != mConnectDevice) {
+//            mHandler.postDelayed({
+//                mConnectDevice?.device?.let {
+//                    mConnectionState.postValue(
+//                            CallbackMsg(
+//                                    DISCONNECTED.code,
+//                                    DISCONNECTED.msg
+//                            )
+//                    )
+//                }
+//            }, 5000)
+//
+//        }
+//        mHandler.postDelayed({
+//            mConnectDevice?.device?.let {
+//                Log.d(TAG, "===>-mesh-蓝牙层-开始第一次重连")
+//                bleMeshManager?.connect(mConnectDevice!!.device!!)?.retry(3,100)?.enqueue()
+//            }
+//        }, 2000)
     }
 
     /**
@@ -252,7 +278,6 @@ class NrfMeshManager(
 //        this.bleMeshManager = bleMeshManager
         this.bleMeshManager?.setGattCallbacks(this)
         this.bleMeshManager
-        mHandler = Handler()
     }//Initialize the mesh api
 
     internal fun clearInstance() {
@@ -302,7 +327,7 @@ class NrfMeshManager(
                 context.setConnectObserver()
             }
         }
-        Log.d(TAG,"===>-mesh-connect开始尝试gatt连接")
+        Log.d(TAG, "===>-mesh-蓝牙层-connect开始尝试gatt连接")
         //Added a 1 second delay for connection, mostly to wait for a disconnection to complete before connecting.
         if (bluetoothDevice != null) {
             mHandler.postDelayed({
@@ -311,6 +336,7 @@ class NrfMeshManager(
         } else {
             Utils.printLog(TAG, "===>-mesh-bluetoothDevice is null")
         }
+        mHandler.postDelayed(mConnectTimeOut, 15000)
     }
 
     /**
@@ -320,7 +346,7 @@ class NrfMeshManager(
      */
     private fun connectToProxy(device: ExtendedBluetoothDevice) {
         initIsConnectedLiveData()
-        Log.d(TAG,"===>-mesh-connectToProxy回调用连接中")
+        Log.d(TAG, "===>-mesh-蓝牙层-connectToProxy回调用连接中")
         mConnectionState.postValue(
                 CallbackMsg(
                         CONNECTING.code,
@@ -346,7 +372,6 @@ class NrfMeshManager(
         clearProvisioningLiveData()
         isProvisioningComplete = false
         bleMeshManager?.disconnect()?.enqueue()
-//        bleMeshManager?.clearGatt()
     }
 
     internal fun clearProvisioningLiveData() {
@@ -446,7 +471,7 @@ class NrfMeshManager(
     }
 
     override fun onDeviceConnecting(device: BluetoothDevice) {
-        Log.d(TAG,"===>-mesh-onDeviceConnecting回调用连接中")
+        Log.d(TAG, "===>-mesh-蓝牙层-onDeviceConnecting连接中")
         mConnectionState.postValue(
                 CallbackMsg(
                         CONNECTING.code,
@@ -456,6 +481,8 @@ class NrfMeshManager(
     }
 
     override fun onDeviceConnected(device: BluetoothDevice) {
+        Log.d(TAG, "===>-mesh-蓝牙层-设备已连接")
+        mHandler.removeCallbacks(mConnectTimeOut)
         mIsConnected = true
         mConnectionState.postValue(
                 CallbackMsg(
@@ -469,7 +496,9 @@ class NrfMeshManager(
     override fun onDeviceDisconnecting(device: BluetoothDevice) {
         Utils.printLog(
                 TAG,
-                "===>-mesh-Disconnecting...，connect devicd:${mConnectDevice?.getAddress()},disConnect device:${device.address}"
+                "===>-mesh-蓝牙层-正在断开连接-Disconnecting...，" +
+                        "connect devicd:${mConnectDevice?.getAddress()}" +
+                        ",disConnect device:${device.address}"
         )
         mIsConnectedToProxy.postValue(false)
         mIsConnected = false
@@ -491,7 +520,7 @@ class NrfMeshManager(
     }
 
     override fun onDeviceDisconnected(device: BluetoothDevice) {
-        Utils.printLog(TAG, "===>-mesh-Disconnected")
+        Utils.printLog(TAG, "===>-mesh-蓝牙层-设备已断开连接 Disconnected")
         mConnectionState.postValue(
                 CallbackMsg(
                         DISCONNECTED.code,
@@ -518,7 +547,7 @@ class NrfMeshManager(
     }
 
     override fun onLinkLossOccurred(device: BluetoothDevice) {
-        Utils.printLog(TAG, "===>-mesh-Link loss occurred")
+        Utils.printLog(TAG, "===>-mesh-蓝牙层-Link loss occurred")
         mIsConnected = false
     }
 
@@ -533,7 +562,7 @@ class NrfMeshManager(
 
     override fun onDeviceReady(device: BluetoothDevice) {
         mOnDeviceReady.postValue(null)
-        Log.d(TAG, "===>-mesh- gatt 蓝牙设备代理已连接成功")
+        Log.d(TAG, "===>-mesh-蓝牙层-gatt 蓝牙设备代理已连接成功")
         mConnectionState.postValue(CallbackMsg(COMMON_SUCCESS.code, COMMON_SUCCESS.msg))
 
         if (bleMeshManager?.isProvisioningComplete == true) {
@@ -1060,7 +1089,7 @@ class NrfMeshManager(
      * stop scanning for bluetooth devices.
      */
     internal fun stopScan() {
-        Utils.printLog(TAG, "===>-mesh- 停止蓝牙扫描")
+        Utils.printLog(TAG, "===>-mesh-蓝牙层-停止蓝牙扫描")
         mHandler.removeCallbacks(mScannerTimeout)
         var scanner = BluetoothLeScannerCompat.getScanner()
         scanner.stopScan(mScanCallbacks)
@@ -1127,7 +1156,7 @@ class NrfMeshManager(
             try {
                 Utils.printLog(
                         TAG,
-                        "===>-mesh- 发现设备 onScanResult: callBackType=${callbackType} result=${result}"
+                        "==>-mesh- 发现设备 onScanResult: callBackType=${callbackType} result=${result}"
                 )
                 if (!mIsScanning)
                     return
@@ -1215,7 +1244,8 @@ class NrfMeshManager(
                 BluetoothAdapter.STATE_ON -> mScannerStateLiveData.bluetoothEnabled()
                 BluetoothAdapter.STATE_TURNING_OFF, BluetoothAdapter.STATE_OFF ->
                     if (previousState != BluetoothAdapter.STATE_TURNING_OFF
-                            && previousState != BluetoothAdapter.STATE_OFF) {
+                            && previousState != BluetoothAdapter.STATE_OFF
+                    ) {
                         stopScan()
                         mScannerStateLiveData.bluetoothDisabled()
                     }
@@ -1475,7 +1505,7 @@ class NrfMeshManager(
         )
     }
 
-    internal fun deleteCurrentMeshNetwort(){
+    internal fun deleteCurrentMeshNetwort() {
         meshManagerApi.deleteCurrentMeshNetworkFromDb()
     }
 
@@ -1487,5 +1517,9 @@ class NrfMeshManager(
 
     internal fun clearGatt() {
         bleMeshManager?.clearGatt()
+    }
+
+    internal fun isScanning(): Boolean {
+        return mIsScanning
     }
 }

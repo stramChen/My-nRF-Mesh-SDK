@@ -104,6 +104,11 @@ object MeshSDK {
             scanResultCallback: ArrayMapCallback,
             errCallback: IntCallback
     ) {
+        if(isScanning()!= null){
+            if(isScanning()!!){
+                stopScan()
+            }
+        }
         disConnect()
         var scanCallback: ScanCallback = object :
                 ScanCallback {
@@ -308,7 +313,6 @@ object MeshSDK {
             init(this.applicationContext, object : BooleanCallback() {
                 override fun onResult(boolean: Boolean) {
                     if (boolean) {
-                        clearAllCallbacks();
                         connect(networkKey, callback)
                     }
                 }
@@ -916,7 +920,7 @@ object MeshSDK {
                                                 if (msg.code == ConnectState.DISCONNECTED.code && needReconnect && !isReconnect.get()) {//连接断开，自动寻找代理节点重连
                                                     Utils.printLog(
                                                             TAG,
-                                                            "===>-mesh-connect onConnectStateChange start reConnect"
+                                                            "===>-mesh-开始尝试重新连接"
                                                     )
                                                     isConnecting.set(false)
                                                     if (!isReconnect.get()) {
@@ -1781,6 +1785,10 @@ object MeshSDK {
     private fun clearAllMesh(booleanCallback: BooleanCallback?) {
         stopScan()
         MeshHelper.MeshProxyService.mMeshProxyService?.deleteCurrentMeshNetwork(booleanCallback)
+    }
+
+    fun isScanning(): Boolean? {
+        return MeshHelper.MeshProxyService.mMeshProxyService?.isScanning()
     }
 
 }
