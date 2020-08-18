@@ -513,11 +513,17 @@ open class BaseMeshService : LifecycleService() {
         mNrfMeshManager?.exportMeshNetwork(callback)
     }
 
+    var mImportObserver:Observer<String> =Observer {
+        //这里是为了避免多次回调用，同时为了减少前任代码的改动-_-，所以代码写的有点啰嗦
+        mImportCallBack?.onResultMsg(it)
+        mImportCallBack = null
+    }
+    var mImportCallBack:StringCallback? = null;
+
     internal fun importMeshNetworkJson(json: String, mapCallback: StringCallback) {
+        mImportCallBack = mapCallback
         mNrfMeshManager?.importMeshNetworkJson(json)
-        mNrfMeshManager?.mNetworkImportState?.observe(this, Observer {
-            mapCallback.onResultMsg(it)
-        })
+        mNrfMeshManager?.mNetworkImportState?.observe(this, mImportObserver)
     }
 
     internal fun subscribeLightStatus(callback: MeshCallback) {
@@ -762,7 +768,7 @@ open class BaseMeshService : LifecycleService() {
                     attrValue = ByteUtil.bytesToHexString(
                             byteArrayOf(parameter[2 + i])
                     )
-                    pirSensor.remainingElectricity = attrValue
+                    pirSensor.remainingElectricity = attrValue.toInt(16).toString()
                     i += attrTypeLen+ 1
                 }
                 DC.pirSensorCons[SWITCH_THIRD] -> {

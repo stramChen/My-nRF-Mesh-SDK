@@ -532,11 +532,8 @@ object MeshHelper {
     }
 
     fun importMeshNetwork(json: String, callback: StringCallback) {
-        rx.Observable.create<String> {
-        }.subscribeOn(AndroidSchedulers.mainThread()).doOnSubscribe {
             disConnect()
             MeshProxyService.mMeshProxyService?.importMeshNetworkJson(json, callback)
-        }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
     fun createGroup(groupName: String, groupAdd: Int = 0): Boolean {
