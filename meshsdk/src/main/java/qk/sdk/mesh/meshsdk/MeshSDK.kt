@@ -105,8 +105,8 @@ object MeshSDK {
             scanResultCallback: ArrayMapCallback,
             errCallback: IntCallback
     ) {
-        if(isScanning()!= null){
-            if(isScanning()!!){
+        if (isScanning() != null) {
+            if (isScanning()!!) {
                 stopScan()
             }
         }
@@ -517,6 +517,7 @@ object MeshSDK {
         Utils.printLog(TAG, "===>-mesh- 先尝试断开蓝牙连接")
         isConnecting.set(false)
         isSubscribeDeviceStatusSuccessfully = false
+        MeshHelper.MeshProxyService.mMeshProxyService?.mConnectCallback = null
         MeshHelper.disConnect()
         clearAllCallbacks()
     }
@@ -814,16 +815,22 @@ object MeshSDK {
      * @param uuid 设备唯一id
      * @param properties 需要获取属性的集合
      */
-    fun getDeviceCurrentStatus(uuid: String, properties: List<String>, callback: StringCallback) {
-        val productId = MxMeshUtil.getProductIdByUUID(uuid).toString();
-        var param: ArrayList<Pair<String?, String?>?>? = ArrayList();
-        properties.forEach {
-            when (productId) {
-                DC.lightCons[PRODUCT_ID] -> {
-                    param!!.add(Pair(DC.lightCons[it], null))
-                }
-                DC.socketCons[PRODUCT_ID] -> {
-                    param!!.add(Pair(DC.socketCons[it], null))
+    fun getDeviceCurrentStatus(uuid: String, properties: List<String?>?, callback: StringCallback) {
+        val productId = MxMeshUtil.getProductIdByUUID(uuid).toString()
+        var param: ArrayList<Pair<String?, String?>?>? = ArrayList()
+        properties?.forEach {
+            it?.let {
+                when (productId) {
+                    DC.lightCons[PRODUCT_ID] -> {
+                        param!!.add(Pair(DC.lightCons[it], null))
+                    }
+                    DC.socketCons[PRODUCT_ID] -> {
+                        param!!.add(Pair(DC.socketCons[it], null))
+                    }
+                    DC.pirSensorCons[PRODUCT_ID] -> {
+                        param!!.add(Pair(DC.pirSensorCons[it], null))
+                    }
+                    else -> { }
                 }
             }
         }
@@ -1049,7 +1056,7 @@ object MeshSDK {
 //        }
 //    }
 
-    fun checkOldGroupExist(){
+    fun checkOldGroupExist() {
         MeshHelper.removeGroup("New Group")
     }
 
@@ -1077,7 +1084,7 @@ object MeshSDK {
     /**
      * 检查是否已经订阅设备状态成功
      */
-    fun isSubscribleDeviceStatusSuccess():Boolean{
+    fun isSubscribleDeviceStatusSuccess(): Boolean {
         return isSubscribeDeviceStatusSuccessfully
     }
 
@@ -1248,9 +1255,9 @@ object MeshSDK {
         var map = HashMap<String, Any>()
         if (doProxyCheck(uuid, map, callback)) {
             //通过uuid获取group
-            var group :Group?= null
-            var groups  = MeshHelper.getGroupByName(groupName)
-            if(groups.size >0){
+            var group: Group? = null
+            var groups = MeshHelper.getGroupByName(groupName)
+            if (groups.size > 0) {
                 group = groups[0]
             }
             if (group == null) {
@@ -1324,9 +1331,9 @@ object MeshSDK {
         var map = HashMap<String, Any>()
         if (doProxyCheck(uuid, map, callback)) {
             //通过groupName获取group
-            var group:Group? = null
-            var groups  = MeshHelper.getGroupByName(groupName)
-            if(groups.size >0){
+            var group: Group? = null
+            var groups = MeshHelper.getGroupByName(groupName)
+            if (groups.size > 0) {
                 group = groups[0]
             }
             if (group == null) {
@@ -1774,24 +1781,37 @@ object MeshSDK {
         }
     }
 
-        /**
-         * 订阅设备消息
-         */
-        fun getAllMeshDeviceStatus(callback: StringCallback) {
-            Utils.printLog(TAG, "===>-mesh- 开始 获取所有节点状态");
-            getProvisionedNodes(object : ArrayMapCallback {
-                override fun onResult(result: ArrayList<HashMap<String, Any>>) {
-                    result.forEach {
-                        getDeviceCurrentStatus(it["uuid"] as String,
-                                listOf(SWITCH), object : StringCallback() {
-                            override fun onResultMsg(msg: String) {
-                                callback.onResultMsg(msg)
-                            }
-                        })
+    /**
+     * 订阅设备消息
+     */
+    fun getAllMeshDeviceStatus(callback: StringCallback) {
+        Utils.printLog(TAG, "===>-mesh- 开始 获取所有节点状态");
+        getProvisionedNodes(object : ArrayMapCallback {
+            override fun onResult(result: ArrayList<HashMap<String, Any>>) {
+                result.forEach {
+                    val productId = MxMeshUtil.getProductIdByUUID(it["uuid"] as String).toString();
+                    var param: List<String?>? = null
+                    when (productId) {
+                        DC.lightCons[PRODUCT_ID] -> {
+                            param = listOf(SWITCH)
+                        }
+                        DC.socketCons[PRODUCT_ID] -> {
+                            param = listOf(SWITCH)
+                        }
+                        DC.pirSensorCons[PRODUCT_ID] -> {
+                            param = listOf(REMAINING_ELECTRICITY)
+                        }
                     }
+                    getDeviceCurrentStatus(it["uuid"] as String,
+                            param, object : StringCallback() {
+                        override fun onResultMsg(msg: String) {
+                            callback.onResultMsg(msg)
+                        }
+                    })
                 }
-            })
-        }
+            }
+        })
+    }
 
     /**
      * 清除手机所有mesh配置
@@ -1803,6 +1823,10 @@ object MeshSDK {
 
     fun isScanning(): Boolean? {
         return MeshHelper.MeshProxyService.mMeshProxyService?.isScanning()
+    }
+
+    fun notifyAllDeviceOnline(){
+        MeshHelper.MeshProxyService.mMeshProxyService?.notifyAllDeviceOnline()
     }
 
 }

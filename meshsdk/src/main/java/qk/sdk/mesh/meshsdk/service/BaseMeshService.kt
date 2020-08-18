@@ -21,7 +21,9 @@ import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
 import qk.sdk.mesh.meshsdk.mesh.NrfMeshManager
 import qk.sdk.mesh.meshsdk.util.*
 import rx.Observable
+import rx.Subscriber
 import rx.Subscription
+import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -60,7 +62,7 @@ open class BaseMeshService : LifecycleService() {
             ConcurrentHashMap()
 
     //设备状态监听，一个就好
-    private var mBleConnectStatusObserver = Observer<CallbackMsg>{
+    private var mBleConnectStatusObserver = Observer<CallbackMsg> {
         mConnectCallback?.onConnectStateChange(it)
         Utils.printLog(TAG, "===>-mesh- mNrfMeshManager?.connectionState:${it.msg}")
         LogFileUtil.writeLogToInnerFile(
@@ -205,7 +207,7 @@ open class BaseMeshService : LifecycleService() {
                                                 else if (heartBeanTag == 2) {
                                                     mHeartBeatMap[uuid] = heartBeanTag and 0
                                                     var subRes = SubscribeBean(TYPE_DEVICE_STATUS
-                                                            ,DeviceNode<Any>(STATUS_OFFLINE, uuid));
+                                                            , DeviceNode<Any>(STATUS_OFFLINE, uuid));
                                                     mDownStreamCallback?.onCommand(Gson().toJson(subRes));
                                                 }
                                                 //设备上线了 01，feedback
@@ -221,7 +223,7 @@ open class BaseMeshService : LifecycleService() {
                                                 }
 
                                             }
-                                            Log.d(TAG,"===>-mesh- heart beat检查结果==uuid:${uuid}" +
+                                            Log.d(TAG, "===>-mesh- heart beat检查结果==uuid:${uuid}" +
                                                     "==result:${mHeartBeatMap[uuid]}")
                                         }
                                     }
@@ -246,6 +248,33 @@ open class BaseMeshService : LifecycleService() {
         }
     }
 
+    fun notifyAllDeviceOnline() {
+        Observable.create<String> {
+            while (true) {
+                if (mDownStreamCallback != null) {
+                    it.onCompleted()
+                    break
+                }
+            }
+        }.subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(object : Subscriber<String>() {
+                    override fun onNext(t: String) {
+                    }
+                    override fun onCompleted() {
+                        Log.d(TAG, "===>-mesh-通知所有的设备上线")
+                        mNrfMeshManager?.nodes?.value?.forEach {
+                            var subRes = SubscribeBean(TYPE_DEVICE_STATUS
+                                    , DeviceNode<Any>(STATUS_ONLINE, it.uuid));
+                            mDownStreamCallback?.onCommand(Gson().toJson(subRes));
+                        }
+                    }
+                    override fun onError(e: Throwable?) {
+                    }
+                })
+
+    }
+
     /**
      * 检查设备是否在线
      */
@@ -256,7 +285,7 @@ open class BaseMeshService : LifecycleService() {
             //设备一直处于离线状态，赶紧通知它上线吧！
             if ((mHeartBeatMap[uuid] ?: 0) == 0) {
                 var subRes = SubscribeBean(TYPE_DEVICE_STATUS
-                        ,DeviceNode<Any>(STATUS_ONLINE, uuid));
+                        , DeviceNode<Any>(STATUS_ONLINE, uuid));
                 mDownStreamCallback?.onCommand(Gson().toJson(subRes));
             }
             //让高位为1,表示当前它肯定是在线的
@@ -502,7 +531,7 @@ open class BaseMeshService : LifecycleService() {
         }
     }
 
-    internal fun deleteCurrentMeshNetwork(callback:BooleanCallback?){
+    internal fun deleteCurrentMeshNetwork(callback: BooleanCallback?) {
         mNrfMeshManager?.deleteCurrentMeshNetwort()
         callback?.let {
             callback.onResult(true)
@@ -513,12 +542,12 @@ open class BaseMeshService : LifecycleService() {
         mNrfMeshManager?.exportMeshNetwork(callback)
     }
 
-    var mImportObserver:Observer<String> =Observer {
+    var mImportObserver: Observer<String> = Observer {
         //这里是为了避免多次回调用，同时为了减少前任代码的改动-_-，所以代码写的有点啰嗦
         mImportCallBack?.onResultMsg(it)
         mImportCallBack = null
     }
-    var mImportCallBack:StringCallback? = null;
+    var mImportCallBack: StringCallback? = null;
 
     internal fun importMeshNetworkJson(json: String, mapCallback: StringCallback) {
         mImportCallBack = mapCallback
@@ -648,20 +677,20 @@ open class BaseMeshService : LifecycleService() {
     fun decodeMessageAndFeedBack(message: VendorModelMessageStatus) {
         val uuid = MeshHelper.getMeshNetwork()?.getNode(message.src)?.uuid
         val pid: String? = uuid?.let { MxMeshUtil.getProductIdByUUID(it).toString() }
-        Log.d(TAG,"===>-mesh- 收到数据后 src是${message.src}解包得到的uuid是${uuid},对应的产品pid是${pid}")
-        var sequence :Int= message.parameter[0].toInt();
-        Log.d(TAG,"===>-mesh- 收到数据后 得到的sequence= $sequence")
+        Log.d(TAG, "===>-mesh- 收到数据后 src是${message.src}解包得到的uuid是${uuid},对应的产品pid是${pid}")
+        var sequence: Int = message.parameter[0].toInt();
+        Log.d(TAG, "===>-mesh- 收到数据后 得到的sequence= $sequence")
         var dst = message.dst;
 
         var res = parseParam(message.parameter, pid, uuid)
 
-        val key = MeshHelper.generatePrimaryKey(sequence,uuid);
+        val key = MeshHelper.generatePrimaryKey(sequence, uuid);
         val callback = MeshHandler.getCallback(key)
 
         //区分一下是组播消息还是单播消息
         if (dst == SUBSCRIBE_ALL_DEVICE_ADDR) {
-            var subRes = SubscribeBean(TYPE_DEVICE_PROPERTY,JsonParser().parse(res));
-            mDownStreamCallback?.onCommand(Gson().toJson(subRes)?:"");
+            var subRes = SubscribeBean(TYPE_DEVICE_PROPERTY, JsonParser().parse(res));
+            mDownStreamCallback?.onCommand(Gson().toJson(subRes) ?: "");
         } else {
             if (null != callback) {
                 if (callback is StringCallback) {
@@ -738,18 +767,18 @@ open class BaseMeshService : LifecycleService() {
         pirSensor.deviceId = uuid
         var i = 1;
         var attrTypeLen = 2;
-        while (i<parameter.size && parameter.size>2) {
+        while (i < parameter.size && parameter.size > 2) {
             val attrType: String = ByteUtil.bytesToHexString(
-                byteArrayOf(parameter[i], parameter[i + 1])
+                    byteArrayOf(parameter[i], parameter[i + 1])
             )
             //这里先不解析五元组
-            if(attrType == ATTR_TYPE_COMMON_GET_QUADRUPLES) return "{}";
+            if (attrType == ATTR_TYPE_COMMON_GET_QUADRUPLES) return "{}";
             var attrValue: String = ""
             when (attrType) {
                 ATTR_TYPE_GET_VERSION -> {
                     //解析版本号
                     attrValue = ByteUtil.bytesToHexString(
-                        byteArrayOf(parameter[2 + i],parameter[2 + i+1],parameter[2 + i+2])
+                            byteArrayOf(parameter[2 + i], parameter[2 + i + 1], parameter[2 + i + 2])
                     )
                     pirSensor.version = generateVersionName(attrValue)
                     i += attrTypeLen + 3;
@@ -761,7 +790,7 @@ open class BaseMeshService : LifecycleService() {
                     )
                     pirSensor.bioSenser =
                             if (attrValue == DC.CODE_SWITCH_ON) BIO_SENSER_ON else BIO_SENSER_OFF
-                    i += attrTypeLen+ 1
+                    i += attrTypeLen + 1
                 }
                 DC.pirSensorCons[REMAINING_ELECTRICITY] -> {
                     //电量只占一个字节
@@ -769,16 +798,16 @@ open class BaseMeshService : LifecycleService() {
                             byteArrayOf(parameter[2 + i])
                     )
                     pirSensor.remainingElectricity = attrValue.toInt(16).toString()
-                    i += attrTypeLen+ 1
+                    i += attrTypeLen + 1
                 }
                 DC.pirSensorCons[SWITCH_THIRD] -> {
                     pirSensor.event = ""
-                    i += attrTypeLen+ 2
+                    i += attrTypeLen + 2
                 }
                 DC.pirSensorCons[EVENT] -> {
-                    i += attrTypeLen+ 2
+                    i += attrTypeLen + 2
                 }
-                else->{
+                else -> {
                     return "{}"
                 }
             }
@@ -801,41 +830,41 @@ open class BaseMeshService : LifecycleService() {
         socketBean.deviceId = uuid
         var i = 1;
         var attrLen = 2;
-        while (i <parameter.size && parameter.size>2) {
+        while (i < parameter.size && parameter.size > 2) {
             val attrType: String = ByteUtil.bytesToHexString(
-                byteArrayOf(parameter[i], parameter[i + 1])
+                    byteArrayOf(parameter[i], parameter[i + 1])
             )
             //这里先不解析五元组
-            if(attrType == ATTR_TYPE_COMMON_GET_QUADRUPLES) return "{}";
+            if (attrType == ATTR_TYPE_COMMON_GET_QUADRUPLES) return "{}";
             var attrValue: String = ""
             when (attrType) {
                 ATTR_TYPE_GET_VERSION -> {
                     //解析版本号
                     attrValue = ByteUtil.bytesToHexString(
-                        byteArrayOf(parameter[2 + i],parameter[2 + i+1],parameter[2 + i+2])
+                            byteArrayOf(parameter[2 + i], parameter[2 + i + 1], parameter[2 + i + 2])
                     )
                     socketBean.version = generateVersionName(attrValue)
-                    i += attrLen+ 3;
+                    i += attrLen + 3;
                 }
                 DC.socketCons[SWITCH] -> {
                     socketBean.switch =
                             if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
-                    i += attrLen+ 2
+                    i += attrLen + 2
                 }
                 DC.socketCons[SWITCH_SECOND] -> {
                     socketBean.switchSecond =
                             if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
-                    i += attrLen+ 2
+                    i += attrLen + 2
                 }
                 DC.socketCons[SWITCH_THIRD] -> {
                     socketBean.switchThird =
                             if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
-                    i += attrLen+ 2
+                    i += attrLen + 2
                 }
                 DC.socketCons[EVENT] -> {
-                    i += attrLen+ 2
+                    i += attrLen + 2
                 }
-                else->{
+                else -> {
                     return "{}";
                 }
             }
@@ -858,22 +887,22 @@ open class BaseMeshService : LifecycleService() {
         lightBean.deviceId = uuid
         var i = 1;
         var attrLen = 2;
-        while (i<parameter.size && parameter.size>2) {
+        while (i < parameter.size && parameter.size > 2) {
             val attrType: String = ByteUtil.bytesToHexString(
                     byteArrayOf(parameter[i], parameter[i + 1])
             )
             //这里先不解析五元组
-            if(attrType == ATTR_TYPE_COMMON_GET_QUADRUPLES) return "{}";
+            if (attrType == ATTR_TYPE_COMMON_GET_QUADRUPLES) return "{}";
 
             var attrValue: String = ""
             when (attrType) {
                 ATTR_TYPE_GET_VERSION -> {
                     //解析版本号
                     attrValue = ByteUtil.bytesToHexString(
-                        byteArrayOf(parameter[2 + i],parameter[2 + i+1],parameter[2 + i+2])
+                            byteArrayOf(parameter[2 + i], parameter[2 + i + 1], parameter[2 + i + 2])
                     )
                     lightBean.version = generateVersionName(attrValue)
-                    i += attrLen+3;
+                    i += attrLen + 3;
                 }
                 DC.lightCons[SWITCH] -> {
                     //开关只占一个字节
@@ -883,7 +912,7 @@ open class BaseMeshService : LifecycleService() {
 
                     lightBean.switch =
                             if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
-                    i += attrLen+ 1;
+                    i += attrLen + 1;
                 }
                 DC.lightCons[COLOR] -> {
                     var h = ByteUtil.byteToShort(
@@ -893,7 +922,7 @@ open class BaseMeshService : LifecycleService() {
                             )
                     )
                     lightBean.color = 0
-                    i += attrLen+ 3;
+                    i += attrLen + 3;
                 }
                 DC.lightCons[LIGHTNESS_LEVEL] -> {
                     lightBean.lightnessLevel = ByteUtil.byteArrayToInt(
@@ -902,7 +931,7 @@ open class BaseMeshService : LifecycleService() {
                                     parameter[2 + i + 1]
                             )
                     )
-                    i += attrLen+ 2
+                    i += attrLen + 2
                 }
                 DC.lightCons[COLOR_TEMPERATURE] -> {
                     lightBean.colorTemperature = ByteUtil.byteArrayToInt(
@@ -911,17 +940,17 @@ open class BaseMeshService : LifecycleService() {
                                     parameter[2 + i + 1]
                             )
                     )
-                    i += attrLen+ 2
+                    i += attrLen + 2
                 }
                 DC.lightCons[MODE_NUMBER] -> {
                     var l = parameter[i].toInt()
                     lightBean.modeNumber = ""
-                    i += attrLen+ 2
+                    i += attrLen + 2
                 }
                 DC.lightCons[EVENT] -> {
 
                 }
-                else->{
+                else -> {
                     return "{}"
                 }
             }
