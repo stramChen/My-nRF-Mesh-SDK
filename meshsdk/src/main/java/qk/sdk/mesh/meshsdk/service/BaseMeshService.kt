@@ -847,16 +847,22 @@ open class BaseMeshService : LifecycleService() {
                     i += attrLen + 3;
                 }
                 DC.socketCons[SWITCH] -> {
+                    attrValue = ByteUtil.bytesToHexString(
+                            byteArrayOf(parameter[2 + i]))
                     socketBean.switch =
                             if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
                     i += attrLen + 2
                 }
                 DC.socketCons[SWITCH_SECOND] -> {
+                    attrValue = ByteUtil.bytesToHexString(
+                            byteArrayOf(parameter[2 + i]))
                     socketBean.switchSecond =
                             if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
                     i += attrLen + 2
                 }
                 DC.socketCons[SWITCH_THIRD] -> {
+                    attrValue = ByteUtil.bytesToHexString(
+                            byteArrayOf(parameter[2 + i]))
                     socketBean.switchThird =
                             if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
                     i += attrLen + 2

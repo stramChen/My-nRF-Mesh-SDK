@@ -84,7 +84,8 @@ object DeviceConstantsCode {
 
     //内部封装相关操作码
     val socketCons: HashMap<String, String> = hashMapOf(
-            PRODUCT_ID to "5504728",
+//            PRODUCT_ID to "5504728",
+            PRODUCT_ID to "4284236",
             SWITCH to "0001",
             SWITCH_SECOND to "2401",
             SWITCH_THIRD to "2501",
