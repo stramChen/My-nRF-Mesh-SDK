@@ -215,6 +215,7 @@ object MeshSDK {
 
                                         when (msg.code) {
                                             ConnectState.PROVISION_SUCCESS.code -> {
+                                                hasProvisioned = true
                                                 map.clear()
                                                 doMapCallback(
                                                         map,
@@ -232,10 +233,11 @@ object MeshSDK {
                                                     disConnect()
                                                     MeshHelper.clearGatt()
                                                 }
-
+                                                //如果已经配网成功之后，突然断连接，则可能是网关配网成功后的
+                                                //蓝牙重启操作，因此需要进行重连尝试
                                                 if (hasProvisioned && needReconnect) {
                                                     MeshHelper.unRegisterConnectListener()
-                                                    reConnect(networkKey, callback)
+                                                    tryReconnect(networkKey, map, callback)
                                                 } else if (ConnectState.DISCONNECTED.code == msg.code && !hasProvisionStart) {
                                                     doMapCallback(map, callback, msg)
                                                 } else {
@@ -285,6 +287,25 @@ object MeshSDK {
                 }
             })
         }
+    }
+
+    private fun tryReconnect(networkKey: String, map: HashMap<String, Any>, callback: MapCallback) {
+        reConnect(networkKey, object : MapCallback() {
+            override fun onResult(result: HashMap<String, Any>) {
+                for ((key, value) in result) {
+                    if (value is Int && value == 200) {
+                        doMapCallback(
+                                map,
+                                callback,
+                                CallbackMsg(
+                                        ConnectState.DEVICE_CONNECTED.code,
+                                        ConnectState.DEVICE_CONNECTED.msg
+                                )
+                        )
+                    }
+                }
+            }
+        })
     }
 
     /**
@@ -830,7 +851,8 @@ object MeshSDK {
                     DC.pirSensorCons[PRODUCT_ID] -> {
                         param!!.add(Pair(DC.pirSensorCons[it], null))
                     }
-                    else -> { }
+                    else -> {
+                    }
                 }
             }
         }
@@ -1065,6 +1087,14 @@ object MeshSDK {
      */
     fun subscribeDeviceStatus(callback: IDeviceStatusCallBack) {
         checkOldGroupExist();
+        subscribeTwoGroups()
+        BaseMeshService.mDownStreamCallback = callback
+    }
+
+    /**
+     * 订阅两个组播地址D000,D002
+     */
+    private fun subscribeTwoGroups() {
         createGroup(SUBSCRIBE_ALL_DEVICE, object : BooleanCallback() {
             override fun onResult(boolean: Boolean) {
                 isSubscribeDeviceStatusSuccessfully = boolean
@@ -1078,7 +1108,6 @@ object MeshSDK {
                 Utils.printLog(TAG, "===>-mesh- createGroup:$ALL_DEVICE_SYNC$boolean")
             }
         }, ALL_DEVICE_SYNC_ADDR)
-        BaseMeshService.mDownStreamCallback = callback
     }
 
     /**
@@ -1825,7 +1854,7 @@ object MeshSDK {
         return MeshHelper.MeshProxyService.mMeshProxyService?.isScanning()
     }
 
-    fun notifyAllDeviceOnline(){
+    fun notifyAllDeviceOnline() {
         MeshHelper.MeshProxyService.mMeshProxyService?.notifyAllDeviceOnline()
     }
 
