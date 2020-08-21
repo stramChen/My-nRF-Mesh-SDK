@@ -1080,6 +1080,8 @@ object MeshSDK {
 
     fun checkOldGroupExist() {
         MeshHelper.removeGroup("New Group")
+        MeshHelper.removeGroup("0xD000")
+        MeshHelper.removeGroup("0xD002")
     }
 
     /**

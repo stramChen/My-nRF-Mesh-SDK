@@ -28,11 +28,11 @@ const val VENDOR_MSG_GET_COMPOSITION_DATA = "02"
 
 
 //设备订阅组播地址
-const val SUBSCRIBE_ALL_DEVICE: String = "0xD000";
+const val SUBSCRIBE_ALL_DEVICE: String = "D000";
 const val SUBSCRIBE_ALL_DEVICE_ADDR: Int = 0xD000;
 
 //设备同步组播地址
-const val ALL_DEVICE_SYNC: String = "0xD002";
+const val ALL_DEVICE_SYNC: String = "D002";
 const val ALL_DEVICE_SYNC_ADDR: Int = 0xD002;
 
 /**
