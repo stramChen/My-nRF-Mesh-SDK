@@ -1852,8 +1852,11 @@ object MeshSDK {
         MeshHelper.MeshProxyService.mMeshProxyService?.deleteCurrentMeshNetwork(booleanCallback)
     }
 
-    fun isScanning(): Boolean? {
-        return MeshHelper.MeshProxyService.mMeshProxyService?.isScanning()
+    fun isScanning(): Boolean {
+        if(null != MeshHelper.MeshProxyService.mMeshProxyService){
+            return MeshHelper.MeshProxyService.mMeshProxyService!!.isScanning()
+        }
+        return false
     }
 
     fun notifyAllDeviceOnline() {
