@@ -44,6 +44,8 @@ object PermissionUtil {
         HiPermission.create(context).msg(prompt).permissions(permissions)
             .style(R.style.PermissionDefaultBlueStyle)
             .animStyle(R.style.PermissionAnimScale)
+                .title(context.getString(R.string.grant_permission_ble_title))
+                .msg(context.getString(R.string.grant_permission_ble_content))
             .checkMutiPermission(callback)
 
     }

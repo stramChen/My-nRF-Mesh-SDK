@@ -2,5 +2,7 @@
     <string name="app_name">MeshSDK</string>
 
     <string name="grant_permission">请打开权限</string>
+    <string name="grant_permission_ble_title">未开启蓝牙服务 </string>
+    <string name="grant_permission_ble_content">请允许"佛照智家"使用蓝牙服务以便快速发现附近设备 </string>
 
 </resources>
