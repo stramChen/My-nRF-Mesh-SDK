@@ -675,7 +675,7 @@ open class BaseMeshService : LifecycleService() {
     }
 
     fun decodeMessageAndFeedBack(message: VendorModelMessageStatus) {
-        val uuid = MeshHelper.getMeshNetwork()?.getNode(message.src)?.uuid
+        val uuid = MeshHelper.getMeshNetwork()?.getNode(message.src)?.uuid?.toUpperCase()
         val pid: String? = uuid?.let { MxMeshUtil.getProductIdByUUID(it).toString() }
         Log.d(TAG, "===>-mesh- 收到数据后 src是${message.src}解包得到的uuid是${uuid},对应的产品pid是${pid}")
         var sequence: Int = message.parameter[0].toInt();
@@ -1224,8 +1224,11 @@ open class BaseMeshService : LifecycleService() {
         }
     }
 
-    internal fun isScanning(): Boolean? {
-        return mNrfMeshManager?.isScanning()
+    internal fun isScanning(): Boolean {
+        if(null != mNrfMeshManager){
+            return mNrfMeshManager!!.isScanning()
+        }
+        return false
     }
 
     internal fun clearGatt() {
