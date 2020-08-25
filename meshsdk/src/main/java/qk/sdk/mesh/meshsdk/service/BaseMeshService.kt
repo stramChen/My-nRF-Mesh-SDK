@@ -195,6 +195,9 @@ open class BaseMeshService : LifecycleService() {
                         Observable.interval(0, 50 * 1000 + 100, TimeUnit.MILLISECONDS)
                                 .subscribeOn(Schedulers.computation())
                                 .subscribe {
+                                    //没订阅之前不做心跳检查
+                                    if(null == mDownStreamCallback) return@subscribe
+
                                     for (uuid in mHeartBeatMap.keys()) {
                                         synchronized(mHearBeanLock) {
                                             var heartBeanTag = mHeartBeatMap[uuid];
@@ -279,6 +282,9 @@ open class BaseMeshService : LifecycleService() {
      * 检查设备是否在线
      */
     private fun MeshMessage.checkDeviceOnline() {
+        // 没订阅之前不做状态变化
+        if(null == mDownStreamCallback) return
+
         var uuid: String? = MeshHelper
                 .getMeshNetwork()?.getNode(src)?.uuid?.toUpperCase();
         synchronized(mHearBeanLock) {
