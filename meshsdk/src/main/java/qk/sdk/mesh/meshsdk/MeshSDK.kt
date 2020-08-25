@@ -159,13 +159,13 @@ object MeshSDK {
      * 注意：android的networkKey都必须是大写的
      */
     fun provision(uuid: String, networkKey: String, callback: MapCallback) {
-        //有时候
+        val uuidUpcase = uuid.toUpperCase()
         mContext?.apply {
             init(this, object : BooleanCallback() {
                 override fun onResult(boolean: Boolean) {
                     if (boolean) {
                         var map = HashMap<String, Any>()
-                        doBaseCheck(uuid, map, callback)
+                        doBaseCheck(uuidUpcase, map, callback)
                         if (networkKey.isEmpty() || getAllNetworkKey().size <= 0
                                 || !getAllNetworkKey().contains(networkKey.toUpperCase())
                         ) {
@@ -180,7 +180,7 @@ object MeshSDK {
                         var needReconnect = true
 
                         mContext?.let { _ ->
-                            mExtendedBluetoothDeviceMap.get(uuid)?.let { extendedBluetoothDevice ->
+                            mExtendedBluetoothDeviceMap.get(uuidUpcase)?.let { extendedBluetoothDevice ->
                                 Utils.printLog(
                                         TAG,
                                         "===>-mesh-extendedBluetoothDevice:${extendedBluetoothDevice.getAddress()}"
@@ -195,7 +195,7 @@ object MeshSDK {
                                         )
                                         isConnecting.set(false)
                                         //开始启动配置邀请
-                                        MeshHelper.startProvision(mExtendedBluetoothDeviceMap[uuid]!!,
+                                        MeshHelper.startProvision(mExtendedBluetoothDeviceMap[uuidUpcase]!!,
                                                 MeshHelper.getCurrentNetworkKey()!!,
                                                 object : BaseCallback {
                                                     override fun onError(msg: CallbackMsg) {
@@ -1107,7 +1107,7 @@ object MeshSDK {
         createGroup(ALL_DEVICE_SYNC, object : BooleanCallback() {
             override fun onResult(boolean: Boolean) {
                 isSubscribeDeviceStatusSuccessfully = boolean
-                Utils.printLog(TAG, "===>-mesh- createGroup:$ALL_DEVICE_SYNC$boolean")
+                Utils.printLog(TAG, "===>-mesh- createGroup:$ALL_DEVICE_SYNC:$boolean")
             }
         }, ALL_DEVICE_SYNC_ADDR)
     }
