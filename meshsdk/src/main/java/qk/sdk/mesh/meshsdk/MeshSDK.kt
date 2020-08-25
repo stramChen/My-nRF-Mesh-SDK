@@ -122,13 +122,14 @@ object MeshSDK {
                     Utils.printLog(TAG, "scan result:${it.getAddress()}")
                     it.beacon?.apply {
                         val unprovisionedBeacon = UnprovisionedBeacon(this.beaconData)
+                        val uuidUpCase = unprovisionedBeacon.uuid.toString().toUpperCase()
                         var map = HashMap<String, Any>()
                         map.put("mac", it.getAddress())
-                        map.put("uuid", unprovisionedBeacon.uuid.toString())
+                        map.put("uuid", uuidUpCase)
                         map.put("rssi", it.rssi ?: 0)
                         map.put("name", it.name ?: "")
                         resultArray.add(map)
-                        mExtendedBluetoothDeviceMap.put(unprovisionedBeacon.uuid.toString(), it)
+                        mExtendedBluetoothDeviceMap.put(uuidUpCase, it)
                     }
 
                 }
