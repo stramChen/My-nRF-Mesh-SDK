@@ -826,7 +826,7 @@ class NrfMeshManager(
         val node = mMeshNetwork?.getNode(src)
         Utils.printLog(
                 TAG,
-                "onMeshMessageReceived:${ByteUtil.bytesToHexString(meshMessage.parameter)}"
+                "===>-mesh-onMeshMessageReceived:${ByteUtil.bytesToHexString(meshMessage.parameter)}"
         )
         if (node != null)
             if (meshMessage is ProxyConfigFilterStatus) {

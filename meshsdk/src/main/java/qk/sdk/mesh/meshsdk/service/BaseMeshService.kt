@@ -745,13 +745,16 @@ open class BaseMeshService : LifecycleService() {
         //根据产品型号来解码对应的参数，参数以key&value&key&value形式来区分,key占两个字节，value占k个字节
         var res = "";
         when (pid) {
-            DC.lightCons[PRODUCT_ID] -> {
+            PRODUCT_ID_LIGHT_2,
+            PRODUCT_ID_LIGHT_5-> {
                 res = decodeLightParam(pid, uuid, parameter)
             }
-            DC.socketCons[PRODUCT_ID] -> {
+            PRODUCT_ID_SOCKKET_SINGLE,
+            PRODUCT_ID_SOCKKET_DOBULE,
+            PRODUCT_ID_SOCKKET_TRIPLE-> {
                 res = decodeSocketParams(pid, uuid, parameter)
             }
-            DC.pirSensorCons[PRODUCT_ID] -> {
+            PRODUCT_ID_PIR_SENSOR -> {
                 res = decodePirSensorParams(pid, uuid, parameter)
             }
         }
@@ -784,7 +787,9 @@ open class BaseMeshService : LifecycleService() {
                 ATTR_TYPE_GET_VERSION -> {
                     //解析版本号
                     attrValue = ByteUtil.bytesToHexString(
-                            byteArrayOf(parameter[2 + i], parameter[2 + i + 1], parameter[2 + i + 2])
+                            byteArrayOf(parameter[ATTR_LEN + i]
+                                    , parameter[ATTR_LEN + i + 1]
+                                    , parameter[ATTR_LEN + i + 2])
                     )
                     pirSensor.version = generateVersionName(attrValue)
                     i += attrTypeLen + 3;
@@ -792,7 +797,7 @@ open class BaseMeshService : LifecycleService() {
                 DC.pirSensorCons[BIO_SENSER] -> {
                     //有人无人只占一个字节
                     attrValue = ByteUtil.bytesToHexString(
-                            byteArrayOf(parameter[2 + i])
+                            byteArrayOf(parameter[ATTR_LEN + i])
                     )
                     pirSensor.bioSenser =
                             if (attrValue == DC.CODE_SWITCH_ON) BIO_SENSER_ON else BIO_SENSER_OFF
@@ -801,7 +806,7 @@ open class BaseMeshService : LifecycleService() {
                 DC.pirSensorCons[REMAINING_ELECTRICITY] -> {
                     //电量只占一个字节
                     attrValue = ByteUtil.bytesToHexString(
-                            byteArrayOf(parameter[2 + i])
+                            byteArrayOf(parameter[ATTR_LEN + i])
                     )
                     pirSensor.remainingElectricity = attrValue.toInt(16).toString()
                     i += attrTypeLen + 1
@@ -847,31 +852,33 @@ open class BaseMeshService : LifecycleService() {
                 ATTR_TYPE_GET_VERSION -> {
                     //解析版本号
                     attrValue = ByteUtil.bytesToHexString(
-                            byteArrayOf(parameter[2 + i], parameter[2 + i + 1], parameter[2 + i + 2])
+                            byteArrayOf(parameter[ATTR_LEN + i]
+                                    , parameter[ATTR_LEN + i + 1]
+                                    , parameter[ATTR_LEN + i + 2])
                     )
                     socketBean.version = generateVersionName(attrValue)
                     i += attrLen + 3;
                 }
                 DC.socketCons[SWITCH] -> {
                     attrValue = ByteUtil.bytesToHexString(
-                            byteArrayOf(parameter[2 + i]))
+                            byteArrayOf(parameter[ATTR_LEN + i]))
                     socketBean.switch =
                             if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
-                    i += attrLen + 2
+                    i += attrLen + 1
                 }
                 DC.socketCons[SWITCH_SECOND] -> {
                     attrValue = ByteUtil.bytesToHexString(
-                            byteArrayOf(parameter[2 + i]))
+                            byteArrayOf(parameter[ATTR_LEN + i]))
                     socketBean.switchSecond =
                             if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
-                    i += attrLen + 2
+                    i += attrLen + 1
                 }
                 DC.socketCons[SWITCH_THIRD] -> {
                     attrValue = ByteUtil.bytesToHexString(
-                            byteArrayOf(parameter[2 + i]))
+                            byteArrayOf(parameter[ATTR_LEN + i]))
                     socketBean.switchThird =
                             if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
-                    i += attrLen + 2
+                    i += attrLen + 1
                 }
                 DC.socketCons[EVENT] -> {
                     i += attrLen + 2
@@ -898,7 +905,6 @@ open class BaseMeshService : LifecycleService() {
         lightBean.productID = pid
         lightBean.deviceId = uuid
         var i = 1;
-        var attrLen = 2;
         while (i < parameter.size && parameter.size > 2) {
             val attrType: String = ByteUtil.bytesToHexString(
                     byteArrayOf(parameter[i], parameter[i + 1])
@@ -911,53 +917,62 @@ open class BaseMeshService : LifecycleService() {
                 ATTR_TYPE_GET_VERSION -> {
                     //解析版本号
                     attrValue = ByteUtil.bytesToHexString(
-                            byteArrayOf(parameter[2 + i], parameter[2 + i + 1], parameter[2 + i + 2])
+                            byteArrayOf(parameter[ATTR_LEN + i]
+                                    , parameter[ATTR_LEN + i + 1]
+                                    , parameter[ATTR_LEN + i + 2])
                     )
                     lightBean.version = generateVersionName(attrValue)
-                    i += attrLen + 3;
+                    i += ATTR_LEN + 3;
                 }
                 DC.lightCons[SWITCH] -> {
                     //开关只占一个字节
                     attrValue = ByteUtil.bytesToHexString(
-                            byteArrayOf(parameter[2 + i])
+                            byteArrayOf(parameter[ATTR_LEN + i])
                     )
 
                     lightBean.switch =
                             if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
-                    i += attrLen + 1;
+                    i += ATTR_LEN + 1;
                 }
                 DC.lightCons[COLOR] -> {
-                    var h = ByteUtil.byteToShort(
+
+                    var h = ByteUtil.byteArrayToIntWithBigEnd(
                             byteArrayOf(
-                                    parameter[i + 1]
-                                    , parameter[i]
+                                    parameter[ATTR_LEN +i]
+                                    , parameter[ATTR_LEN +i+1]
                             )
                     )
-                    lightBean.color = 0
-                    i += attrLen + 3;
+                    var s = parameter[ATTR_LEN +i+1+1].toInt()
+
+                    var v = parameter[ATTR_LEN +i+1+1+1].toInt()
+                    var hsvColorBean = HSVColorBean(h,s,v)
+                    lightBean.hsvColorBean?.hue = hsvColorBean.hue
+                    lightBean.hsvColorBean?.saturation = hsvColorBean.saturation
+                    lightBean.hsvColorBean?.value = hsvColorBean.value
+                    i += ATTR_LEN + 4;
                 }
                 DC.lightCons[LIGHTNESS_LEVEL] -> {
                     lightBean.lightnessLevel = ByteUtil.byteArrayToInt(
                             byteArrayOf(
-                                    parameter[2 + i],
-                                    parameter[2 + i + 1]
+                                    parameter[ATTR_LEN + i],
+                                    parameter[ATTR_LEN + i + 1]
                             )
                     )
-                    i += attrLen + 2
+                    i += ATTR_LEN + 2
                 }
                 DC.lightCons[COLOR_TEMPERATURE] -> {
                     lightBean.colorTemperature = ByteUtil.byteArrayToInt(
                             byteArrayOf(
-                                    parameter[2 + i],
-                                    parameter[2 + i + 1]
+                                    parameter[ATTR_LEN + i],
+                                    parameter[ATTR_LEN + i + 1]
                             )
                     )
-                    i += attrLen + 2
+                    i += ATTR_LEN + 2
                 }
                 DC.lightCons[MODE_NUMBER] -> {
-                    var l = parameter[i].toInt()
-                    lightBean.modeNumber = ""
-                    i += attrLen + 2
+                    var mode = parameter[ATTR_LEN+i].toInt()
+                    lightBean.modeNumber = mode
+                    i += ATTR_LEN + 2
                 }
                 DC.lightCons[EVENT] -> {
 

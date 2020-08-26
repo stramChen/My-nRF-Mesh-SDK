@@ -17,7 +17,10 @@ import qk.sdk.mesh.meshsdk.service.BaseMeshService
 import qk.sdk.mesh.meshsdk.util.*
 import qk.sdk.mesh.meshsdk.util.Constants.ConnectState
 import java.lang.Thread.sleep
+import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 import qk.sdk.mesh.meshsdk.bean.DeviceConstantsCode as DC
 
 object MeshSDK {
@@ -606,7 +609,7 @@ object MeshSDK {
     }
 
     /**
-     * 协议v2.0：开关
+     * 协议v2.0：灯开关
      */
     fun setGenericOnOff(
             uuid: String, onOff: Boolean,
@@ -636,6 +639,44 @@ object MeshSDK {
                     eleIndex,
                     VENDOR_MSG_OPCODE_ATTR_SET,
                     listOf(Pair(DC.lightCons[SWITCH], if (onOff) "01" else "00")),
+                    callback
+            )
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            callback.onResult(false)
+        }
+    }
+
+    /**
+     * 协议v2.0：单火开关
+     */
+    fun setSocketOnOff(
+            uuid: String, onOff: Boolean,
+            eleIndex: Int, callback: BooleanCallback
+    ) {
+        if (!MeshHelper.isConnectedToProxy()) {
+            callback.onResult(false)
+            return
+        }
+
+        try {
+            var list = ArrayList<Pair<String?, String?>?>();
+            if(eleIndex == 0){
+                list.add(Pair(DC.socketCons[SWITCH], if (onOff) "01" else "00"))
+            }
+            if(eleIndex == 1){
+                list.add(Pair(DC.socketCons[SWITCH_SECOND], if (onOff) "01" else "00"))
+            }
+            if(eleIndex == 2){
+                list.add(Pair(DC.socketCons[SWITCH_THIRD], if (onOff) "01" else "00"))
+            }
+
+            sendMeshMessage(
+                    uuid,
+                    eleIndex,
+                    VENDOR_MSG_OPCODE_ATTR_SET,
+                    list,
                     callback
             )
 
@@ -843,13 +884,16 @@ object MeshSDK {
         properties?.forEach {
             it?.let {
                 when (productId) {
-                    DC.lightCons[PRODUCT_ID] -> {
+                    PRODUCT_ID_LIGHT_2,
+                    PRODUCT_ID_LIGHT_5 -> {
                         param!!.add(Pair(DC.lightCons[it], null))
                     }
-                    DC.socketCons[PRODUCT_ID] -> {
+                    PRODUCT_ID_SOCKKET_SINGLE,
+                    PRODUCT_ID_SOCKKET_DOBULE,
+                    PRODUCT_ID_SOCKKET_TRIPLE -> {
                         param!!.add(Pair(DC.socketCons[it], null))
                     }
-                    DC.pirSensorCons[PRODUCT_ID] -> {
+                    PRODUCT_ID_PIR_SENSOR -> {
                         param!!.add(Pair(DC.pirSensorCons[it], null))
                     }
                     else -> {
@@ -1541,7 +1585,7 @@ object MeshSDK {
                 "Brightness:$bright,ColorTemperature:$temperature,mode:$mode,onOff:$onOff"
         )
 
-        if (hsv != null) {// todo mxchip 待调试
+        if (hsv != null) {
             var vendorMap = hsv as HashMap<String, Any>
             var h = vendorMap["Hue"]
             var s = vendorMap["Saturation"]
@@ -1552,25 +1596,26 @@ object MeshSDK {
                 callback.onResult(false)
                 return
             }
-            var value = "${ByteUtil.bytesToHexString(
-                    byteArrayOf(
-                            (if (paramType == 1) (v as Int).toByte()
-                            else if (paramType == 2) (v as Double).toByte()
-                            else (v as Float).toByte())
-                    )
-            )}${ByteUtil.bytesToHexString(
-                    ByteUtil.shortToByte(
-                            if (paramType == 1) (h as Int).toShort()
-                            else if (paramType == 2) (h as Double).toShort()
-                            else (h as Float).toShort()
-                    )
-            )}${ByteUtil.bytesToHexString(
-                    byteArrayOf(
-                            (if (paramType == 1) (s as Int).toByte()
-                            else if (paramType == 2) (s as Double).toByte()
-                            else (s as Float).toByte())
-                    )
-            )}"
+            var value =
+                    "${ByteUtil.bytesToHexString(
+                            ByteUtil.shortToByte(
+                                    if (paramType == 1) (h as Int).toShort()
+                                    else if (paramType == 2) (h as Double).toShort()
+                                    else (h as Float).toShort()
+                            )
+                    )}${ByteUtil.bytesToHexString(
+                            byteArrayOf(
+                                    (if (paramType == 1) (v as Int).toByte()
+                                    else if (paramType == 2) (v as Double).toByte()
+                                    else (v as Float).toByte())
+                            )
+                    )}${ByteUtil.bytesToHexString(
+                            byteArrayOf(
+                                    (if (paramType == 1) (s as Int).toByte()
+                                    else if (paramType == 2) (s as Double).toByte()
+                                    else (s as Float).toByte())
+                            )
+                    )}"
             sendMeshMessage(
                     uuid,
                     0,
@@ -1610,15 +1655,15 @@ object MeshSDK {
                     listOf(Pair(DC.lightCons[COLOR_TEMPERATURE], temValue)),
                     callback
             )
-        } else if (mode != null) {//TODO mxchip 白/彩灯模式未调试
+        } else if (mode != null) {
             var value = ByteUtil.bytesToHexString(
                     byteArrayOf(("$mode".toDouble().toInt()).toByte())
             )
             sendMeshMessage(
                     uuid,
                     0,
-                    "11",
-                    listOf(Pair(null, value)),
+                    VENDOR_MSG_OPCODE_ATTR_SET,
+                    listOf(Pair(DC.lightCons[MODE_NUMBER], value)),
                     callback
             )
         } else if (onOff != null && Utils.getNumberType(onOff) >= 0) {
@@ -1636,15 +1681,26 @@ object MeshSDK {
      */
     fun fetchLightCurrentStatus(uuid: String, callback: StringCallback) {
         Utils.printLog(TAG, "fetchLightCurrentStatus")
+        var productID = MxMeshUtil.getProductIdByUUID(uuid)
+        var params = arrayListOf(
+                Pair(DC.lightCons[LIGHTNESS_LEVEL], null),
+                Pair(DC.lightCons[COLOR_TEMPERATURE], null),
+                Pair(DC.lightCons[SWITCH], null)
+        )
+        if (productID.toString() == PRODUCT_ID_LIGHT_5) {
+            params.addAll(
+                    listOf(
+                            Pair(DC.lightCons[COLOR], null),
+                            Pair(DC.lightCons[MODE_NUMBER], null)
+                    )
+            )
+
+        }
         sendMeshMessage(
                 uuid,
                 0,
                 VENDOR_MSG_OPCODE_ATTR_GET,
-                listOf(
-                        Pair(DC.lightCons[LIGHTNESS_LEVEL], null)
-                        , Pair(DC.lightCons[COLOR_TEMPERATURE], null)
-                        , Pair(DC.lightCons[SWITCH], null)
-                )
+                params
                 , callback
         )
     }
@@ -1824,13 +1880,16 @@ object MeshSDK {
                     val productId = MxMeshUtil.getProductIdByUUID(it["uuid"] as String).toString();
                     var param: List<String?>? = null
                     when (productId) {
-                        DC.lightCons[PRODUCT_ID] -> {
+                        PRODUCT_ID_LIGHT_2,
+                        PRODUCT_ID_LIGHT_5 -> {
                             param = listOf(SWITCH)
                         }
-                        DC.socketCons[PRODUCT_ID] -> {
+                        PRODUCT_ID_SOCKKET_SINGLE,
+                        PRODUCT_ID_SOCKKET_DOBULE,
+                        PRODUCT_ID_SOCKKET_TRIPLE -> {
                             param = listOf(SWITCH)
                         }
-                        DC.pirSensorCons[PRODUCT_ID] -> {
+                        PRODUCT_ID_PIR_SENSOR -> {
                             param = listOf(REMAINING_ELECTRICITY)
                         }
                     }
@@ -1854,7 +1913,7 @@ object MeshSDK {
     }
 
     fun isScanning(): Boolean {
-        if(null != MeshHelper.MeshProxyService.mMeshProxyService){
+        if (null != MeshHelper.MeshProxyService.mMeshProxyService) {
             return MeshHelper.MeshProxyService.mMeshProxyService!!.isScanning()
         }
         return false

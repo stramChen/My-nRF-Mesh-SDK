@@ -130,13 +130,13 @@ public class ByteUtil {
 
     public static int getPId(byte[] srcByte, byte[] desByte, int startIndex) {
         System.arraycopy(srcByte, startIndex, desByte, 0, 4);
-        return byteArrayToInt2(desByte);
+        return byteArrayToIntWithBigEnd(desByte);
     }
 
     /**
      * 以大端模式将byte[]转成int
      */
-    public static int byteArrayToInt2(byte[] bytes) {
+    public static int byteArrayToIntWithBigEnd(byte[] bytes) {
         int value = 0;
         int byteSize = bytes.length;
         // 由低位->高位

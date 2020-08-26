@@ -15,6 +15,7 @@ object MxMeshUtil {
     /**
      * 根据UUID获取productID
      */
+    @JvmStatic
     fun getProductIdByUUID(uuid: String): Int {
         var uuidHex = uuid.replace("-", "")
         var uuidBytes = ByteUtil.hexStringToBytes(uuidHex)
