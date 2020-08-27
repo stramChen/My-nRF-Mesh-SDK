@@ -243,7 +243,6 @@ object MeshHelper {
         }.subscribeOn(AndroidSchedulers.mainThread()).subscribe()
     }
 
-    //给RN用
     fun addAppkeys(
             method: String,
             index: Int,
@@ -251,13 +250,13 @@ object MeshHelper {
             timeOut: Boolean,
             retry: Boolean
     ) {
-//        var applicationKey: ApplicationKey? = null
-//        getAppKeys()?.forEach {
-//            if (it.keyIndex == index) {
-//                applicationKey = it
-//            }
-//        }
-        val applicationKey = getAppKeys()?.get(index)
+        var applicationKey: ApplicationKey? = null
+        getAppKeys()?.forEach {
+            if (it.keyIndex == index) {
+                applicationKey = it
+            }
+        }
+//        val applicationKey = getAppKeys()?.get(index)
 
         if (applicationKey == null) {
             Utils.printLog(TAG, "addAppKeys() applicationKey is null!")
