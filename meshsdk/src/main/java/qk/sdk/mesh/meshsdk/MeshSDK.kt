@@ -674,7 +674,7 @@ object MeshSDK {
 
             sendMeshMessage(
                     uuid,
-                    eleIndex,
+                    0,
                     VENDOR_MSG_OPCODE_ATTR_SET,
                     list,
                     callback
