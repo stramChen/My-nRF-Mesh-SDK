@@ -103,7 +103,7 @@ uploadArchives {
             repository(url: "file:///Users/chensichuang/Documents/develop/AndroidStudioProjects/mesh_android/meshsdk/libs")
             pom.project {
                 name 'meshprovisioner'
-                version '2.0.3-snapshot'
+                version '2.0.4-snapshot'
                 artifactId 'meshprovisioner'
                 groupId 'cn.mxchip.meshprovisioner.test'
                 packaging 'aar'
