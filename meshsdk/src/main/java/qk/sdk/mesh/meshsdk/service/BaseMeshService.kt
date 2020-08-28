@@ -659,7 +659,7 @@ open class BaseMeshService : LifecycleService() {
     /**
      * 根据 opcode来进行消息分发
      */
-    private fun dispatchMsgByOpCode(meshMsg: MeshMessage?) {
+    private fun dispatchMsgByOpCode(meshMsg: MeshMessage) {
         if (meshMsg is VendorModelMessageStatus &&
                 meshMsg.opCode == VENDOR_MSG_OPCODE_ATTR_RECEIVE.toInt(16)) {
             decodeMessageAndFeedBack(meshMsg);
@@ -675,8 +675,13 @@ open class BaseMeshService : LifecycleService() {
         if (meshMsg is ConfigCompositionDataStatus &&
                 meshMsg.opCode == VENDOR_MSG_GET_COMPOSITION_DATA.toInt(16)
         ) {
-            (MeshHandler.getCallback(GET_COMPOSITION_DATA)
-                    as MeshCallback).onReceive(meshMsg);
+            if(null != MeshHandler.getCallback(GET_COMPOSITION_DATA)){
+                (MeshHandler.getCallback(GET_COMPOSITION_DATA)
+                        as MeshCallback).onReceive(meshMsg);
+            }else{
+                Log.d(TAG, "===>-mesh- 收到COMPOSITION_DATA,但是回调的map已经被清空，可能发生了超时")
+            }
+
         }
     }
 
