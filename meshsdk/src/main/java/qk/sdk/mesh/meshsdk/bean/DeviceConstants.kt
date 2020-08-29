@@ -39,10 +39,10 @@ const val COLOR_T = "color_t";
 
 /*************************************灯****************************************/
 
-//亮度
+//颜色
 const val COLOR = "color";
 
-//颜色
+//亮度
 const val LIGHTNESS_LEVEL = "lightness_level";
 
 //色温

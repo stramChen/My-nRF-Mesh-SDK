@@ -64,7 +64,7 @@ open class BaseMeshService : LifecycleService() {
     //设备状态监听，一个就好
     private var mBleConnectStatusObserver = Observer<CallbackMsg> {
         mConnectCallback?.onConnectStateChange(it)
-        Utils.printLog(TAG, "===>-mesh- mNrfMeshManager?.connectionState:${it.msg}")
+        Log.d(TAG, "===>-mesh- mNrfMeshManager?.connectionState:${it.msg}")
         LogFileUtil.writeLogToInnerFile(
                 this@BaseMeshService,
                 "${it.msg}",
@@ -100,11 +100,26 @@ open class BaseMeshService : LifecycleService() {
     }
 
     override fun onCreate() {
+        Log.d(TAG, "===>-mesh- service被创建了<<<<<<<<<<<")
         super.onCreate()
+        Log.d(TAG, "===>-mesh- service被创建了>>>>>>>>>>>")
         mNrfMeshManager = NrfMeshManager(this, MeshManagerApi(this), BleMeshManager(this))
         //设置监听
         setObserver()
     }
+
+    override fun onDestroy() {
+        Log.d(TAG, "===>-mesh- service被销毁了<<<<<<<<<<<")
+        super.onDestroy()
+        Log.d(TAG, "===>-mesh- service被销毁了>>>>>>>>>>>")
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d(TAG, "===>-mesh- service被启动了<<<<<<<<<<<")
+        return super.onStartCommand(intent, flags, startId)
+        Log.d(TAG, "===>-mesh- service被启动了>>>>>>>>>>>")
+    }
+
 
     val PERMISSION_BLUETOOTH_REQUEST_CODE = 1000
     val PERMISSION_BLUETOOTH_ADMIN_REQUEST_CODE = 1001
@@ -281,12 +296,16 @@ open class BaseMeshService : LifecycleService() {
     /**
      * 检查设备是否在线
      */
-    private fun MeshMessage.checkDeviceOnline() {
+    private fun checkDeviceOnline(meshMsg: MeshMessage) {
         // 没订阅之前不做状态变化
         if(null == mDownStreamCallback) return
 
         var uuid: String? = MeshHelper
-                .getMeshNetwork()?.getNode(src)?.uuid?.toUpperCase();
+                .getMeshNetwork()?.getNode(meshMsg.src)?.uuid?.toUpperCase()
+
+        //这里uuid有时候可能为空，推断可能是设备被app删除了，但是固件其实还在上报
+        if(null == uuid)  return
+
         synchronized(mHearBeanLock) {
             //设备一直处于离线状态，赶紧通知它上线吧！
             if ((mHeartBeatMap[uuid] ?: 0) == 0) {
@@ -605,7 +624,7 @@ open class BaseMeshService : LifecycleService() {
 
                 //因为第一心跳包要在30S左右才能收到，为了尽快让设备上线，这是只要接受到设备的消息就当作上线算
                 //原本需要---meshMsg.opCode ==OPCODE_HEART_BEAT
-                checkDeviceOnline()
+                checkDeviceOnline(meshMsg)
 
                 //根据opCode分发消息
                 dispatchMsgByOpCode(meshMsg)
