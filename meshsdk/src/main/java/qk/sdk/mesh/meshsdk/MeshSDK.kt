@@ -239,7 +239,7 @@ object MeshSDK {
                                                 //蓝牙重启操作，因此需要进行重连尝试
                                                 if (hasProvisioned && needReconnect) {
                                                     MeshHelper.unRegisterConnectListener()
-                                                    tryReconnect(networkKey, map, callback)
+                                                    tryReconnectAfterProvison(networkKey, map, callback)
                                                 } else if (ConnectState.DISCONNECTED.code == msg.code && !hasProvisionStart) {
                                                     doMapCallback(map, callback, msg)
                                                 } else {
@@ -291,7 +291,7 @@ object MeshSDK {
         }
     }
 
-    private fun tryReconnect(networkKey: String, map: HashMap<String, Any>, callback: MapCallback) {
+    private fun tryReconnectAfterProvison(networkKey: String, map: HashMap<String, Any>, callback: MapCallback) {
         reConnect(networkKey, object : MapCallback() {
             override fun onResult(result: HashMap<String, Any>) {
                 for ((key, value) in result) {
@@ -1000,7 +1000,7 @@ object MeshSDK {
                                                     isConnecting.set(false)
                                                     if (!isReconnect.get()) {
                                                         isReconnect.set(true)
-                                                        reConnect(networkKey, callback)
+                                                        reconnectAndSubscribeDeviceStatus(networkKey)
                                                     }
                                                 }
                                             }
@@ -1036,6 +1036,22 @@ object MeshSDK {
                 }
             })
         }
+    }
+
+    /**
+     * 重连并且订阅设备状态
+     */
+    private fun reconnectAndSubscribeDeviceStatus(networkKey: String) {
+        reConnect(networkKey, object : MapCallback() {
+            override fun onResult(result: HashMap<String, Any>) {
+                for ((key, value) in result) {
+                    //重连完成要自己订阅设备状态
+                    if (value is Int && value == 200) {
+                        subscribeTwoGroups()
+                    }
+                }
+            }
+        })
     }
 
     fun exportMeshNetwork(callback: StringCallback) {
@@ -1877,7 +1893,7 @@ object MeshSDK {
     /**
      * 订阅设备消息
      */
-    fun getAllMeshDeviceStatus(callback: StringCallback) {
+    fun getAllMeshDeviceStatusOneByOne(callback: StringCallback) {
         Utils.printLog(TAG, "===>-mesh- 开始 获取所有节点状态");
         getProvisionedNodes(object : ArrayMapCallback {
             override fun onResult(result: ArrayList<HashMap<String, Any>>) {
