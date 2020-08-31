@@ -17,10 +17,7 @@ import qk.sdk.mesh.meshsdk.service.BaseMeshService
 import qk.sdk.mesh.meshsdk.util.*
 import qk.sdk.mesh.meshsdk.util.Constants.ConnectState
 import java.lang.Thread.sleep
-import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 import qk.sdk.mesh.meshsdk.bean.DeviceConstantsCode as DC
 
 object MeshSDK {
@@ -40,7 +37,8 @@ object MeshSDK {
 
     private var isSubscribeDeviceStatusSuccessfully = false;
 
-    const val VENDOR_MSG_HB = "14"
+    //这里记录一下全局的手动点击的时间戳，外层的key是uuid，内层的key是属性名,value是时间戳
+    var mDeviceTouchTimeStamp = java.util.HashMap<String, HashMap<String, Long>>()
 
 
     //callback name
@@ -633,6 +631,8 @@ object MeshSDK {
                     MeshHelper.getSelectedMeshNode()?.elements?.values?.elementAt(eleIndex),
                     MeshHelper.getSelectedElement()?.meshModels?.get(VENDOR_MODELID)
             )
+
+            mDeviceTouchTimeStamp[uuid]= hashMapOf(SWITCH to System.currentTimeMillis())
 
             sendMeshMessage(
                     uuid,
@@ -1586,6 +1586,7 @@ object MeshSDK {
         )
 
         if (hsv != null) {
+            mDeviceTouchTimeStamp[uuid]= hashMapOf(COLOR to System.currentTimeMillis())
             var vendorMap = hsv as HashMap<String, Any>
             var h = vendorMap["Hue"]
             var s = vendorMap["Saturation"]
@@ -1624,6 +1625,7 @@ object MeshSDK {
                     callback
             )
         } else if (bright != null && Utils.getNumberType(bright) > 0) {
+            mDeviceTouchTimeStamp[uuid] = hashMapOf(LIGHTNESS_LEVEL to System.currentTimeMillis())
             var briType = Utils.getNumberType(bright)
             var value = ByteUtil.bytesToHexString(
                     ByteUtil.shortToByte(
@@ -1640,6 +1642,7 @@ object MeshSDK {
                     callback
             )
         } else if (temperature != null && Utils.getNumberType(temperature) > 0) {
+            mDeviceTouchTimeStamp[uuid] = hashMapOf(COLOR_TEMPERATURE to System.currentTimeMillis())
             var temType = Utils.getNumberType(temperature)
             var temValue = ByteUtil.bytesToHexString(
                     ByteUtil.shortToByte(
@@ -1656,6 +1659,7 @@ object MeshSDK {
                     callback
             )
         } else if (mode != null) {
+            mDeviceTouchTimeStamp[uuid] = hashMapOf(MODE_NUMBER to System.currentTimeMillis())
             var value = ByteUtil.bytesToHexString(
                     byteArrayOf(("$mode".toDouble().toInt()).toByte())
             )
@@ -1667,6 +1671,7 @@ object MeshSDK {
                     callback
             )
         } else if (onOff != null && Utils.getNumberType(onOff) >= 0) {
+            mDeviceTouchTimeStamp[uuid] = hashMapOf(SWITCH to System.currentTimeMillis())
             var onOffType = Utils.getNumberType(onOff)
             var onOffParam =
                     if (onOffType == 1) onOff as Int else if (onOffType == 2) (onOff as Double).toInt() else (onOff as Float).toInt()
