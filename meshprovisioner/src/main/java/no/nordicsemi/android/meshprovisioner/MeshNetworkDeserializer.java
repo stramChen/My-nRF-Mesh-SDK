@@ -203,6 +203,8 @@ public final class MeshNetworkDeserializer implements JsonSerializer<MeshNetwork
             final JsonObject jsonProvisioner = jsonProvisioners.get(i).getAsJsonObject();
             final String name = jsonProvisioner.get("provisionerName").getAsString();
             final String uuid = jsonProvisioner.get("UUID").getAsString().toUpperCase();
+            final int nextAvailableAddress = jsonProvisioner.get(
+                    "nextAvailableAddress").getAsInt();
             final String provisionerUuid = MeshParserUtils.formatUuid(uuid);
 
             if (provisionerUuid == null)
@@ -228,6 +230,7 @@ public final class MeshNetworkDeserializer implements JsonSerializer<MeshNetwork
             final Provisioner provisioner = new Provisioner(provisionerUuid,
                     unicastRanges, groupRanges, sceneRanges, meshUuid);
             provisioner.setProvisionerName(name);
+            provisioner.nextAvailableAddress = nextAvailableAddress;
             provisioners.add(provisioner);
         }
         return provisioners;
@@ -246,6 +249,7 @@ public final class MeshNetworkDeserializer implements JsonSerializer<MeshNetwork
         for (Provisioner provisioner : provisioners) {
             final JsonObject provisionerJson = new JsonObject();
             provisionerJson.addProperty("provisionerName", provisioner.getProvisionerName());
+            provisionerJson.addProperty("nextAvailableAddress", provisioner.nextAvailableAddress);
             provisionerJson.addProperty("UUID", MeshParserUtils.uuidToHex(provisioner.getProvisionerUuid()));
             provisionerJson.add("allocatedUnicastRange",
                     serializeAllocatedUnicastRanges(context, provisioner.allocatedUnicastRanges));

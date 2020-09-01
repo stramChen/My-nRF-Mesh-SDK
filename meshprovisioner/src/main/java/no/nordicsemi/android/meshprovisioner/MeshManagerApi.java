@@ -871,7 +871,7 @@ public class MeshManagerApi implements MeshMngrApi {
         final MeshNetwork network = new MeshNetwork(meshUuid);
         network.netKeys = generateNetKeys(meshUuid);
         network.appKeys = generateAppKeys(meshUuid);
-        final AllocatedUnicastRange unicastRange = new AllocatedUnicastRange(0x0001, 0x199A);
+        final AllocatedUnicastRange unicastRange = new AllocatedUnicastRange(0x0001, 0x7FFF);
         final AllocatedGroupRange groupRange = new AllocatedGroupRange(0xC000, 0xCC9A);
         final AllocatedSceneRange sceneRange = new AllocatedSceneRange(0x0001, 0x3333);
         final Provisioner provisioner = network.createProvisioner("nRF Mesh Provisioner", unicastRange, groupRange, sceneRange);
@@ -897,7 +897,7 @@ public class MeshManagerApi implements MeshMngrApi {
         if (mMeshNetwork == null)
             return;
 
-        final AllocatedUnicastRange unicastRange = new AllocatedUnicastRange(0x0001, 0x199A);
+        final AllocatedUnicastRange unicastRange = new AllocatedUnicastRange(0x0001, 0x7FFF);
         final AllocatedGroupRange groupRange = new AllocatedGroupRange(0xC000, 0xCC9A);
         final AllocatedSceneRange sceneRange = new AllocatedSceneRange(0x0001, 0x3333);
         final Provisioner provisioner = mMeshNetwork.createProvisioner("nRF Mesh Provisioner", unicastRange, groupRange, sceneRange);
@@ -1081,7 +1081,8 @@ public class MeshManagerApi implements MeshMngrApi {
         public void onNodeProvisioned(final ProvisionedMeshNode meshNode) {
             updateProvisionedNodeList(meshNode);
             mMeshNetwork.sequenceNumbers.put(meshNode.getUnicastAddress(), meshNode.getSequenceNumber());
-            mMeshNetwork.unicastAddress = mMeshNetwork.nextAvailableUnicastAddress(meshNode.getNumberOfElements(), mMeshNetwork.getSelectedProvisioner());
+            //这里就不让地址再继续递增了，因为每次配网的时候都会先递增获取，然后再分配
+//            mMeshNetwork.unicastAddress = mMeshNetwork.nextAvailableUnicastAddress(meshNode.getNumberOfElements(), mMeshNetwork.getSelectedProvisioner());
             //Set the mesh network uuid to the node so we can identify nodes belonging to a network
             meshNode.setMeshUuid(mMeshNetwork.getMeshUUID());
             mMeshNetworkDb.insertNode(mProvisionedNodeDao, meshNode);
@@ -1344,7 +1345,9 @@ public class MeshManagerApi implements MeshMngrApi {
     };
 
     private boolean isAddressValid(@NonNull final UnprovisionedMeshNode node) {
-        final int unicast = mMeshNetwork.nextAvailableUnicastAddress(node.getNumberOfElements(), mMeshNetwork.getSelectedProvisioner());
+        //这里修改一下，因为nextAvailableUnicastAddress被修改为地址递增，所以现在直接判断MeshNetwork.getUnicastAddress()
+//        final int unicast = mMeshNetwork.nextAvailableUnicastAddress(node.getNumberOfElements(), mMeshNetwork.getSelectedProvisioner());
+        final int unicast = mMeshNetwork.getUnicastAddress();
         if (!MeshAddress.isValidUnicastAddress(unicast)) {
             throw new IllegalArgumentException("Invalid address");
         }

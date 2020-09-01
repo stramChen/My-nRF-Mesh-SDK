@@ -51,7 +51,7 @@ import no.nordicsemi.android.meshprovisioner.utils.MeshParserUtils;
         ProvisionedMeshNode.class,
         Group.class,
         Scene.class},
-        version = 9)
+        version = 10)
 abstract class MeshNetworkDb extends RoomDatabase {
 
     private static String TAG = MeshNetworkDb.class.getSimpleName();
@@ -103,6 +103,7 @@ abstract class MeshNetworkDb extends RoomDatabase {
                             .addMigrations(MIGRATION_6_7)
                             .addMigrations(MIGRATION_7_8)
                             .addMigrations(MIGRATION_8_9)
+                            .addMigrations(MIGRATION_9_10)
                             .build();
                 }
 
@@ -828,6 +829,13 @@ abstract class MeshNetworkDb extends RoomDatabase {
         }
     };
 
+    private static final Migration MIGRATION_9_10 = new Migration(9, 10) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            migrateProvisioner9_10(database);
+        }
+    };
+
     private static void migrateMeshNetwork(final SupportSQLiteDatabase database) {
         database.execSQL("CREATE TABLE `mesh_network_temp` " +
                 "(`mesh_uuid` TEXT NOT NULL, " +
@@ -1401,5 +1409,10 @@ abstract class MeshNetworkDb extends RoomDatabase {
         database.execSQL("DROP TABLE provisioner");
         database.execSQL("CREATE INDEX index_provisioner_mesh_uuid ON `provisioner_temp` (mesh_uuid)");
         database.execSQL("ALTER TABLE provisioner_temp RENAME TO provisioner");
+    }
+
+    private static void migrateProvisioner9_10(@NonNull final SupportSQLiteDatabase database) {
+        database.execSQL("ALTER TABLE provisioner"
+                + " ADD COLUMN next_available_address INTEGER NOT NULL DEFAULT 2");
     }
 }

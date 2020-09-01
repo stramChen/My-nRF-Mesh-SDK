@@ -127,7 +127,17 @@ public final class MeshNetwork extends BaseMeshNetwork {
         Collections.sort(nodes, nodeComparator);
         // Iterate through all nodes just once, while iterating over ranges.
         int index = 0;
-        for (AllocatedUnicastRange range : provisioner.getAllocatedUnicastRanges()) {
+
+        //这里使设备的地址无限增加,超过C000则从头开始,目前的业务需要应该只会有一个element
+        index = provisioner.nextAvailableAddress++;
+        if(index >=0xC000){
+            provisioner.nextAvailableAddress = 2;
+            index = provisioner.nextAvailableAddress;
+        }
+        return index;
+
+        //下面的地址回收机制暂时不用，因为有各种问题，等问题排查出来，再使用地址回收
+        /*for (AllocatedUnicastRange range : provisioner.getAllocatedUnicastRanges()) {
             // Start from the beginning of the current range.
             int address = range.getLowAddress();
 
@@ -163,7 +173,7 @@ public final class MeshNetwork extends BaseMeshNetwork {
         }
 
         // No address was found :(
-        return -1;
+        return -1;*/
     }
 
     /**

@@ -82,6 +82,10 @@ public class Provisioner implements Parcelable {
     @Expose
     private int globalTtl = 5;
 
+    @ColumnInfo(name = "next_available_address")
+    @Expose
+    public int nextAvailableAddress = 2;
+
     @ColumnInfo(name = "last_selected")
     @Expose
     private boolean lastSelected;
