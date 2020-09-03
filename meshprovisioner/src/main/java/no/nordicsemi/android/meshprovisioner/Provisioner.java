@@ -84,7 +84,7 @@ public class Provisioner implements Parcelable {
 
     @ColumnInfo(name = "next_available_address")
     @Expose
-    public int nextAvailableAddress = 2;
+    public int nextAvailableAddress = 3;
 
     @ColumnInfo(name = "last_selected")
     @Expose
