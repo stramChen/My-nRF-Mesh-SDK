@@ -64,7 +64,7 @@ dependencies {
         api 'androidx.multidex:multidex:2.0.1'
     } else {
         //打包编译，给smartPlus直接引用
-        api(name: 'meshprovisioner-2.0.10-snapshot', ext: 'aar')
+        api(name: 'meshprovisioner-2.0.11-snapshot', ext: 'aar')
         implementation fileTree(dir: 'libs', include: ['*.jar'], exclude: [])
     }
     api 'no.nordicsemi.android:ble:2.1.1'
