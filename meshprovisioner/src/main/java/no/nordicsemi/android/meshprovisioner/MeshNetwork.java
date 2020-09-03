@@ -128,10 +128,18 @@ public final class MeshNetwork extends BaseMeshNetwork {
         // Iterate through all nodes just once, while iterating over ranges.
         int index = 0;
 
+
         //这里使设备的地址无限增加,超过C000则从头开始,目前的业务需要应该只会有一个element
         index = provisioner.nextAvailableAddress++;
+
+        //兼容老版本地址，本来是从3开始的，但是如果老版本已经有很多节点了，那么要跳过这些节点的地址
+        if(index<nodes.size()){
+            provisioner.nextAvailableAddress = nodes.size()+1;
+            index = provisioner.nextAvailableAddress;
+        }
+
         if(index >=0xC000){
-            provisioner.nextAvailableAddress = 2;
+            provisioner.nextAvailableAddress = 3;
             index = provisioner.nextAvailableAddress;
         }
         return index;
