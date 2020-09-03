@@ -283,6 +283,7 @@ abstract class MeshNetworkDb extends RoomDatabase {
         private final ProvisionedMeshNodesDao nodesDao;
         private final GroupsDao groupsDao;
         private final ScenesDao scenesDao;
+        private final Object lock = new Object();
 
         InsertNetworkAsyncTask(@NonNull final MeshNetworkDao meshNetworkDao,
                                @NonNull final NetworkKeysDao netKeysDao,
@@ -304,22 +305,24 @@ abstract class MeshNetworkDb extends RoomDatabase {
 
         @Override
         protected Void doInBackground(final Void... params) {
-            meshNetworkDao.insert(meshNetwork);
-            netKeysDao.insert(meshNetwork.netKeys);
-            appKeysDao.insert(meshNetwork.appKeys);
-            provisionersDao.insert(meshNetwork.provisioners);
-            if (!meshNetwork.nodes.isEmpty()) {
-                nodesDao.insert(meshNetwork.nodes);
-            }
+            synchronized (lock){
+                meshNetworkDao.insert(meshNetwork);
+                netKeysDao.insert(meshNetwork.netKeys);
+                appKeysDao.insert(meshNetwork.appKeys);
+                provisionersDao.insert(meshNetwork.provisioners);
+                if (!meshNetwork.nodes.isEmpty()) {
+                    nodesDao.insert(meshNetwork.nodes);
+                }
 
-            if (meshNetwork.groups != null) {
-                groupsDao.insert(meshNetwork.groups);
-            }
+                if (meshNetwork.groups != null) {
+                    groupsDao.insert(meshNetwork.groups);
+                }
 
-            if (meshNetwork.scenes != null) {
-                scenesDao.insert(meshNetwork.scenes);
+                if (meshNetwork.scenes != null) {
+                    scenesDao.insert(meshNetwork.scenes);
+                }
+                return null;
             }
-            return null;
         }
     }
 
@@ -396,6 +399,7 @@ abstract class MeshNetworkDb extends RoomDatabase {
         private final ProvisionedMeshNodesDao nodesDao;
         private final GroupsDao groupsDao;
         private final ScenesDao sceneDao;
+        private final Object lock = new Object();
 
         UpdateNetworkAsyncTask1(@NonNull final MeshNetworkDao meshNetworkDao,
                                 @NonNull final NetworkKeysDao netKeysDao,
@@ -415,15 +419,17 @@ abstract class MeshNetworkDb extends RoomDatabase {
 
         @Override
         protected Void doInBackground(@NonNull final MeshNetwork... params) {
-            final MeshNetwork network = params[0];
-            meshNetworkDao.update(network);
-            netKeyDao.update(network.getNetKeys());
-            appKeyDao.update(network.getAppKeys());
-            provisionersDao.update(network.getProvisioners());
-            nodesDao.update(network.getNodes());
-            groupsDao.update(network.getGroups());
-            sceneDao.update(network.getScenes());
-            return null;
+            synchronized (lock){
+                final MeshNetwork network = params[0];
+                meshNetworkDao.update(network);
+                netKeyDao.update(network.getNetKeys());
+                appKeyDao.update(network.getAppKeys());
+                provisionersDao.update(network.getProvisioners());
+                nodesDao.update(network.getNodes());
+                groupsDao.update(network.getGroups());
+                sceneDao.update(network.getScenes());
+                return null;
+            }
         }
 
         @Override
