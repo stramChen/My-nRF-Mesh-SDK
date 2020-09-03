@@ -31,7 +31,7 @@ class MainMeshActivity : BaseMeshActivity(), View.OnClickListener {
             mNodeAdapter?.setData(nodes)
         }
 
-        override fun onNodeDeleted(isDeleted: Boolean, node: ProvisionedMeshNode) {
+        override fun onNodeDeleted(isDeleted: Boolean, node: ProvisionedMeshNode?) {
             mNodeAdapter?.mData?.remove(node)
             mNodeAdapter?.notifyDataSetChanged()
         }

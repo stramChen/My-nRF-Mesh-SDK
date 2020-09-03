@@ -3,6 +3,7 @@
 apply from: "config.gradle"
 //本地打aar包
 ext.sdkLocalRun=false
+//ext.sdkLocalRun=true
 buildscript {
     ext.kotlin_version = '1.3.61'
     ext.gradle_version = '4.0.0'

@@ -4,6 +4,7 @@ apply plugin: 'kotlin-android-extensions'
 apply plugin: 'maven'
 //是否在本地跑
 ext.sdkLocalRun=false
+//ext.sdkLocalRun=true
 android {
     compileSdkVersion 29
     buildToolsVersion "29.0.2"
@@ -63,7 +64,7 @@ dependencies {
         api 'androidx.multidex:multidex:2.0.1'
     } else {
         //打包编译，给smartPlus直接引用
-        api(name: 'meshprovisioner-2.0.4-snapshot', ext: 'aar')
+        api(name: 'meshprovisioner-2.0.10-snapshot', ext: 'aar')
         implementation fileTree(dir: 'libs', include: ['*.jar'], exclude: [])
     }
     api 'no.nordicsemi.android:ble:2.1.1'
@@ -82,7 +83,7 @@ dependencies {
     api group: 'io.reactivex', name: 'rxandroid', version: '1.2.1'
 }
 
-//
+
 uploadArchives {
     repositories {
         mavenDeployer {
