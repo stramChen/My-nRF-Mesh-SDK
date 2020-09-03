@@ -149,7 +149,7 @@ public final class MeshNetwork extends BaseMeshNetwork {
 //        }
 
         if(index >=0xC000){
-            provisioner.nextAvailableAddress = 3;
+            provisioner.nextAvailableAddress = Provisioner.DEFAULT_UNICASET_ADDRESS;
             index = provisioner.nextAvailableAddress;
         }
         return index;

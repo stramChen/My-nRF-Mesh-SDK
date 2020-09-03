@@ -82,13 +82,16 @@ public class Provisioner implements Parcelable {
     @Expose
     private int globalTtl = 5;
 
+    public static int DEFAULT_UNICASET_ADDRESS = 3;
+
     @ColumnInfo(name = "next_available_address")
     @Expose
-    public int nextAvailableAddress = 3;
+    public int nextAvailableAddress = DEFAULT_UNICASET_ADDRESS;
 
     @ColumnInfo(name = "last_selected")
     @Expose
     private boolean lastSelected;
+
 
     @Ignore
     private final Comparator<AddressRange> addressRangeComparator = (addressRange1, addressRange2) ->

@@ -203,8 +203,8 @@ public final class MeshNetworkDeserializer implements JsonSerializer<MeshNetwork
             final JsonObject jsonProvisioner = jsonProvisioners.get(i).getAsJsonObject();
             final String name = jsonProvisioner.get("provisionerName").getAsString();
             final String uuid = jsonProvisioner.get("UUID").getAsString().toUpperCase();
-            final int nextAvailableAddress = jsonProvisioner.get(
-                    "nextAvailableAddress").getAsInt();
+            JsonElement element = jsonProvisioner.get("nextAvailableAddress");
+            final int nextAvailableAddress = element == null?Provisioner.DEFAULT_UNICASET_ADDRESS:element.getAsInt();
             final String provisionerUuid = MeshParserUtils.formatUuid(uuid);
 
             if (provisionerUuid == null)
