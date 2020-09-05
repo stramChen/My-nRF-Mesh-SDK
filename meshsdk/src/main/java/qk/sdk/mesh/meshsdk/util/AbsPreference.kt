@@ -18,15 +18,12 @@ abstract class AbsPreference {
     }
 
     fun getInstance(): SharedPreferences {
-        checkInit()
         return sPreferences!!
     }
 
-    fun checkInit() {
+    fun isInit():Boolean {
         Log.d(TAG,"检查SP是否为空，sPreferences:${sPreferences}---mContext${mContext}")
-        if (sPreferences == null) {
-            sPreferences = mContext!!.getSharedPreferences(mAppFlag, Context.MODE_PRIVATE)!!
-        }
+        return sPreferences == null
     }
 
     /**

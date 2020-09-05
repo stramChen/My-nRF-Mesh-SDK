@@ -6,6 +6,7 @@ object LocalPreferences : AbsPreference() {
     private val CURRENT_NETKEY = "currentNetKey"
     private val SP_MESH = "mesh_sp"
 
+    @JvmStatic
     fun init(context: Context) {
         init(SP_MESH, context)
     }
