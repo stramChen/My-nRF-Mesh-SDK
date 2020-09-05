@@ -87,7 +87,7 @@ dependencies {
 uploadArchives {
     repositories {
         mavenDeployer {
-            repository(url: "file:///Users/chensichuang/Documents/mxchip/aar/")
+            repository(url: "file:///Users/guoguo/Downloads/aar/")
             pom.project {
                 name 'meshsdk'
                 version '2.0.2-snapshot'

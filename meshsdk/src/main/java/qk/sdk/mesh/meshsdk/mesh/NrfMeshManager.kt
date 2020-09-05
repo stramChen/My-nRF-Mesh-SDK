@@ -735,7 +735,7 @@ class NrfMeshManager(
         loadNodes()
 //        mHandler.post { mConnectionState.postValue("Scanning for provisioned node") }
 //        mHandler.postDelayed(
-//            mReconnectRunnable,
+//            mReconnectRun nable,
 //            1000
 //        ) //Added a slight delay to disconnect and refresh the cache
     }

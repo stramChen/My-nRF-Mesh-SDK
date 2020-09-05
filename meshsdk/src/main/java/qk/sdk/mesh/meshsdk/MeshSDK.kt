@@ -68,7 +68,7 @@ object MeshSDK {
                 callback?.onResult(true)
                 MeshHelper.MeshProxyService.mMeshProxyService?.tryStartHeartBeatCheck();
             }
-            LogFileUtil.deleteLog(mContext)
+//            LogFileUtil.deleteLog(mContext)
         }
     }
 

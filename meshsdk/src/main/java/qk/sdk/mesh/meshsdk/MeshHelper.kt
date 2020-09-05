@@ -36,9 +36,9 @@ object MeshHelper {
 
     // 检查蓝牙权限
     // 希望不需要传递 Activity
-    fun checkPermission(activity: Activity, listener: ListenerWrapper.PermissionRequestListener) {
-        PermissionUtil.checkMeshPermission(activity, listener)
-    }
+//    fun checkPermission(activity: Activity, listener: ListenerWrapper.PermissionRequestListener) {
+//        PermissionUtil.checkMeshPermission(activity, listener)
+//    }
 
     // 扫描蓝牙节点
     fun startScan(filterUuid: UUID, scanCallback: ScanCallback?, networkKey: String = "") {

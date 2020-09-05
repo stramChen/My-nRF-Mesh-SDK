@@ -43,6 +43,7 @@ const val ADD_APPKEYS = "addAppkeys"
 
 //获取设备的model
 const val GET_COMPOSITION_DATA = "getCompositionData"
+
 //attr type占两个字节
 const val ATTR_LEN = 2
 
@@ -56,25 +57,48 @@ const val ATTR_TYPE_GET_VERSION = "0500" // 获取设备固件版本号
 const val ATTR_TYPE_REBOOT_GATEWAY = "0600" // 重启设备
 const val ATTR_TYPE_VIRTUAL_BUTTON = "0700" // 虚拟按钮
 
+//佛照产品
 //产品PID
 //五路灯
-const val PRODUCT_ID_LIGHT_5 = "4752526";
-//二路灯
-const val PRODUCT_ID_LIGHT_2 = "3808464";
+const val PRODUCT_ID_LIGHT_5 = "4752526"
 
-//开关插座
+//二路灯
+const val PRODUCT_ID_LIGHT_2 = "3808464"
+
 //单火开关
-const val PRODUCT_ID_SOCKKET_SINGLE = "4284236";
+const val PRODUCT_ID_SOCKKET_SINGLE = "4284236"
 //双键单火开关
-const val PRODUCT_ID_SOCKKET_DOBULE = "4791464";
+const val PRODUCT_ID_SOCKKET_DOBULE = "4791464"
 //三键单火开关
-const val PRODUCT_ID_SOCKKET_TRIPLE = "4139203";
+const val PRODUCT_ID_SOCKKET_TRIPLE = "4139203"
 
 //Pir传感器
-const val PRODUCT_ID_PIR_SENSOR = "3987829";
+const val PRODUCT_ID_PIR_SENSOR = "3987829"
 
 //网关
-const val PRODUCT_ID_GATEWAY = "3808465";
+const val PRODUCT_ID_GATEWAY = "3808465"
+
+//智家精灵产品
+////五路灯
+//const val PRODUCT_ID_LIGHT_5 = "5049550"
+//
+////二路灯
+//const val PRODUCT_ID_LIGHT_2 = "5005926"
+////单火开关
+//const val PRODUCT_ID_SOCKKET_SINGLE = "5005932"
+//
+////双键单火开关
+//const val PRODUCT_ID_SOCKKET_DOBULE = "5005934"
+//
+////三键单火开关
+//const val PRODUCT_ID_SOCKKET_TRIPLE = "5005929"
+//
+////Pir传感器
+//const val PRODUCT_ID_PIR_SENSOR = "5005928"
+//
+////网关
+//const val PRODUCT_ID_GATEWAY = "5005925"
+
 
 object DeviceConstantsCode {
 
@@ -90,12 +114,12 @@ object DeviceConstantsCode {
     const val CODE_SWITCH_OFF = "00";
 
     val lightCons: HashMap<String, String> = hashMapOf(
-            SWITCH to "0001",//开关
-            COLOR to "2301",//颜色hsv
-            LIGHTNESS_LEVEL to "2101",//亮度
-            COLOR_TEMPERATURE to "2201",//色温
-            MODE_NUMBER to "04F0",
-            EVENT to "09F0"
+        SWITCH to "0001",//开关
+        COLOR to "2301",//颜色hsv
+        LIGHTNESS_LEVEL to "2101",//亮度
+        COLOR_TEMPERATURE to "2201",//色温
+        MODE_NUMBER to "04F0",
+        EVENT to "09F0"
     )
 
     /*************************************灯***************************************/
@@ -104,10 +128,10 @@ object DeviceConstantsCode {
 
     //内部封装相关操作码
     val socketCons: HashMap<String, String> = hashMapOf(
-            SWITCH to "0001",
-            SWITCH_SECOND to "2401",
-            SWITCH_THIRD to "2501",
-            EVENT to "09F0"
+        SWITCH to "0001",
+        SWITCH_SECOND to "2401",
+        SWITCH_THIRD to "2501",
+        EVENT to "09F0"
     )
 
     /*************************************插座/单火开关***************************************/
@@ -117,9 +141,9 @@ object DeviceConstantsCode {
 
     //内部封装相关操作码
     val pirSensorCons: HashMap<String, String> = hashMapOf(
-            BIO_SENSER to "0104",
-            REMAINING_ELECTRICITY to "0401",
-            EVENT to "09F0"
+        BIO_SENSER to "0104",
+        REMAINING_ELECTRICITY to "0401",
+        EVENT to "09F0"
     )
 
     /*************************************PIR传感器***************************************/
