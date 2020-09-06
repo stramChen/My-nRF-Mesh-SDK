@@ -176,35 +176,46 @@ class NetworkImportExportUtils {
                 gsonBuilder.registerTypeAdapter(nodeList, new NodeDeserializer());
                 gsonBuilder.registerTypeAdapter(elementList, new InternalElementListDeserializer());
                 gsonBuilder.registerTypeAdapter(meshModelList, new MeshModelListDeserializer());
+
+
                 final Gson gson = gsonBuilder.serializeNulls().create();
 
                 final String json = this.networkJson;
                 final MeshNetwork network = gson.fromJson(json, MeshNetwork.class);
                 if (network != null) {
-                    if (network.netKeys != null) {
-                        Iterator<NetworkKey> networkKeyIterator = network.netKeys.iterator();
-                        while (networkKeyIterator.hasNext()) {
-                            NetworkKey networkKey = networkKeyIterator.next();
-                            if (networkKey.getKeyIndex() == 0) {
-                                networkKeyIterator.remove();
-                            }
-                        }
-
-                        for (NetworkKey networkKey : this.network.netKeys) {
-                            if (networkKey.keyIndex == 0) {
-                                network.netKeys.add(networkKey);
-                            }
-                        }
-                    } else {
-                        network.netKeys = this.network.netKeys;
-                    }
-
                     this.network = network;
                 }
             } catch (final com.google.gson.JsonSyntaxException ex) {
                 error = ex.getMessage();
                 Log.e(TAG, " " + error);
             }
+
+            //这么做可能会导致外键约束异常
+//                if (network != null) {
+//                    if (network.netKeys != null) {
+//                        Iterator<NetworkKey> networkKeyIterator = network.netKeys.iterator();
+//                        while (networkKeyIterator.hasNext()) {
+//                            NetworkKey networkKey = networkKeyIterator.next();
+//                            if (networkKey.getKeyIndex() == 0) {
+//                                networkKeyIterator.remove();
+//                            }
+//                        }
+//
+//                        for (NetworkKey networkKey : this.network.netKeys) {
+//                            if (networkKey.keyIndex == 0) {
+//                                network.netKeys.add(networkKey);
+//                            }
+//                        }
+//                    } else {
+//                        network.netKeys = this.network.netKeys;
+//                    }
+//
+//                    this.network = network;
+//                }
+//            } catch (final com.google.gson.JsonSyntaxException ex) {
+//                error = ex.getMessage();
+//                Log.e(TAG, " " + error);
+//            }
         }
 
         /**
