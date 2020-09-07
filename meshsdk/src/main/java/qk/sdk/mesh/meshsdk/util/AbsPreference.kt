@@ -23,7 +23,7 @@ abstract class AbsPreference {
 
     fun isInit():Boolean {
         Log.d(TAG,"检查SP是否为空，sPreferences:${sPreferences}---mContext${mContext}")
-        return sPreferences == null
+        return sPreferences != null
     }
 
     /**
