@@ -870,7 +870,8 @@ public class MeshManagerApi implements MeshMngrApi {
 
         final MeshNetwork network = new MeshNetwork(meshUuid);
         network.netKeys = generateNetKeys(meshUuid);
-        network.appKeys = generateAppKeys(meshUuid);
+        //默认不生成appkey
+//        network.appKeys = generateAppKeys(meshUuid);
         final AllocatedUnicastRange unicastRange = new AllocatedUnicastRange(0x0001, 0x7FFF);
         final AllocatedGroupRange groupRange = new AllocatedGroupRange(0xC000, 0xCC9A);
         final AllocatedSceneRange sceneRange = new AllocatedSceneRange(0x0001, 0x3333);
