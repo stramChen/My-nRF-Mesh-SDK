@@ -537,12 +537,12 @@ object MeshSDK {
      * 断开gatt连接
      */
     fun disConnect() {
-        Utils.printLog(TAG, "===>-mesh- 先尝试断开蓝牙连接")
         isConnecting.set(false)
         isSubscribeDeviceStatusSuccessfully = false
         MeshHelper.MeshProxyService.mMeshProxyService?.mConnectCallback = null
         MeshHelper.disConnect()
         clearAllCallbacks()
+        Utils.printLog(TAG, "===>-mesh- 断开蓝牙连接")
     }
 
     private fun clearAllCallbacks() {
@@ -998,6 +998,13 @@ object MeshSDK {
                                                             "===>-mesh-开始尝试重新连接"
                                                     )
                                                     isConnecting.set(false)
+                                                    if(!BluetoothAdapter.getDefaultAdapter().isEnabled()){
+                                                        Utils.printLog(
+                                                                TAG,
+                                                                "===>蓝牙开关关闭了,无法进行重连"
+                                                        )
+                                                        return
+                                                    }
                                                     if (!isReconnect.get()) {
                                                         isReconnect.set(true)
                                                         reconnectAndSubscribeDeviceStatus(networkKey)
@@ -1928,8 +1935,7 @@ object MeshSDK {
     /**
      * 清除手机所有mesh配置
      */
-    private fun clearAllMesh(booleanCallback: BooleanCallback?) {
-        stopScan()
+    fun clearAllMesh(booleanCallback: BooleanCallback?) {
         MeshHelper.MeshProxyService.mMeshProxyService?.deleteCurrentMeshNetwork(booleanCallback)
     }
 
