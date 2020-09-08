@@ -66,11 +66,11 @@ open class BaseMeshService : LifecycleService() {
     private var mBleConnectStatusObserver = Observer<CallbackMsg> {
         mConnectCallback?.onConnectStateChange(it)
         Log.d(TAG, "===>-mesh- mNrfMeshManager?.connectionState:${it.msg}")
-        LogFileUtil.writeLogToInnerFile(
-            this@BaseMeshService,
-            "${it.msg}",
-            LogFileUtil.getInnerFileName(Constants.MESH_LOG_FILE_NAME)
-        )
+//        LogFileUtil.writeLogToInnerFile(
+//            this@BaseMeshService,
+//            "${it.msg}",
+//            LogFileUtil.getInnerFileName(Constants.MESH_LOG_FILE_NAME)
+//        )
     }
 
     private var mProvisionedNodesStatusObserver = Observer<ProvisionedMeshNode> {
@@ -416,11 +416,11 @@ open class BaseMeshService : LifecycleService() {
                                         mNrfMeshManager?.meshNetworkLiveData?.nodeName
                                     mNrfMeshManager?.meshManagerApi?.startProvisioning(node)
                                     Utils.printLog(TAG, "开始provisioning")
-                                    LogFileUtil.writeLogToInnerFile(
-                                        this@BaseMeshService,
-                                        "开始provisioning",
-                                        LogFileUtil.getInnerFileName(Constants.MESH_LOG_FILE_NAME)
-                                    )
+//                                    LogFileUtil.writeLogToInnerFile(
+//                                        this@BaseMeshService,
+//                                        "开始provisioning",
+//                                        LogFileUtil.getInnerFileName(Constants.MESH_LOG_FILE_NAME)
+//                                    )
                                     isProvisioningStarted = true
                                 }
                             }
