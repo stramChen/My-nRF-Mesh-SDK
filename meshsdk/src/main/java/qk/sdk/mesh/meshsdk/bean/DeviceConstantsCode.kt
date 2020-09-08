@@ -62,11 +62,19 @@ const val ATTR_TYPE_VIRTUAL_BUTTON = "0700" // 虚拟按钮
 //五路灯
 const val PRODUCT_ID_LIGHT_5 = "4752526"
 
+//var PRODUCT_TYPE_LIGHT_2 = arrayListOf<String>("4752526")
+//var PRODUCT_TYPE_LIGHT_5 = arrayListOf<String>("3808464")
+
 //二路灯
 const val PRODUCT_ID_LIGHT_2 = "3808464"
 
 //单火开关
 const val PRODUCT_ID_SOCKKET_SINGLE = "4284236"
+
+//var PRODUCT_TYPE_SOCKET = arrayListOf<String>("4284236","4791464","4139203")
+//var PRODUCT_TYPE_SOCKET_DOBULE = arrayListOf<String>("4284236","4791464","4139203")
+//var PRODUCT_TYPE_SOCKET_TRIPLE = arrayListOf<String>("4284236","4791464","4139203")
+
 //双键单火开关
 const val PRODUCT_ID_SOCKKET_DOBULE = "4791464"
 //三键单火开关
@@ -75,8 +83,12 @@ const val PRODUCT_ID_SOCKKET_TRIPLE = "4139203"
 //Pir传感器
 const val PRODUCT_ID_PIR_SENSOR = "3987829"
 
+var PRODUCT_TYPE_PIR_SENSOR = arrayListOf<String>("3987829")
+
 //网关
 const val PRODUCT_ID_GATEWAY = "3808465"
+
+var PRODUCT_TYPE_GATEWAY = arrayListOf<String>("3808465")
 
 //智家精灵产品
 ////五路灯
