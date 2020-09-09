@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import no.nordicsemi.android.meshprovisioner.transport.Element;
 import no.nordicsemi.android.meshprovisioner.transport.ProvisionedMeshNode;
@@ -80,27 +81,27 @@ abstract class BaseMeshNetwork {
     @Ignore
     @SerializedName("netKeys")
     @Expose
-    List<NetworkKey> netKeys = new ArrayList<>();
+    List<NetworkKey> netKeys = new CopyOnWriteArrayList<>();
     @Ignore
     @SerializedName("appKeys")
     @Expose
-    List<ApplicationKey> appKeys = new ArrayList<>();
+    List<ApplicationKey> appKeys = new CopyOnWriteArrayList<>();
     @Ignore
     @SerializedName("provisioners")
     @Expose
-    List<Provisioner> provisioners = new ArrayList<>();
+    List<Provisioner> provisioners = new CopyOnWriteArrayList<>();
     @Ignore
     @SerializedName("nodes")
     @Expose
-    List<ProvisionedMeshNode> nodes = new ArrayList<>();
+    List<ProvisionedMeshNode> nodes = new CopyOnWriteArrayList<>();
     @Ignore
     @SerializedName("groups")
     @Expose
-    List<Group> groups = new ArrayList<>();
+    List<Group> groups = new CopyOnWriteArrayList<>();
     @Ignore
     @SerializedName("scenes")
     @Expose
-    List<Scene> scenes = new ArrayList<>();
+    List<Scene> scenes = new CopyOnWriteArrayList<>();
     //Library related attributes
     @Ignore
     @ColumnInfo(name = "unicast_address")
