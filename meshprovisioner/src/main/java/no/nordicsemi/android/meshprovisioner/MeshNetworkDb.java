@@ -305,7 +305,6 @@ abstract class MeshNetworkDb extends RoomDatabase {
 
         @Override
         protected Void doInBackground(final Void... params) {
-            synchronized (lock){
                 meshNetworkDao.insert(meshNetwork);
                 netKeysDao.insert(meshNetwork.netKeys);
                 appKeysDao.insert(meshNetwork.appKeys);
@@ -322,7 +321,6 @@ abstract class MeshNetworkDb extends RoomDatabase {
                     scenesDao.insert(meshNetwork.scenes);
                 }
                 return null;
-            }
         }
     }
 
@@ -419,17 +417,15 @@ abstract class MeshNetworkDb extends RoomDatabase {
 
         @Override
         protected Void doInBackground(@NonNull final MeshNetwork... params) {
-            synchronized (lock){
                 final MeshNetwork network = params[0];
-                meshNetworkDao.update(network);
-                netKeyDao.update(network.getNetKeys());
-                appKeyDao.update(network.getAppKeys());
-                provisionersDao.update(network.getProvisioners());
-                nodesDao.update(network.getNodes());
-                groupsDao.update(network.getGroups());
-                sceneDao.update(network.getScenes());
-                return null;
-            }
+                    meshNetworkDao.update(network);
+                    netKeyDao.update(network.getNetKeys());
+                    appKeyDao.update(network.getAppKeys());
+                    provisionersDao.update(network.getProvisioners());
+                    nodesDao.update(network.getNodes());
+                    groupsDao.update(network.getGroups());
+                    sceneDao.update(network.getScenes());
+                    return null;
         }
 
         @Override
