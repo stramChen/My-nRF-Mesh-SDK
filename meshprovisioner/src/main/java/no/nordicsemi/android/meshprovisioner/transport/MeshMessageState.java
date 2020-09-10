@@ -148,7 +148,12 @@ abstract class MeshMessageState implements LowerTransportLayerCallbacks {
         final ControlMessage message = mMeshTransport.createSegmentBlockAcknowledgementMessage(controlMessage);
         if (message.getNetworkLayerPdu() != null && message.getNetworkLayerPdu().size() > 0) {
             Log.v(TAG, "Sending acknowledgement: " + MeshParserUtils.bytesToHex(message.getNetworkLayerPdu().get(0), false));
-            mInternalTransportCallbacks.onMeshPduCreated(message.getDst(), message.getNetworkLayerPdu().get(0));
+            if(null != mInternalTransportCallbacks){
+                mInternalTransportCallbacks.onMeshPduCreated(message.getDst(), message.getNetworkLayerPdu().get(0));
+            }else {
+                Log.v(TAG, "发现了mInternalTransportCallbacks为空了，请检查外部有什么地方导致它被销毁了");
+
+            }
         }
         mMeshStatusCallbacks.onBlockAcknowledgementProcessed(message.getDst(), controlMessage);
     }
