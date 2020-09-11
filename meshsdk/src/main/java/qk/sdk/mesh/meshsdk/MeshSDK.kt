@@ -545,6 +545,17 @@ object MeshSDK {
         Utils.printLog(TAG, "===>-mesh- 断开蓝牙连接")
     }
 
+    /**
+     * 连接前需要检查一下，资源变的情况
+     */
+    fun checkResourceBeforeConnect() {
+        //订阅需要释放
+        if(isSubscribeDeviceStatusSuccessfully){
+            Log.d(TAG, "===>-mesh-发现订阅状态没释放,现在去释放")
+            isSubscribeDeviceStatusSuccessfully = false
+        }
+    }
+
     private fun clearAllCallbacks() {
         mConnectCallbacks.forEach { requestCallback ->
             if (requestCallback is MapCallback) {
@@ -632,7 +643,7 @@ object MeshSDK {
                     MeshHelper.getSelectedElement()?.meshModels?.get(VENDOR_MODELID)
             )
 
-            mDeviceTouchTimeStamp[uuid]= hashMapOf(SWITCH to System.currentTimeMillis())
+            mDeviceTouchTimeStamp[uuid] = hashMapOf(SWITCH to System.currentTimeMillis())
 
             sendMeshMessage(
                     uuid,
@@ -662,13 +673,13 @@ object MeshSDK {
 
         try {
             var list = ArrayList<Pair<String?, String?>?>();
-            if(eleIndex == 0){
+            if (eleIndex == 0) {
                 list.add(Pair(DC.socketCons[SWITCH], if (onOff) "01" else "00"))
             }
-            if(eleIndex == 1){
+            if (eleIndex == 1) {
                 list.add(Pair(DC.socketCons[SWITCH_SECOND], if (onOff) "01" else "00"))
             }
-            if(eleIndex == 2){
+            if (eleIndex == 2) {
                 list.add(Pair(DC.socketCons[SWITCH_THIRD], if (onOff) "01" else "00"))
             }
 
@@ -956,6 +967,9 @@ object MeshSDK {
                                 isConnecting.set(true)
                             }
 
+                            //连接前检查一下需要释放的资源
+                            checkResourceBeforeConnect()
+
                             Utils.printLog(TAG, "===>-mesh- connect start scan")
                             setCurrentNetworkKey(networkKey)
                             MeshHelper.startScan(BleMeshManager.MESH_PROXY_UUID, object :
@@ -998,7 +1012,7 @@ object MeshSDK {
                                                             "===>-mesh-开始尝试重新连接"
                                                     )
                                                     isConnecting.set(false)
-                                                    if(!BluetoothAdapter.getDefaultAdapter().isEnabled()){
+                                                    if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
                                                         Utils.printLog(
                                                                 TAG,
                                                                 "===>蓝牙开关关闭了,无法进行重连"
@@ -1303,9 +1317,11 @@ object MeshSDK {
 
                         Utils.printLog(
                                 TAG,
-                                "propertyId:${ByteUtil.bytesToHexString(sensorData.propertyId)},value:${ByteUtil.bytesToHexString(
-                                        sensorData.value
-                                )}"
+                                "propertyId:${ByteUtil.bytesToHexString(sensorData.propertyId)},value:${
+                                    ByteUtil.bytesToHexString(
+                                            sensorData.value
+                                    )
+                                }"
                         )
                     }
 
@@ -1465,8 +1481,7 @@ object MeshSDK {
                         if (meshModel.boundAppKeyIndexes?.size ?: 0 > 0 && (meshModel is GenericOnOffServerModel || meshModel is VendorModel)) {
                             sleep(500)
                             var meshMsg = ConfigModelPublicationSet(
-                                    eleValue.elementAddress
-                                    ,
+                                    eleValue.elementAddress,
                                     publishAddress,
                                     meshModel.boundAppKeyIndexes[0],
                                     false,
@@ -1609,7 +1624,7 @@ object MeshSDK {
         )
 
         if (hsv != null) {
-            mDeviceTouchTimeStamp[uuid]= hashMapOf(COLOR to System.currentTimeMillis())
+            mDeviceTouchTimeStamp[uuid] = hashMapOf(COLOR to System.currentTimeMillis())
             var vendorMap = hsv as HashMap<String, Any>
             var h = vendorMap["Hue"]
             var s = vendorMap["Saturation"]
@@ -1621,25 +1636,31 @@ object MeshSDK {
                 return
             }
             var value =
-                    "${ByteUtil.bytesToHexString(
-                            ByteUtil.shortToByte(
-                                    if (paramType == 1) (h as Int).toShort()
-                                    else if (paramType == 2) (h as Double).toShort()
-                                    else (h as Float).toShort()
-                            )
-                    )}${ByteUtil.bytesToHexString(
-                            byteArrayOf(
-                                    (if (paramType == 1) (v as Int).toByte()
-                                    else if (paramType == 2) (v as Double).toByte()
-                                    else (v as Float).toByte())
-                            )
-                    )}${ByteUtil.bytesToHexString(
-                            byteArrayOf(
-                                    (if (paramType == 1) (s as Int).toByte()
-                                    else if (paramType == 2) (s as Double).toByte()
-                                    else (s as Float).toByte())
-                            )
-                    )}"
+                    "${
+                        ByteUtil.bytesToHexString(
+                                ByteUtil.shortToByte(
+                                        if (paramType == 1) (h as Int).toShort()
+                                        else if (paramType == 2) (h as Double).toShort()
+                                        else (h as Float).toShort()
+                                )
+                        )
+                    }${
+                        ByteUtil.bytesToHexString(
+                                byteArrayOf(
+                                        (if (paramType == 1) (v as Int).toByte()
+                                        else if (paramType == 2) (v as Double).toByte()
+                                        else (v as Float).toByte())
+                                )
+                        )
+                    }${
+                        ByteUtil.bytesToHexString(
+                                byteArrayOf(
+                                        (if (paramType == 1) (s as Int).toByte()
+                                        else if (paramType == 2) (s as Double).toByte()
+                                        else (s as Float).toByte())
+                                )
+                        )
+                    }"
             sendMeshMessage(
                     uuid,
                     0,
@@ -1728,8 +1749,7 @@ object MeshSDK {
                 uuid,
                 0,
                 VENDOR_MSG_OPCODE_ATTR_GET,
-                params
-                , callback
+                params, callback
         )
     }
 
@@ -1823,11 +1843,7 @@ object MeshSDK {
      */
     fun getDeviceVersion(uuid: String, callback: StringCallback) {
         sendMeshMessage(
-                uuid
-                , 0
-                , VENDOR_MSG_OPCODE_ATTR_GET
-                , listOf(Pair(ATTR_TYPE_GET_VERSION, null))
-                , callback
+                uuid, 0, VENDOR_MSG_OPCODE_ATTR_GET, listOf(Pair(ATTR_TYPE_GET_VERSION, null)), callback
         )
     }
 
@@ -1880,10 +1896,7 @@ object MeshSDK {
                     newParam = "${timeCuts}${newParam}"
                     var message = MeshHelper.getAppkeyByKeyName(result[0])?.let {
                         VendorModelMessageUnacked(
-                                it, VENDOR_MODELID
-                                , VENDOR_MODEL_COMPANYIDENTIFIER
-                                , VENDOR_MSG_OPCODE_STATUS
-                                , ByteUtil.hexStringToBytes(newParam)
+                                it, VENDOR_MODELID, VENDOR_MODEL_COMPANYIDENTIFIER, VENDOR_MSG_OPCODE_STATUS, ByteUtil.hexStringToBytes(newParam)
 //                        VendorModelMessageUnackedState(
 //                        VendorModelMessageUnackedState(
 //                                    it, VENDOR_MODEL_COMPANYIDENTIFIER)
@@ -1953,7 +1966,7 @@ object MeshSDK {
     /**
      * 这里添加一个方法给默认的provisoner分配最大的单播地址范围
      */
-    fun allocateDefaultProvisionerBigAddressRange(){
+    fun allocateDefaultProvisionerBigAddressRange() {
         MeshHelper.MeshProxyService.mMeshProxyService?.allocateDefaultProvisionerBigAddressRange()
     }
 
