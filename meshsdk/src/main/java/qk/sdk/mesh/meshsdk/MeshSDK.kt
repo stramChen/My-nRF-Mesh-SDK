@@ -337,7 +337,7 @@ object MeshSDK {
             init(this.applicationContext, object : BooleanCallback() {
                 override fun onResult(boolean: Boolean) {
                     if (boolean) {
-                        connect(networkKey, callback)
+                        connect(applicationContext,networkKey, callback)
                     }
                 }
             })
@@ -949,9 +949,8 @@ object MeshSDK {
     /**
      * 建立gatt连接
      */
-    fun connect(networkKey: String, callback: MapCallback) {
-        mContext?.apply {
-            init(this.applicationContext, object : BooleanCallback() {
+    fun connect(context: Context, networkKey: String, callback: MapCallback) {
+            init(context, object : BooleanCallback() {
                 override fun onResult(boolean: Boolean) {
                     if (boolean) {
                         var map = HashMap<String, Any>()
@@ -1056,7 +1055,6 @@ object MeshSDK {
                     }
                 }
             })
-        }
     }
 
     /**
@@ -1317,11 +1315,9 @@ object MeshSDK {
 
                         Utils.printLog(
                                 TAG,
-                                "propertyId:${ByteUtil.bytesToHexString(sensorData.propertyId)},value:${
-                                    ByteUtil.bytesToHexString(
-                                            sensorData.value
-                                    )
-                                }"
+                                "propertyId:${ByteUtil.bytesToHexString(sensorData.propertyId)},value:${ByteUtil.bytesToHexString(
+                                        sensorData.value
+                                )}"
                         )
                     }
 
@@ -1624,7 +1620,7 @@ object MeshSDK {
         )
 
         if (hsv != null) {
-            mDeviceTouchTimeStamp[uuid] = hashMapOf(COLOR to System.currentTimeMillis())
+            mDeviceTouchTimeStamp[uuid]= hashMapOf(COLOR to System.currentTimeMillis())
             var vendorMap = hsv as HashMap<String, Any>
             var h = vendorMap["Hue"]
             var s = vendorMap["Saturation"]
@@ -1636,31 +1632,25 @@ object MeshSDK {
                 return
             }
             var value =
-                    "${
-                        ByteUtil.bytesToHexString(
-                                ByteUtil.shortToByte(
-                                        if (paramType == 1) (h as Int).toShort()
-                                        else if (paramType == 2) (h as Double).toShort()
-                                        else (h as Float).toShort()
-                                )
-                        )
-                    }${
-                        ByteUtil.bytesToHexString(
-                                byteArrayOf(
-                                        (if (paramType == 1) (v as Int).toByte()
-                                        else if (paramType == 2) (v as Double).toByte()
-                                        else (v as Float).toByte())
-                                )
-                        )
-                    }${
-                        ByteUtil.bytesToHexString(
-                                byteArrayOf(
-                                        (if (paramType == 1) (s as Int).toByte()
-                                        else if (paramType == 2) (s as Double).toByte()
-                                        else (s as Float).toByte())
-                                )
-                        )
-                    }"
+                    "${ByteUtil.bytesToHexString(
+                            ByteUtil.shortToByte(
+                                    if (paramType == 1) (h as Int).toShort()
+                                    else if (paramType == 2) (h as Double).toShort()
+                                    else (h as Float).toShort()
+                            )
+                    )}${ByteUtil.bytesToHexString(
+                            byteArrayOf(
+                                    (if (paramType == 1) (v as Int).toByte()
+                                    else if (paramType == 2) (v as Double).toByte()
+                                    else (v as Float).toByte())
+                            )
+                    )}${ByteUtil.bytesToHexString(
+                            byteArrayOf(
+                                    (if (paramType == 1) (s as Int).toByte()
+                                    else if (paramType == 2) (s as Double).toByte()
+                                    else (s as Float).toByte())
+                            )
+                    )}"
             sendMeshMessage(
                     uuid,
                     0,
