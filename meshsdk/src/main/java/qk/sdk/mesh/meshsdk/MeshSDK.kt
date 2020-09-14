@@ -2,7 +2,10 @@ package qk.sdk.mesh.meshsdk
 
 import android.bluetooth.BluetoothAdapter
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import android.view.MotionEvent
 import com.google.gson.Gson
 import me.weyye.hipermission.PermissionCallback
 import no.nordicsemi.android.meshprovisioner.Group
@@ -17,8 +20,12 @@ import qk.sdk.mesh.meshsdk.service.BaseMeshService
 import qk.sdk.mesh.meshsdk.util.*
 import qk.sdk.mesh.meshsdk.util.Constants.ConnectState
 import java.lang.Thread.sleep
+import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 import qk.sdk.mesh.meshsdk.bean.DeviceConstantsCode as DC
+
 
 object MeshSDK {
     private val TAG = "MeshSDK"
@@ -228,7 +235,12 @@ object MeshSDK {
                                                         )
                                                 )
                                             }
-                                            ConnectState.DISCONNECTED.code,
+                                            ConnectState.DISCONNECTED.code->{
+                                                //连接断开，自动寻找代理节点重连
+                                                if (MeshSDK.needReconnect && !isReconnect.get()) {
+                                                    tryReconnect(networkKey)
+                                                }
+                                            }
                                             ConnectState.CONNECT_BLE_RESOURCE_FAILED.code -> {
                                                 isConnecting.set(false)
                                                 if (ConnectState.CONNECT_BLE_RESOURCE_FAILED.code == msg.code) {
@@ -337,7 +349,7 @@ object MeshSDK {
             init(this.applicationContext, object : BooleanCallback() {
                 override fun onResult(boolean: Boolean) {
                     if (boolean) {
-                        connect(applicationContext,networkKey, callback)
+                        connect(applicationContext, networkKey, callback)
                     }
                 }
             })
@@ -546,11 +558,21 @@ object MeshSDK {
     }
 
     /**
+     * 内部断开gatt连接，不清除回调
+     */
+    private fun innerDisConnect() {
+        isConnecting.set(false)
+        isSubscribeDeviceStatusSuccessfully = false
+        MeshHelper.innerDisConnect()
+        Utils.printLog(TAG, "===>-mesh- 断开蓝牙连接")
+    }
+
+    /**
      * 连接前需要检查一下，资源变的情况
      */
     fun checkResourceBeforeConnect() {
         //订阅需要释放
-        if(isSubscribeDeviceStatusSuccessfully){
+        if (isSubscribeDeviceStatusSuccessfully) {
             Log.d(TAG, "===>-mesh-发现订阅状态没释放,现在去释放")
             isSubscribeDeviceStatusSuccessfully = false
         }
@@ -924,10 +946,21 @@ object MeshSDK {
         )
     }
 
+    private fun deleyDisconnectDevice() {
+        Handler(Looper.getMainLooper()).postDelayed(object : Runnable {
+            override fun run() {
+                innerDisConnect()
+            }
+        }, 1000)
+    }
+
     fun resetNode(uuid: String) {
         MeshHelper.getProvisionNode()?.forEach { node ->
-            if (node.meshUuid == uuid) {
+            if (node.uuid == uuid) {
                 MeshHelper.setSelectedMeshNode(node)
+                if (getGattDirectConnectNode()?.uuid == node.uuid) {
+                    deleyDisconnectDevice()
+                }
             }
         }
 
@@ -937,6 +970,7 @@ object MeshSDK {
                 MeshHelper.getSelectedMeshNode()?.unicastAddress ?: 0,
                 configNodeReset, null
         )
+
     }
 
     var isReconnect: AtomicBoolean = AtomicBoolean(false)
@@ -950,111 +984,128 @@ object MeshSDK {
      * 建立gatt连接
      */
     fun connect(context: Context, networkKey: String, callback: MapCallback) {
-            init(context, object : BooleanCallback() {
-                override fun onResult(boolean: Boolean) {
-                    if (boolean) {
-                        var map = HashMap<String, Any>()
-                        doBaseCheck(null, map, callback)
-                        //进行一下包含判断，因为重连的时候也会走这个
-                        if (!mGattConnectCallbacks.contains(callback)) {
-                            mGattConnectCallbacks.add(callback)
+        init(context, object : BooleanCallback() {
+            override fun onResult(boolean: Boolean) {
+                if (boolean) {
+                    var map = HashMap<String, Any>()
+                    doBaseCheck(null, map, callback)
+                    //进行一下包含判断，因为重连的时候也会走这个
+                    if (!mGattConnectCallbacks.contains(callback)) {
+                        mGattConnectCallbacks.add(callback)
+                    }
+
+                    if (!MeshHelper.isConnectedToProxy() && MeshHelper.getProvisionNode()?.size ?: 0 > 0) {
+                        synchronized(isConnecting) {
+                            if (isConnecting.get()) return
+                            isConnecting.set(true)
                         }
 
-                        if (!MeshHelper.isConnectedToProxy() && MeshHelper.getProvisionNode()?.size ?: 0 > 0) {
-                            synchronized(isConnecting) {
-                                if (isConnecting.get()) return
-                                isConnecting.set(true)
-                            }
+                        //连接前检查一下需要释放的资源
+                        checkResourceBeforeConnect()
 
-                            //连接前检查一下需要释放的资源
-                            checkResourceBeforeConnect()
-
-                            Utils.printLog(TAG, "===>-mesh- connect start scan")
-                            setCurrentNetworkKey(networkKey)
-                            MeshHelper.startScan(BleMeshManager.MESH_PROXY_UUID, object :
-                                    ScanCallback {
-                                override fun onScanResult(
-                                        devices: List<ExtendedBluetoothDevice>,
-                                        updatedIndex: Int?
-                                ) {
-                                    if (devices.isNotEmpty()) {
-                                        MeshHelper.stopScan()
-                                        Utils.printLog(
-                                                TAG,
-                                                "===>-mesh- 扫描到待配对节点 " +
-                                                        "connect onScanResult:${devices[0].getAddress()}"
-                                        )
-                                        var connectCallback = object :
-                                                ConnectCallback {
-                                            override fun onConnect() {
-                                                stopScan()
-                                                isReconnect.set(false)
-                                                isConnecting.set(false)
-                                                notifyAllGattConnectCallback(
-                                                        CallbackMsg(
-                                                                ConnectState.COMMON_SUCCESS.code,
-                                                                ConnectState.COMMON_SUCCESS.msg
-                                                        )
-                                                )
-                                            }
-
-                                            override fun onConnectStateChange(msg: CallbackMsg) {
-                                                Utils.printLog(
-                                                        TAG,
-                                                        "===>-mesh-connect onConnectStateChange:${msg.msg}" +
-                                                                ",needReconnect:$needReconnect" +
-                                                                ",isReconnect:$isReconnect"
-                                                )
-                                                if (msg.code == ConnectState.DISCONNECTED.code && needReconnect && !isReconnect.get()) {//连接断开，自动寻找代理节点重连
-                                                    Utils.printLog(
-                                                            TAG,
-                                                            "===>-mesh-开始尝试重新连接"
+                        Utils.printLog(TAG, "===>-mesh- connect start scan")
+                        setCurrentNetworkKey(networkKey)
+                        MeshHelper.startScan(BleMeshManager.MESH_PROXY_UUID, object :
+                                ScanCallback {
+                            override fun onScanResult(
+                                    devices: List<ExtendedBluetoothDevice>,
+                                    updatedIndex: Int?
+                            ) {
+                                if (devices.isNotEmpty()) {
+                                    MeshHelper.stopScan()
+                                    Utils.printLog(
+                                            TAG,
+                                            "===>-mesh- 扫描到待配对节点 " +
+                                                    "connect onScanResult:${devices[0].getAddress()}"
+                                    )
+                                    var connectCallback = object :
+                                            ConnectCallback {
+                                        override fun onConnect() {
+                                            stopScan()
+                                            isReconnect.set(false)
+                                            isConnecting.set(false)
+                                            notifyAllGattConnectCallback(
+                                                    CallbackMsg(
+                                                            ConnectState.COMMON_SUCCESS.code,
+                                                            ConnectState.COMMON_SUCCESS.msg
                                                     )
-                                                    isConnecting.set(false)
-                                                    if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
-                                                        Utils.printLog(
-                                                                TAG,
-                                                                "===>蓝牙开关关闭了,无法进行重连"
-                                                        )
-                                                        return
-                                                    }
-                                                    if (!isReconnect.get()) {
-                                                        isReconnect.set(true)
-                                                        reconnectAndSubscribeDeviceStatus(networkKey)
-                                                    }
-                                                }
-                                            }
+                                            )
+                                        }
 
-                                            override fun onError(msg: CallbackMsg) {
-                                                isConnecting.set(false)
-                                                Utils.printLog(
-                                                        TAG, "===>-mesh-connect连接出现异常。${msg.code}:${msg.msg}"
-                                                )
-                                                if (msg.code == ConnectState.STOP_CONNECT.code)
-                                                    needReconnect = false
-                                                notifyAllGattConnectCallback(msg)
+                                        override fun onConnectStateChange(msg: CallbackMsg) {
+                                            Utils.printLog(
+                                                    TAG,
+                                                    "===>-mesh-connect onConnectStateChange:${msg.msg}" +
+                                                            ",needReconnect:$needReconnect" +
+                                                            ",isReconnect:$isReconnect"
+                                            )
+                                            if (msg.code == ConnectState.DISCONNECTED.code && needReconnect && !isReconnect.get()) {//连接断开，自动寻找代理节点重连
+                                                tryReconnect(networkKey)
                                             }
                                         }
-                                        MeshHelper.connect(devices[0], true, connectCallback)
-                                    }
-                                }
 
-                                override fun onError(msg: CallbackMsg) {
-                                    notifyAllGattConnectCallback(msg)
+                                        override fun onError(msg: CallbackMsg) {
+                                            isConnecting.set(false)
+                                            Utils.printLog(
+                                                    TAG, "===>-mesh-connect连接出现异常。${msg.code}:${msg.msg}"
+                                            )
+                                            if (msg.code == ConnectState.STOP_CONNECT.code)
+                                                needReconnect = false
+                                            notifyAllGattConnectCallback(msg)
+                                        }
+                                    }
+                                    MeshHelper.connect(devices[0], true, connectCallback)
                                 }
-                            }, networkKey.toUpperCase())
-                        } else {
-                            doMapCallback(
-                                    map, callback,
-                                    CallbackMsg(
-                                            ConnectState.COMMON_SUCCESS.code,
-                                            ConnectState.COMMON_SUCCESS.msg
-                                    )
-                            )
-                        }
+                            }
+
+                            override fun onError(msg: CallbackMsg) {
+                                notifyAllGattConnectCallback(msg)
+                            }
+                        }, networkKey.toUpperCase())
+                    } else {
+                        doMapCallback(
+                                map, callback,
+                                CallbackMsg(
+                                        ConnectState.COMMON_SUCCESS.code,
+                                        ConnectState.COMMON_SUCCESS.msg
+                                )
+                        )
                     }
                 }
-            })
+            }
+        })
+    }
+
+    private fun tryReconnect(networkKey: String) {
+        Utils.printLog(
+                TAG,
+                "===>-mesh-开始尝试重新连接"
+        )
+        isConnecting.set(false)
+        if (!BluetoothAdapter.getDefaultAdapter().isEnabled()) {
+            Utils.printLog(
+                    TAG,
+                    "===>蓝牙开关关闭了,无法进行重连"
+            )
+            return
+        }
+        if (!isReconnect.get()) {
+            isReconnect.set(true)
+            reconnectAndSubscribeDeviceStatus(networkKey)
+        }
+    }
+
+    /**
+     * 获取Gatt连接的节点
+     */
+    fun getGattDirectConnectNode(): ProvisionedMeshNode? {
+        var macAddress: String? = MeshHelper.MeshProxyService.mMeshProxyService
+                ?.getConnectedDevice()?.getAddress()
+        MeshHelper.getProvisionNode()?.forEach {
+            var nodeMacAddress = MxMeshUtil.getMacAddressIdByUUID(it.uuid)
+            if (nodeMacAddress == macAddress) return it;
+        }
+        return null;
     }
 
     /**
@@ -1315,9 +1366,11 @@ object MeshSDK {
 
                         Utils.printLog(
                                 TAG,
-                                "propertyId:${ByteUtil.bytesToHexString(sensorData.propertyId)},value:${ByteUtil.bytesToHexString(
-                                        sensorData.value
-                                )}"
+                                "propertyId:${ByteUtil.bytesToHexString(sensorData.propertyId)},value:${
+                                    ByteUtil.bytesToHexString(
+                                            sensorData.value
+                                    )
+                                }"
                         )
                     }
 
@@ -1620,7 +1673,7 @@ object MeshSDK {
         )
 
         if (hsv != null) {
-            mDeviceTouchTimeStamp[uuid]= hashMapOf(COLOR to System.currentTimeMillis())
+            mDeviceTouchTimeStamp[uuid] = hashMapOf(COLOR to System.currentTimeMillis())
             var vendorMap = hsv as HashMap<String, Any>
             var h = vendorMap["Hue"]
             var s = vendorMap["Saturation"]
@@ -1632,25 +1685,31 @@ object MeshSDK {
                 return
             }
             var value =
-                    "${ByteUtil.bytesToHexString(
-                            ByteUtil.shortToByte(
-                                    if (paramType == 1) (h as Int).toShort()
-                                    else if (paramType == 2) (h as Double).toShort()
-                                    else (h as Float).toShort()
-                            )
-                    )}${ByteUtil.bytesToHexString(
-                            byteArrayOf(
-                                    (if (paramType == 1) (v as Int).toByte()
-                                    else if (paramType == 2) (v as Double).toByte()
-                                    else (v as Float).toByte())
-                            )
-                    )}${ByteUtil.bytesToHexString(
-                            byteArrayOf(
-                                    (if (paramType == 1) (s as Int).toByte()
-                                    else if (paramType == 2) (s as Double).toByte()
-                                    else (s as Float).toByte())
-                            )
-                    )}"
+                    "${
+                        ByteUtil.bytesToHexString(
+                                ByteUtil.shortToByte(
+                                        if (paramType == 1) (h as Int).toShort()
+                                        else if (paramType == 2) (h as Double).toShort()
+                                        else (h as Float).toShort()
+                                )
+                        )
+                    }${
+                        ByteUtil.bytesToHexString(
+                                byteArrayOf(
+                                        (if (paramType == 1) (v as Int).toByte()
+                                        else if (paramType == 2) (v as Double).toByte()
+                                        else (v as Float).toByte())
+                                )
+                        )
+                    }${
+                        ByteUtil.bytesToHexString(
+                                byteArrayOf(
+                                        (if (paramType == 1) (s as Int).toByte()
+                                        else if (paramType == 2) (s as Double).toByte()
+                                        else (s as Float).toByte())
+                                )
+                        )
+                    }"
             sendMeshMessage(
                     uuid,
                     0,

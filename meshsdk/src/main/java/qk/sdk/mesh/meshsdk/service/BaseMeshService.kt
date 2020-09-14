@@ -166,7 +166,7 @@ open class BaseMeshService : LifecycleService() {
         mConnectCallback = null
     }
 
-    internal fun getConnectingDevice(): ExtendedBluetoothDevice? {
+    internal fun getConnectedDevice(): ExtendedBluetoothDevice? {
         return mNrfMeshManager?.mConnectDevice
     }
 
@@ -336,6 +336,13 @@ open class BaseMeshService : LifecycleService() {
 
     internal fun disConnect() {
         stopConnect()
+        mNrfMeshManager?.unprovisionedMeshNode?.removeObservers(this)
+//        mNrfMeshManager?.mExtendedMeshNode?.removeObservers(this)
+        mNrfMeshManager?.disconnect()
+        isProvisioningStarted = false
+    }
+
+    internal fun innerDisConnect() {
         mNrfMeshManager?.unprovisionedMeshNode?.removeObservers(this)
 //        mNrfMeshManager?.mExtendedMeshNode?.removeObservers(this)
         mNrfMeshManager?.disconnect()

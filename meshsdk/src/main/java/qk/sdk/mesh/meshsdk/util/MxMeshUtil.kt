@@ -32,6 +32,21 @@ object MxMeshUtil {
     }
 
     /**
+     * 根据UUID获取mac地址
+     */
+    @JvmStatic
+    fun getMacAddressIdByUUID(uuid: String): String {
+        var uuidHex = uuid.replace("-", "")
+        var uuidHexBytes = ByteUtil.hexStringToBytes(uuidHex)
+        var macAddressByte = ByteArray(6)
+        System.arraycopy(uuidHexBytes, 7, macAddressByte, 0, 6)
+        macAddressByte.reverse()
+        var macAddress:String = ByteUtil.bytesToHexString(macAddressByte)
+        macAddress = macAddress.replace(Regex("(.{2})"), "$1:")
+        return macAddress.substring(0,macAddress.length-1)
+    }
+
+    /**
      * 生成Tid，后面会作为sequence来标示回唯一的回调
      * 0做保留sequence，不作为唯一的回调标示
      * sequence逻辑为1-253作为10s内的唯一标示符，超过10s则从1开始重新计数

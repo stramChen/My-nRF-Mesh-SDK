@@ -1,10 +1,8 @@
 package qk.sdk.mesh.meshsdk
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import com.joker.api.wrapper.ListenerWrapper
 import no.nordicsemi.android.meshprovisioner.*
 import no.nordicsemi.android.meshprovisioner.transport.*
 import no.nordicsemi.android.meshprovisioner.utils.AddressArray
@@ -81,12 +79,17 @@ object MeshHelper {
 
     // 获取当前已连接的蓝牙设备
     fun getConnectedDevice(): ExtendedBluetoothDevice? {
-        return MeshProxyService.mMeshProxyService?.getConnectingDevice()
+        return MeshProxyService.mMeshProxyService?.getConnectedDevice()
     }
 
     // 断开当前蓝牙连接
     fun disConnect() {
         MeshProxyService.mMeshProxyService?.disConnect()
+    }
+
+    // 断开当前蓝牙连接
+    fun innerDisConnect() {
+        MeshProxyService.mMeshProxyService?.innerDisConnect()
     }
 
     // 停止蓝牙连接 - 正在连接的时候

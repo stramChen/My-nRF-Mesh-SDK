@@ -542,6 +542,7 @@ class NrfMeshManager(
             }
             //clearExtendedMeshNode();
         }
+        mConnectDevice = null;
         mSetupProvisionedNode = false
         mConnectedProxyAddress.postValue(null)
     }
