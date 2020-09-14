@@ -89,7 +89,7 @@ public final class ProvisionedMeshNode extends ProvisionedBaseMeshNode {
     @Ignore
     @RestrictTo(RestrictTo.Scope.LIBRARY)
     public ProvisionedMeshNode(final UnprovisionedMeshNode node) {
-        uuid = node.getDeviceUuid().toString();
+        uuid = node.getDeviceUuid().toString().toUpperCase();
         isConfigured = node.isConfigured();
         nodeName = node.getNodeName();
         mAddedNetKeys.add(new NodeKey(node.getKeyIndex()));
