@@ -661,7 +661,7 @@ public final class MeshNetwork extends BaseMeshNetwork {
      * Returns a list of {@link ApplicationKey} belonging to the mesh network
      */
     public List<ApplicationKey> getAppKeys() {
-        return Collections.unmodifiableList(appKeys);
+        return appKeys;
     }
 
     void setAppKeys(List<ApplicationKey> appKeys) {

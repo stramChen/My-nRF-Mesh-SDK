@@ -580,7 +580,7 @@ abstract class BaseMeshNetwork {
      * Returns the list of {@link Provisioner}
      */
     public List<Provisioner> getProvisioners() {
-        return Collections.unmodifiableList(provisioners);
+        return provisioners;
     }
 
     void setProvisioners(List<Provisioner> provisioners) {
@@ -873,7 +873,8 @@ abstract class BaseMeshNetwork {
      * Returns the list of {@link ProvisionedMeshNode}
      */
     public List<ProvisionedMeshNode> getNodes() {
-        return Collections.unmodifiableList(nodes);
+        return nodes;
+        //return Collections.unmodifiableList(nodes);
     }
 
     /**
