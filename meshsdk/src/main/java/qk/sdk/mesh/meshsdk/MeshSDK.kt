@@ -5,7 +5,6 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import android.view.MotionEvent
 import com.google.gson.Gson
 import me.weyye.hipermission.PermissionCallback
 import no.nordicsemi.android.meshprovisioner.Group
@@ -20,7 +19,6 @@ import qk.sdk.mesh.meshsdk.service.BaseMeshService
 import qk.sdk.mesh.meshsdk.util.*
 import qk.sdk.mesh.meshsdk.util.Constants.ConnectState
 import java.lang.Thread.sleep
-import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
@@ -2017,6 +2015,11 @@ object MeshSDK {
      */
     fun allocateDefaultProvisionerBigAddressRange() {
         MeshHelper.MeshProxyService.mMeshProxyService?.allocateDefaultProvisionerBigAddressRange()
+    }
+
+    fun setBleConnectStatusListener(bleStatusCallbacks: BleStatusCallbacks){
+        MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager
+                ?.setBleConnectListener(bleStatusCallbacks)
     }
 
 }

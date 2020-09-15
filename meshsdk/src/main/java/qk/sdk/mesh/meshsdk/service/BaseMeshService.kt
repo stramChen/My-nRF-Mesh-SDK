@@ -7,6 +7,7 @@ import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.Observer
 import com.google.gson.Gson
 import com.google.gson.JsonParser
+import no.nordicsemi.android.ble.BleManagerCallbacks
 import no.nordicsemi.android.meshprovisioner.AllocatedUnicastRange
 import no.nordicsemi.android.meshprovisioner.MeshManagerApi
 import no.nordicsemi.android.meshprovisioner.MeshNetwork

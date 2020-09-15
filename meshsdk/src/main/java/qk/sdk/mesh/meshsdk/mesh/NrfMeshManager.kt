@@ -31,6 +31,7 @@ import qk.sdk.mesh.meshsdk.bean.provision.ProvisioningStatusLiveData
 import qk.sdk.mesh.meshsdk.bean.provision.TransactionStatus
 import qk.sdk.mesh.meshsdk.bean.scan.ScannerLiveData
 import qk.sdk.mesh.meshsdk.bean.scan.ScannerStateLiveData
+import qk.sdk.mesh.meshsdk.callback.BleStatusCallbacks
 import qk.sdk.mesh.meshsdk.service.BaseMeshService
 import qk.sdk.mesh.meshsdk.util.Constants
 import qk.sdk.mesh.meshsdk.util.Constants.ConnectState.*
@@ -159,6 +160,8 @@ class NrfMeshManager(
         mIsReconnecting.postValue(false)
     }
 
+    //蓝牙连接直连状态回调
+    var mBleStatusCallback: BleStatusCallbacks? = null;
 
     private val mConnectTimeOut = Runnable {
 //        Log.d(TAG, "===>-mesh-蓝牙层-连接超时,尝试断开连接,并重连")
@@ -478,6 +481,7 @@ class NrfMeshManager(
                         CONNECTING.msg
                 )
         )
+        mBleStatusCallback?.onDeviceConnecting(device)
     }
 
     override fun onDeviceConnected(device: BluetoothDevice) {
@@ -517,6 +521,7 @@ class NrfMeshManager(
                     )
             )
         }
+        mBleStatusCallback?.onDeviceDisconnecting(device)
     }
 
     override fun onDeviceDisconnected(device: BluetoothDevice) {
@@ -545,6 +550,7 @@ class NrfMeshManager(
         mConnectDevice = null;
         mSetupProvisionedNode = false
         mConnectedProxyAddress.postValue(null)
+        mBleStatusCallback?.onDeviceDisconnected(device)
     }
 
     override fun onLinkLossOccurred(device: BluetoothDevice) {
@@ -585,6 +591,7 @@ class NrfMeshManager(
             }
             mIsConnectedToProxy.postValue(true)
         }
+        mBleStatusCallback?.onDeviceConnected(device)
     }
 
     override fun onBondingRequired(device: BluetoothDevice) {
@@ -1522,5 +1529,9 @@ class NrfMeshManager(
 
     internal fun isScanning(): Boolean {
         return mIsScanning
+    }
+
+    public fun setBleConnectListener(bleStatusCallbacks: BleStatusCallbacks) {
+        this.mBleStatusCallback = bleStatusCallbacks;
     }
 }
