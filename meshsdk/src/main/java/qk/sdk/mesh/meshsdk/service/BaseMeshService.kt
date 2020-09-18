@@ -49,7 +49,8 @@ open class BaseMeshService : LifecycleService() {
         private const val OPCODE_HEART_BEAT: Int = 0x14;
 
         const val DOWNSTREAM_CALLBACK = "subscribeStatus";
-
+        //设置一个监听Service生命周期的静态变量
+        var sServiceLifecycleLintener:MeshServiceLifeCycle? = null
         //状态上报回调用，一个app从头到尾应该只会持有一个这样的回调用
         var mDownStreamCallback: IDeviceStatusCallBack? = null;
     }
@@ -113,6 +114,7 @@ open class BaseMeshService : LifecycleService() {
     override fun onDestroy() {
         Log.d(TAG, "===>-mesh- service被销毁了<<<<<<<<<<<")
         disConnect()
+        sServiceLifecycleLintener?.onDestory()
         super.onDestroy()
         Log.d(TAG, "===>-mesh- service被销毁了>>>>>>>>>>>")
     }
@@ -707,7 +709,8 @@ open class BaseMeshService : LifecycleService() {
      */
     private fun dispatchMsgByOpCode(meshMsg: MeshMessage) {
         if (meshMsg is VendorModelMessageStatus &&
-            meshMsg.opCode == VENDOR_MSG_OPCODE_ATTR_RECEIVE.toInt(16)
+                (meshMsg.opCode == VENDOR_MSG_OPCODE_ATTR_RECEIVE.toInt(16) ||
+                meshMsg.opCode == VENDOR_MSG_OPCODE_HEART_BEAT.toInt(16))
         ) {
             decodeMessageAndFeedBack(meshMsg);
         }

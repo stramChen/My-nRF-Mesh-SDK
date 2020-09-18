@@ -721,6 +721,7 @@ object MeshHelper {
                                 "msg" to Constants.ConnectState.SERVICE_CREATED.msg
                         )
                 )
+                sServiceLifecycleLintener?.onCreate()
             })
 
             mMeshProxyService = this
