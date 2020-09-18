@@ -12,6 +12,7 @@ package qk.sdk.mesh.meshsdk.bean
 const val VENDOR_MSG_OPCODE_ATTR_GET = "10"
 const val VENDOR_MSG_OPCODE_ATTR_SET = "11"
 const val VENDOR_MSG_OPCODE_ATTR_RECEIVE = "13"
+const val VENDOR_MSG_OPCODE_HEART_BEAT = "14"
 const val VENDOR_MSG_ATTR_SET_UNACKED = "12"
 
 //同步设备消息
