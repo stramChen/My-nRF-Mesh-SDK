@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import no.nordicsemi.android.meshprovisioner.data.ApplicationKeyDao;
 import no.nordicsemi.android.meshprovisioner.data.ApplicationKeysDao;
@@ -357,11 +358,16 @@ abstract class MeshNetworkDb extends RoomDatabase {
         protected MeshNetwork doInBackground(final Void... params) {
             final MeshNetwork meshNetwork = meshNetworkDao.getMeshNetwork(true);
             if (meshNetwork != null) {
-                meshNetwork.netKeys = netKeysDao.loadNetworkKeys(meshNetwork.getMeshUUID());
-                meshNetwork.appKeys = appKeysDao.loadApplicationKeys(meshNetwork.getMeshUUID());
-                meshNetwork.nodes = nodesDao.getNodes(meshNetwork.getMeshUUID());
-                meshNetwork.provisioners = provisionersDao.getProvisioners(meshNetwork.getMeshUUID());
-                meshNetwork.groups = groupsDao.loadGroups(meshNetwork.getMeshUUID());
+                meshNetwork.netKeys = new CopyOnWriteArrayList(
+                        netKeysDao.loadNetworkKeys(meshNetwork.getMeshUUID()));
+                meshNetwork.appKeys = new CopyOnWriteArrayList(
+                        appKeysDao.loadApplicationKeys(meshNetwork.getMeshUUID()));
+                meshNetwork.nodes = new CopyOnWriteArrayList(
+                        nodesDao.getNodes(meshNetwork.getMeshUUID()).toArray());
+                meshNetwork.provisioners = new CopyOnWriteArrayList(
+                        provisionersDao.getProvisioners(meshNetwork.getMeshUUID()));
+                meshNetwork.groups = new CopyOnWriteArrayList(
+                        groupsDao.loadGroups(meshNetwork.getMeshUUID()));
             }
             return meshNetwork;
         }

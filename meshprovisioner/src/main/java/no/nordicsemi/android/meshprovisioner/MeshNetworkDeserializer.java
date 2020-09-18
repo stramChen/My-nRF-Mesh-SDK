@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import androidx.annotation.NonNull;
 
@@ -143,7 +144,7 @@ public final class MeshNetworkDeserializer implements JsonSerializer<MeshNetwork
     private List<NetworkKey> deserializeNetKeys(@NonNull final JsonDeserializationContext context,
                                                 @NonNull final JsonArray json,
                                                 @NonNull final String meshUuid) {
-        final Type networkKey = new TypeToken<List<NetworkKey>>() {
+        final Type networkKey = new TypeToken<CopyOnWriteArrayList<NetworkKey>>() {
         }.getType();
         final List<NetworkKey> networkKeys = context.deserialize(json, networkKey);
         for (NetworkKey key : networkKeys) {
@@ -177,7 +178,7 @@ public final class MeshNetworkDeserializer implements JsonSerializer<MeshNetwork
     private List<ApplicationKey> deserializeAppKeys(@NonNull final JsonDeserializationContext context,
                                                     @NonNull final JsonArray json,
                                                     @NonNull final String meshUuid) {
-        final Type applicationKeyList = new TypeToken<List<ApplicationKey>>() {
+        final Type applicationKeyList = new TypeToken<CopyOnWriteArrayList<ApplicationKey>>() {
         }.getType();
         final List<ApplicationKey> applicationKeys = context.deserialize(json, applicationKeyList);
         for (ApplicationKey key : applicationKeys) {
@@ -366,7 +367,7 @@ public final class MeshNetworkDeserializer implements JsonSerializer<MeshNetwork
      */
     private List<ProvisionedMeshNode> deserializeNodes(@NonNull final JsonDeserializationContext context,
                                                        @NonNull final JsonArray json, final String meshUuid) {
-        final Type nodeList = new TypeToken<List<ProvisionedMeshNode>>() {
+        final Type nodeList = new TypeToken<CopyOnWriteArrayList<ProvisionedMeshNode>>() {
         }.getType();
         final List<ProvisionedMeshNode> nodes = context.deserialize(json, nodeList);
         for (ProvisionedMeshNode node : nodes) {
@@ -406,7 +407,7 @@ public final class MeshNetworkDeserializer implements JsonSerializer<MeshNetwork
      */
     private List<Group> deserializeGroups(@NonNull final JsonObject jsonNetwork,
                                           @NonNull final String meshUuid) {
-        final List<Group> groups = new ArrayList<>();
+        final List<Group> groups = new CopyOnWriteArrayList<>();
         if (!jsonNetwork.has("groups"))
             return groups;
 
@@ -475,7 +476,7 @@ public final class MeshNetworkDeserializer implements JsonSerializer<MeshNetwork
      */
     private List<Scene> deserializeScenes(@NonNull final JsonObject jsonNetwork,
                                           @NonNull final String meshUuid) {
-        final List<Scene> scenes = new ArrayList<>();
+        final List<Scene> scenes = new CopyOnWriteArrayList<>();
         try {
             if (!jsonNetwork.has("scenes"))
                 return scenes;

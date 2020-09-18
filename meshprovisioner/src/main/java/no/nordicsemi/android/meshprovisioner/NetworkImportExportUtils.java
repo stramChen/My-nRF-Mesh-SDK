@@ -14,6 +14,7 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.Type;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -149,17 +150,17 @@ class NetworkImportExportUtils {
          */
         private void importNetwork() throws JsonSyntaxException {
             try {
-                Type netKeyList = new TypeToken<List<NetworkKey>>() {
+                Type netKeyList = new TypeToken<CopyOnWriteArrayList<NetworkKey>>() {
                 }.getType();
-                Type appKeyList = new TypeToken<List<ApplicationKey>>() {
+                Type appKeyList = new TypeToken<CopyOnWriteArrayList<ApplicationKey>>() {
                 }.getType();
                 Type allocatedUnicastRange = new TypeToken<List<AllocatedUnicastRange>>() {
                 }.getType();
-                Type allocatedGroupRange = new TypeToken<List<AllocatedGroupRange>>() {
+                Type allocatedGroupRange = new TypeToken<CopyOnWriteArrayList<AllocatedGroupRange>>() {
                 }.getType();
-                Type allocatedSceneRange = new TypeToken<List<AllocatedSceneRange>>() {
+                Type allocatedSceneRange = new TypeToken<CopyOnWriteArrayList<AllocatedSceneRange>>() {
                 }.getType();
-                Type nodeList = new TypeToken<List<ProvisionedMeshNode>>() {
+                Type nodeList = new TypeToken<CopyOnWriteArrayList<ProvisionedMeshNode>>() {
                 }.getType();
                 Type meshModelList = new TypeToken<List<MeshModel>>() {
                 }.getType();

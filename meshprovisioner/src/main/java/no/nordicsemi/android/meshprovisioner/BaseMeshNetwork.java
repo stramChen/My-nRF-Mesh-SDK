@@ -89,7 +89,7 @@ abstract class BaseMeshNetwork {
     @Ignore
     @SerializedName("provisioners")
     @Expose
-    List<Provisioner> provisioners = new CopyOnWriteArrayList<>();
+    List<Provisioner> provisioners = new ArrayList<>();
     @Ignore
     @SerializedName("nodes")
     @Expose
