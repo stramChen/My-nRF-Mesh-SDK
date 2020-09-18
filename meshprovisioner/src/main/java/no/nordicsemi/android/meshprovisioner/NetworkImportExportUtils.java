@@ -156,9 +156,9 @@ class NetworkImportExportUtils {
                 }.getType();
                 Type allocatedUnicastRange = new TypeToken<List<AllocatedUnicastRange>>() {
                 }.getType();
-                Type allocatedGroupRange = new TypeToken<CopyOnWriteArrayList<AllocatedGroupRange>>() {
+                Type allocatedGroupRange = new TypeToken<List<AllocatedGroupRange>>() {
                 }.getType();
-                Type allocatedSceneRange = new TypeToken<CopyOnWriteArrayList<AllocatedSceneRange>>() {
+                Type allocatedSceneRange = new TypeToken<List<AllocatedSceneRange>>() {
                 }.getType();
                 Type nodeList = new TypeToken<CopyOnWriteArrayList<ProvisionedMeshNode>>() {
                 }.getType();

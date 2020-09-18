@@ -364,10 +364,8 @@ abstract class MeshNetworkDb extends RoomDatabase {
                         appKeysDao.loadApplicationKeys(meshNetwork.getMeshUUID()));
                 meshNetwork.nodes = new CopyOnWriteArrayList(
                         nodesDao.getNodes(meshNetwork.getMeshUUID()).toArray());
-                meshNetwork.provisioners = new CopyOnWriteArrayList(
-                        provisionersDao.getProvisioners(meshNetwork.getMeshUUID()));
-                meshNetwork.groups = new CopyOnWriteArrayList(
-                        groupsDao.loadGroups(meshNetwork.getMeshUUID()));
+                meshNetwork.provisioners = provisionersDao.getProvisioners(meshNetwork.getMeshUUID());
+                meshNetwork.groups = groupsDao.loadGroups(meshNetwork.getMeshUUID());
             }
             return meshNetwork;
         }

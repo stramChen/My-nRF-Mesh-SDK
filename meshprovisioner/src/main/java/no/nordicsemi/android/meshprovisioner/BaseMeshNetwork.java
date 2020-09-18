@@ -97,11 +97,11 @@ abstract class BaseMeshNetwork {
     @Ignore
     @SerializedName("groups")
     @Expose
-    List<Group> groups = new CopyOnWriteArrayList<>();
+    List<Group> groups = new ArrayList<>();
     @Ignore
     @SerializedName("scenes")
     @Expose
-    List<Scene> scenes = new CopyOnWriteArrayList<>();
+    List<Scene> scenes = new ArrayList<>();
     //Library related attributes
     @Ignore
     @ColumnInfo(name = "unicast_address")

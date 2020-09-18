@@ -407,7 +407,7 @@ public final class MeshNetworkDeserializer implements JsonSerializer<MeshNetwork
      */
     private List<Group> deserializeGroups(@NonNull final JsonObject jsonNetwork,
                                           @NonNull final String meshUuid) {
-        final List<Group> groups = new CopyOnWriteArrayList<>();
+        final List<Group> groups = new ArrayList<>();
         if (!jsonNetwork.has("groups"))
             return groups;
 
@@ -476,7 +476,7 @@ public final class MeshNetworkDeserializer implements JsonSerializer<MeshNetwork
      */
     private List<Scene> deserializeScenes(@NonNull final JsonObject jsonNetwork,
                                           @NonNull final String meshUuid) {
-        final List<Scene> scenes = new CopyOnWriteArrayList<>();
+        final List<Scene> scenes = new ArrayList<>();
         try {
             if (!jsonNetwork.has("scenes"))
                 return scenes;
