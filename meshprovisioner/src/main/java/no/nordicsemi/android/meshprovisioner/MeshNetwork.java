@@ -4,6 +4,7 @@ package no.nordicsemi.android.meshprovisioner;
 import android.text.TextUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -124,7 +125,12 @@ public final class MeshNetwork extends BaseMeshNetwork {
             throw new IllegalArgumentException("Please allocate a unicast address range to the provisioner");
         }
 
-        Collections.sort(nodes, nodeComparator);
+//        Collections.sort(nodes, nodeComparator);
+//        List temp = Arrays.asList(nodes.toArray());
+//        Collections.sort(temp,nodeComparator);
+//        nodes.clear();
+//        nodes.addAll(temp);
+
         // Iterate through all nodes just once, while iterating over ranges.
         int index = 0;
 
