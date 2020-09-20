@@ -125,11 +125,11 @@ public final class MeshNetwork extends BaseMeshNetwork {
             throw new IllegalArgumentException("Please allocate a unicast address range to the provisioner");
         }
 
-//        Collections.sort(nodes, nodeComparator);
-//        List temp = Arrays.asList(nodes.toArray());
-//        Collections.sort(temp,nodeComparator);
-//        nodes.clear();
-//        nodes.addAll(temp);
+        //处理CopyOnWriteArrayList的排序问题
+        List temp = Arrays.asList(nodes.toArray());
+        Collections.sort(temp,nodeComparator);
+        nodes.clear();
+        nodes.addAll(temp);
 
         // Iterate through all nodes just once, while iterating over ranges.
         int index = 0;
