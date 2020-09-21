@@ -323,7 +323,11 @@ abstract class BaseMeshNetwork {
         if (appKeys.isEmpty()) {
             return 0;
         } else {
-            Collections.sort(appKeys, appKeyComparator);
+            //处理CopyOnWriteArrayList的排序问题
+            List temp = Arrays.asList(appKeys.toArray());
+            Collections.sort(temp,appKeyComparator);
+            appKeys.clear();
+            appKeys.addAll(temp);
             final int index = appKeys.size() - 1;
             return appKeys.get(index).getKeyIndex() + 1;
         }
