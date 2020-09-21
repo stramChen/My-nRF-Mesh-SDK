@@ -365,11 +365,22 @@ public final class MeshNetworkDeserializer implements JsonSerializer<MeshNetwork
      * @param meshUuid network provisionerUuid
      * @return List of nodes
      */
-    private List<ProvisionedMeshNode> deserializeNodes(@NonNull final JsonDeserializationContext context,
-                                                       @NonNull final JsonArray json, final String meshUuid) {
+//    private List<ProvisionedMeshNode> deserializeNodes(@NonNull final JsonDeserializationContext context,
+//                                                       @NonNull final JsonArray json, final String meshUuid) {
+//        final Type nodeList = new TypeToken<CopyOnWriteArrayList<ProvisionedMeshNode>>() {
+//        }.getType();
+//        final List<ProvisionedMeshNode> nodes = context.deserialize(json, nodeList);
+//        for (ProvisionedMeshNode node : nodes) {
+//            node.setMeshUuid(meshUuid);
+//        }
+//        return nodes;
+//    }
+
+    private CopyOnWriteArrayList<ProvisionedMeshNode> deserializeNodes(@NonNull final JsonDeserializationContext context,
+                                                                       @NonNull final JsonArray json, final String meshUuid) {
         final Type nodeList = new TypeToken<CopyOnWriteArrayList<ProvisionedMeshNode>>() {
         }.getType();
-        final List<ProvisionedMeshNode> nodes = context.deserialize(json, nodeList);
+        final CopyOnWriteArrayList<ProvisionedMeshNode> nodes = context.deserialize(json, nodeList);
         for (ProvisionedMeshNode node : nodes) {
             node.setMeshUuid(meshUuid);
         }

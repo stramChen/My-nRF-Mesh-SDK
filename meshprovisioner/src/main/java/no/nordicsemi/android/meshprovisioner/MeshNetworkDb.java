@@ -306,22 +306,22 @@ abstract class MeshNetworkDb extends RoomDatabase {
 
         @Override
         protected Void doInBackground(final Void... params) {
-                meshNetworkDao.insert(meshNetwork);
-                netKeysDao.insert(meshNetwork.netKeys);
-                appKeysDao.insert(meshNetwork.appKeys);
-                provisionersDao.insert(meshNetwork.provisioners);
-                if (!meshNetwork.nodes.isEmpty()) {
-                    nodesDao.insert(meshNetwork.nodes);
-                }
+            meshNetworkDao.insert(meshNetwork);
+            netKeysDao.insert(meshNetwork.netKeys);
+            appKeysDao.insert(meshNetwork.appKeys);
+            provisionersDao.insert(meshNetwork.provisioners);
+            if (!meshNetwork.nodes.isEmpty()) {
+                nodesDao.insert(meshNetwork.nodes);
+            }
 
-                if (meshNetwork.groups != null) {
-                    groupsDao.insert(meshNetwork.groups);
-                }
+            if (meshNetwork.groups != null) {
+                groupsDao.insert(meshNetwork.groups);
+            }
 
-                if (meshNetwork.scenes != null) {
-                    scenesDao.insert(meshNetwork.scenes);
-                }
-                return null;
+            if (meshNetwork.scenes != null) {
+                scenesDao.insert(meshNetwork.scenes);
+            }
+            return null;
         }
     }
 
@@ -363,7 +363,7 @@ abstract class MeshNetworkDb extends RoomDatabase {
                 meshNetwork.appKeys = new CopyOnWriteArrayList(
                         appKeysDao.loadApplicationKeys(meshNetwork.getMeshUUID()));
                 meshNetwork.nodes = new CopyOnWriteArrayList(
-                        nodesDao.getNodes(meshNetwork.getMeshUUID()).toArray());
+                        nodesDao.getNodes(meshNetwork.getMeshUUID()));
                 meshNetwork.provisioners = provisionersDao.getProvisioners(meshNetwork.getMeshUUID());
                 meshNetwork.groups = groupsDao.loadGroups(meshNetwork.getMeshUUID());
             }
@@ -421,15 +421,15 @@ abstract class MeshNetworkDb extends RoomDatabase {
 
         @Override
         protected Void doInBackground(@NonNull final MeshNetwork... params) {
-                final MeshNetwork network = params[0];
-                    meshNetworkDao.update(network);
-                    netKeyDao.update(network.getNetKeys());
-                    appKeyDao.update(network.getAppKeys());
-                    provisionersDao.update(network.getProvisioners());
-                    nodesDao.update(network.getNodes());
-                    groupsDao.update(network.getGroups());
-                    sceneDao.update(network.getScenes());
-                    return null;
+            final MeshNetwork network = params[0];
+            meshNetworkDao.update(network);
+            netKeyDao.update(network.getNetKeys());
+            appKeyDao.update(network.getAppKeys());
+            provisionersDao.update(network.getProvisioners());
+            nodesDao.update(network.getNodes());
+            groupsDao.update(network.getGroups());
+            sceneDao.update(network.getScenes());
+            return null;
         }
 
         @Override
