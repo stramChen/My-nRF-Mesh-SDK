@@ -179,7 +179,11 @@ abstract class BaseMeshNetwork {
         if (netKeys.isEmpty()) {
             return 0;
         } else {
-            Collections.sort(netKeys, netKeyComparator);
+            //处理CopyOnWriteArrayList的排序问题
+            List temp = Arrays.asList(netKeys.toArray());
+            Collections.sort(temp,netKeyComparator);
+            netKeys.clear();
+            netKeys.addAll(temp);
             final int index = netKeys.size() - 1;
             return netKeys.get(index).getKeyIndex() + 1;
         }
@@ -882,7 +886,7 @@ abstract class BaseMeshNetwork {
      *
      * @param nodes list of {@link ProvisionedMeshNode}
      */
-    void setNodes(@NonNull List<ProvisionedMeshNode> nodes) {
+    void setNodes(@NonNull CopyOnWriteArrayList<ProvisionedMeshNode> nodes) {
         this.nodes = nodes;
     }
 
