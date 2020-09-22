@@ -1232,7 +1232,7 @@ abstract class MeshNetworkDb extends RoomDatabase {
         if (!provisioners.isEmpty()) {
             final List<NetworkKey> netKeys = getNetKeys(database);
             final List<ApplicationKey> appKeys = getAppKeys(database);
-            final List<ProvisionedMeshNode> nodes = new ArrayList<>();
+            final List<ProvisionedMeshNode> nodes = new CopyOnWriteArrayList<>();
             for (Provisioner provisioner : provisioners) {
                 final ProvisionedMeshNode node = new ProvisionedMeshNode(provisioner, netKeys, appKeys);
                 final ContentValues values = new ContentValues();

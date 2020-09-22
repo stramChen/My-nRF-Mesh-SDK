@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import androidx.annotation.RestrictTo;
 
@@ -33,7 +34,7 @@ public final class NodeDeserializer implements JsonSerializer<List<ProvisionedMe
 
     @Override
     public List<ProvisionedMeshNode> deserialize(final JsonElement json, final Type typeOfT, final JsonDeserializationContext context) throws JsonParseException {
-        final List<ProvisionedMeshNode> nodes = new ArrayList<>();
+        final List<ProvisionedMeshNode> nodes = new CopyOnWriteArrayList<>();
         final JsonArray jsonArray = json.getAsJsonArray();
         for (int i = 0; i < jsonArray.size(); i++) {
             JsonObject jsonObject = jsonArray.get(i).getAsJsonObject();
