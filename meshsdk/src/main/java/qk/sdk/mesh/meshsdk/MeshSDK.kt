@@ -1,10 +1,12 @@
 package qk.sdk.mesh.meshsdk
 
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothGatt
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import androidx.lifecycle.Observer
 import com.google.gson.Gson
 import me.weyye.hipermission.PermissionCallback
 import no.nordicsemi.android.meshprovisioner.Group
@@ -25,7 +27,7 @@ import kotlin.collections.HashMap
 import qk.sdk.mesh.meshsdk.bean.DeviceConstantsCode as DC
 
 
-object MeshSDK {
+object MeshSDK{
     private val TAG = "MeshSDK"
     private var mContext: Context? = null
     private var mExtendedBluetoothDeviceMap = HashMap<String, ExtendedBluetoothDevice>()
@@ -165,7 +167,31 @@ object MeshSDK {
      * 设备认证，先建立proxy连接，再启动配置邀请
      * 注意：android的networkKey都必须是大写的
      */
-    fun provision(uuid: String, networkKey: String, callback: MapCallback) {
+    fun startProvision(uuid: String, networkKey: String, callback: MapCallback) {
+        if(getGattConnectStatus() != BluetoothGatt.STATE_DISCONNECTED){
+            Log.d(TAG,"===>-mesh-配网前发现Gatt并没有断开连接,现在开始等待Gatt断开连接然后去配网")
+            MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager
+            ?.connectionState?.observe(MeshHelper.MeshProxyService.mMeshProxyService!!
+                            , object : Observer<CallbackMsg> {
+                        override fun onChanged(msg: CallbackMsg?) {
+                            if(ConnectState.DISCONNECTED.code == msg?.code){
+                                Log.d(TAG,"===>-mesh-已经断开连接回调,现在要真的去配网了")
+                                MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager
+                                        ?.connectionState?.removeObserver(this)
+                                realStartProvision(uuid, callback, networkKey)
+                            }
+                        }
+                    })
+        }else{
+            realStartProvision(uuid, callback, networkKey)
+        }
+    }
+
+
+    /**
+     * 真的要开始配网了
+     */
+    private fun realStartProvision(uuid: String, callback: MapCallback, networkKey: String) {
         val uuidUpcase = uuid.toUpperCase()
         mContext?.apply {
             init(this, object : BooleanCallback() {
@@ -233,7 +259,7 @@ object MeshSDK {
                                                         )
                                                 )
                                             }
-                                            ConnectState.DISCONNECTED.code->{
+                                            ConnectState.DISCONNECTED.code -> {
                                                 //连接断开，自动寻找代理节点重连
                                                 if (MeshSDK.needReconnect && !isReconnect.get()) {
                                                     tryReconnect(networkKey)
@@ -562,7 +588,7 @@ object MeshSDK {
         isConnecting.set(false)
         isSubscribeDeviceStatusSuccessfully = false
         MeshHelper.innerDisConnect()
-        Utils.printLog(TAG, "===>-mesh- 断开蓝牙连接")
+        Utils.printLog(TAG, "===>-mesh- 内部断开蓝牙连接，但不返回callback")
     }
 
     /**
@@ -1268,7 +1294,7 @@ object MeshSDK {
      * 发一次获取所有设备主属性的同步请求，接口通过{@see #subscribeDeviceStatus}的回调统一返回
      * 因此你在调用此方法的时候，必须进行{@see #subscribeDeviceStatus}订阅操作。
      */
-    fun getAllDeviceStatus() {
+    fun fetchAllDeviceStatus() {
         MeshHelper.getGroupByAddress(ALL_DEVICE_SYNC_ADDR)?.let { group ->
             val networkKey =
                     MeshHelper.MeshProxyService.mMeshProxyService?.getCurrentNetworkKeyStr();
@@ -2033,9 +2059,20 @@ object MeshSDK {
         MeshHelper.MeshProxyService.mMeshProxyService?.allocateDefaultProvisionerBigAddressRange()
     }
 
+    /**
+     * 设置gatt连接状态监听
+     */
     fun setBleConnectStatusListener(bleStatusCallbacks: BleStatusCallbacks){
         MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager
                 ?.setBleConnectListener(bleStatusCallbacks)
+    }
+
+    /**
+     * 获取蓝牙连接状态
+     */
+    fun getGattConnectStatus(): Int {
+        return MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager
+                ?.bleMeshManager?.connectionState!!
     }
 
 }
