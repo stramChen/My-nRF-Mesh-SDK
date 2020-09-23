@@ -994,8 +994,17 @@ object MeshSDK {
 
                     if (!MeshHelper.isConnectedToProxy() && MeshHelper.getProvisionNode()?.size ?: 0 > 0) {
                         synchronized(isConnecting) {
-                            if (isConnecting.get()) return
+                            if (isConnecting.get()) {
+                                Log.d(TAG, "===>Mesh SDK 层 isConnecting 状态是true,这次请求被搁置")
+                                return
+                            }
                             isConnecting.set(true)
+                            //做一下容错超时机制，防止回调不回来，下次无法重连
+                            Handler().postDelayed(object : Runnable {
+                                override fun run() {
+                                    isConnecting.set(false)
+                                }
+                            }, 8000)
                         }
 
                         //连接前检查一下需要释放的资源
