@@ -35,6 +35,9 @@ const val SUBSCRIBE_ALL_DEVICE_ADDR: Int = 0xD000;
 //设备同步组播地址
 const val ALL_DEVICE_SYNC: String = "D002";
 const val ALL_DEVICE_SYNC_ADDR: Int = 0xD002;
+//本地联动组播地址
+const val LOCAL_LINKAGE: String = "D003";
+const val LOCAL_LINKAGE_ADDR: Int = 0xD003;
 
 /**
  * 指定的CallBack key

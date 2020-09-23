@@ -749,7 +749,7 @@ open class BaseMeshService : LifecycleService() {
         val callback = MeshHandler.getCallback(key)
 
         //区分一下是组播消息还是单播消息
-        if (dst == SUBSCRIBE_ALL_DEVICE_ADDR) {
+        if (dst == SUBSCRIBE_ALL_DEVICE_ADDR || dst == LOCAL_LINKAGE_ADDR) {
             var subRes = SubscribeBean(TYPE_DEVICE_PROPERTY, JsonParser().parse(res));
             mDownStreamCallback?.onCommand(Gson().toJson(subRes) ?: "");
         } else {

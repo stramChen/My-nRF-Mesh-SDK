@@ -1124,7 +1124,7 @@ object MeshSDK {
                 for ((key, value) in result) {
                     //重连完成要自己订阅设备状态
                     if (value is Int && value == 200) {
-                        subscribeTwoGroups()
+                        subscribeThreeGroups()
                     }
                 }
             }
@@ -1227,14 +1227,14 @@ object MeshSDK {
      */
     fun subscribeDeviceStatus(callback: IDeviceStatusCallBack) {
         checkOldGroupExist();
-        subscribeTwoGroups()
+        subscribeThreeGroups()
         BaseMeshService.mDownStreamCallback = callback
     }
 
     /**
-     * 订阅两个组播地址D000,D002
+     * 订阅两个组播地址D000,D002,D003
      */
-    private fun subscribeTwoGroups() {
+    private fun subscribeThreeGroups() {
         createGroup(SUBSCRIBE_ALL_DEVICE, object : BooleanCallback() {
             override fun onResult(boolean: Boolean) {
                 isSubscribeDeviceStatusSuccessfully = boolean
@@ -1248,6 +1248,13 @@ object MeshSDK {
                 Utils.printLog(TAG, "===>-mesh- createGroup:$ALL_DEVICE_SYNC:$boolean")
             }
         }, ALL_DEVICE_SYNC_ADDR)
+        //为本地自动化添加独特的组播地址
+        createGroup(LOCAL_LINKAGE, object : BooleanCallback() {
+            override fun onResult(boolean: Boolean) {
+                isSubscribeDeviceStatusSuccessfully = boolean
+                Utils.printLog(TAG, "===>-mesh- createGroup:$LOCAL_LINKAGE:$boolean")
+            }
+        }, LOCAL_LINKAGE_ADDR)
     }
 
     /**
@@ -1937,7 +1944,7 @@ object MeshSDK {
      * 虚拟按钮
      */
     fun sendGroupMsg(vid: Int) {
-        MeshHelper.getGroupByAddress(ALL_DEVICE_SYNC_ADDR)?.let { group ->
+        MeshHelper.getGroupByAddress(LOCAL_LINKAGE_ADDR)?.let { group ->
             val networkKey =
                     MeshHelper.MeshProxyService.mMeshProxyService?.getCurrentNetworkKeyStr();
             getAllApplicationKey(networkKey!!, object : ArrayStringCallback {
