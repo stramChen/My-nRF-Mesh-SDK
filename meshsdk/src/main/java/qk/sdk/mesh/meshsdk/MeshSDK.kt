@@ -1334,8 +1334,10 @@ object MeshSDK{
         var heartCheckTime: Long =
                 MeshHelper.MeshProxyService.mMeshProxyService?.mHartBeanStatusMarkTime ?: 0
         //当设备状态是11或者01,或者10且未超过心态时间的时候，考虑它是在线状态
-        if (status and 1 == 1 || status == 1
-                || (status == 2 && System.currentTimeMillis() - heartCheckTime < 30 * 1000)
+        if (status and 1 == 1
+                || status == 1
+                || (status == 2 && System.currentTimeMillis() - heartCheckTime <
+                        BaseMeshService.HEART_BEAT_CHECK_PERIOD * 1000)
         ) return true;
         return false;
     }

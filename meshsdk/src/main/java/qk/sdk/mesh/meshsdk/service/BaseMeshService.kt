@@ -41,12 +41,14 @@ open class BaseMeshService : LifecycleService() {
     var mConnectCallback: ConnectCallback? = null
     var mScanCallback: ScanCallback? = null
     var mCurrentNetworkKey: NetworkKey? = null
-
     private val mHearBeanLock: Any = Any();
 
     companion object {
         //心跳OpCode
         private const val OPCODE_HEART_BEAT: Int = 0x14;
+
+        //心跳检查周期
+        const val HEART_BEAT_CHECK_PERIOD:Long = 50
 
         const val DOWNSTREAM_CALLBACK = "subscribeStatus";
         //设置一个监听Service生命周期的静态变量
@@ -210,7 +212,7 @@ open class BaseMeshService : LifecycleService() {
                     mHeartBeatMap[meshNode.uuid.toUpperCase()] = 0;
                 }
                 mHeatBeatSubscription =
-                    Observable.interval(0, 50 * 1000 + 100, TimeUnit.MILLISECONDS)
+                    Observable.interval(0, HEART_BEAT_CHECK_PERIOD * 1000 + 100, TimeUnit.MILLISECONDS)
                         .subscribeOn(Schedulers.computation())
                         .subscribe {
                             //没订阅之前不做心跳检查
