@@ -169,6 +169,12 @@ object MeshSDK{
      */
     fun startProvision(uuid: String, networkKey: String, callback: MapCallback) {
         if(getGattConnectStatus() != BluetoothGatt.STATE_DISCONNECTED){
+            //发现偶然会有在进入配网的时候连接还没断
+            if(getGattConnectStatus() == BluetoothGatt.STATE_CONNECTED
+                    || getGattConnectStatus() == BluetoothGatt.STATE_CONNECTING){
+                Log.d(TAG,"===>-mesh-配网前发现Gatt正在连接或者已连接，现在去断开连接")
+                innerDisConnect()
+            }
             Log.d(TAG,"===>-mesh-配网前发现Gatt并没有断开连接,现在开始等待Gatt断开连接然后去配网")
             MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager
             ?.connectionState?.observe(MeshHelper.MeshProxyService.mMeshProxyService!!
