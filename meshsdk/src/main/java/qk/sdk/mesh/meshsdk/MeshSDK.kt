@@ -2054,6 +2054,10 @@ object MeshSDK{
         MeshHelper.MeshProxyService.mMeshProxyService?.notifyAllDeviceOnline()
     }
 
+    fun notifyAllDeviceOffline() {
+        MeshHelper.MeshProxyService.mMeshProxyService?.notifyAllDeviceOffline()
+    }
+
     /**
      * 这里添加一个方法给默认的provisoner分配最大的单播地址范围
      */

@@ -1,13 +1,14 @@
 package qk.sdk.mesh.meshsdk.service
 
 import android.content.Intent
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.Observer
 import com.google.gson.Gson
 import com.google.gson.JsonParser
-import no.nordicsemi.android.ble.BleManagerCallbacks
 import no.nordicsemi.android.meshprovisioner.AllocatedUnicastRange
 import no.nordicsemi.android.meshprovisioner.MeshManagerApi
 import no.nordicsemi.android.meshprovisioner.MeshNetwork
@@ -41,6 +42,9 @@ open class BaseMeshService : LifecycleService() {
     var mConnectCallback: ConnectCallback? = null
     var mScanCallback: ScanCallback? = null
     var mCurrentNetworkKey: NetworkKey? = null
+
+    var mHeartBeatObservable:Observable<Any>?=null;
+
     private val mHearBeanLock: Any = Any();
 
     companion object {
@@ -79,10 +83,10 @@ open class BaseMeshService : LifecycleService() {
 
     private var mProvisionedNodesStatusObserver = Observer<ProvisionedMeshNode> {
         mConnectCallback?.onConnectStateChange(
-            CallbackMsg(
-                CommonErrorMsg.CONNECT_PROVISIONED_NODE_UPDATE.code,
-                CommonErrorMsg.CONNECT_PROVISIONED_NODE_UPDATE.msg
-            )
+                CallbackMsg(
+                        CommonErrorMsg.CONNECT_PROVISIONED_NODE_UPDATE.code,
+                        CommonErrorMsg.CONNECT_PROVISIONED_NODE_UPDATE.msg
+                )
         )
     }
 
@@ -92,8 +96,8 @@ open class BaseMeshService : LifecycleService() {
             mConnectCallback?.onConnect()
         } else {
             Utils.printLog(
-                TAG, "===>-mesh-connect result:" +
-                        "${mNrfMeshManager?.bleMeshManager?.isDeviceReady}"
+                    TAG, "===>-mesh-connect result:" +
+                    "${mNrfMeshManager?.bleMeshManager?.isDeviceReady}"
             )
         }
     }
@@ -138,10 +142,10 @@ open class BaseMeshService : LifecycleService() {
         mNrfMeshManager?.getScannerState()?.observe(this, Observer {
             if (!it.isBluetoothEnabled)
                 mScanCallback?.onError(
-                    CallbackMsg(
-                        Constants.ConnectState.BLE_NOT_AVAILABLE.code,
-                        Constants.ConnectState.BLE_NOT_AVAILABLE.msg
-                    )
+                        CallbackMsg(
+                                Constants.ConnectState.BLE_NOT_AVAILABLE.code,
+                                Constants.ConnectState.BLE_NOT_AVAILABLE.msg
+                        )
                 )
         })
 
@@ -182,8 +186,8 @@ open class BaseMeshService : LifecycleService() {
 
     //开始连接
     internal fun connect(
-        device: ExtendedBluetoothDevice,
-        connectToNetwork: Boolean, callback: ConnectCallback?
+            device: ExtendedBluetoothDevice,
+            connectToNetwork: Boolean, callback: ConnectCallback?
     ) {
         mConnectCallback = callback
         setConnectObserver()
@@ -230,13 +234,13 @@ open class BaseMeshService : LifecycleService() {
                                         else if (heartBeanTag == 2) {
                                             mHeartBeatMap[uuid] = heartBeanTag and 0
                                             var subRes = SubscribeBean(
-                                                TYPE_DEVICE_STATUS,
-                                                DeviceNode<Any>(STATUS_OFFLINE, uuid)
+                                                    TYPE_DEVICE_STATUS,
+                                                    DeviceNode<Any>(STATUS_OFFLINE, uuid)
                                             );
                                             mDownStreamCallback?.onCommand(
-                                                Gson().toJson(
-                                                    subRes
-                                                )
+                                                    Gson().toJson(
+                                                            subRes
+                                                    )
                                             );
                                         }
                                         //设备上线了 01，feedback
@@ -253,8 +257,8 @@ open class BaseMeshService : LifecycleService() {
 
                                     }
                                     Log.d(
-                                        TAG, "===>-mesh- heart beat检查结果==uuid:${uuid}" +
-                                                "==result:${mHeartBeatMap[uuid]}"
+                                            TAG, "===>-mesh- heart beat检查结果==uuid:${uuid}" +
+                                            "==result:${mHeartBeatMap[uuid]}"
                                     )
                                 }
                             }
@@ -297,7 +301,7 @@ open class BaseMeshService : LifecycleService() {
                     Log.d(TAG, "===>-mesh-通知所有的设备上线")
                     mNrfMeshManager?.nodes?.value?.forEach {
                         var subRes = SubscribeBean(
-                            TYPE_DEVICE_STATUS, DeviceNode<Any>(STATUS_ONLINE, it.uuid)
+                                TYPE_DEVICE_STATUS, DeviceNode<Any>(STATUS_ONLINE, it.uuid)
                         );
                         mDownStreamCallback?.onCommand(Gson().toJson(subRes));
                     }
@@ -307,6 +311,22 @@ open class BaseMeshService : LifecycleService() {
                 }
             })
 
+    }
+
+    fun notifyAllDeviceOffline() {
+        mHeartBeatMap.keys.forEach {
+            mHeartBeatMap[it] = 0
+        }
+        Handler(Looper.getMainLooper()).post(object : Runnable {
+            override fun run() {
+                Log.d(TAG, "===>-mesh-通知所有的设备下线")
+                mNrfMeshManager?.nodes?.value?.forEach {
+                    var subRes = SubscribeBean(TYPE_DEVICE_STATUS,
+                            DeviceNode<Any>(STATUS_OFFLINE, it.uuid));
+                    mDownStreamCallback?.onCommand(Gson().toJson(subRes));
+                }
+            }
+        })
     }
 
     /**
@@ -326,7 +346,7 @@ open class BaseMeshService : LifecycleService() {
             //设备一直处于离线状态，赶紧通知它上线吧！
             if ((mHeartBeatMap[uuid] ?: 0) == 0) {
                 var subRes = SubscribeBean(
-                    TYPE_DEVICE_STATUS, DeviceNode<Any>(STATUS_ONLINE, uuid)
+                        TYPE_DEVICE_STATUS, DeviceNode<Any>(STATUS_ONLINE, uuid)
                 );
                 mDownStreamCallback?.onCommand(Gson().toJson(subRes));
             }
@@ -372,12 +392,12 @@ open class BaseMeshService : LifecycleService() {
                                 val elementCount = capibilities.numberOfElements.toInt()
                                 val provisioner = network.selectedProvisioner
                                 val unicast =
-                                    network.nextAvailableUnicastAddress(elementCount, provisioner)
+                                        network.nextAvailableUnicastAddress(elementCount, provisioner)
                                 network.assignUnicastAddress(unicast)
                                 var node = mNrfMeshManager?.unprovisionedMeshNode?.value
                                 if (node != null && node.provisioningCapabilities.availableOOBTypes.size == 1 && node.provisioningCapabilities.availableOOBTypes[0] == AuthenticationOOBMethods.NO_OOB_AUTHENTICATION) {
                                     node.nodeName =
-                                        mNrfMeshManager?.meshNetworkLiveData?.nodeName
+                                            mNrfMeshManager?.meshNetworkLiveData?.nodeName
                                     mNrfMeshManager?.meshManagerApi?.startProvisioning(node)
                                     Utils.printLog(TAG, "开始provisioning")
                                     isProvisioningStarted = true
@@ -388,10 +408,10 @@ open class BaseMeshService : LifecycleService() {
                             //todo  记录日志
                             if (e.message == ERROR_MSG_UNICAST_UNABLED) {
                                 callback.onError(
-                                    CallbackMsg(
-                                        CommonErrorMsg.PROVISION_UNICAST_UNABLED.code,
-                                        CommonErrorMsg.PROVISION_UNICAST_UNABLED.msg
-                                    )
+                                        CallbackMsg(
+                                                CommonErrorMsg.PROVISION_UNICAST_UNABLED.code,
+                                                CommonErrorMsg.PROVISION_UNICAST_UNABLED.msg
+                                        )
                                 )
                             }
                         }
@@ -404,9 +424,9 @@ open class BaseMeshService : LifecycleService() {
 
     //开始provisioning
     internal fun startProvisioning(
-        device: ExtendedBluetoothDevice,
-        networkKey: NetworkKey,
-        callback: BaseCallback
+            device: ExtendedBluetoothDevice,
+            networkKey: NetworkKey,
+            callback: BaseCallback
     ) {
         mNrfMeshManager?.unprovisionedMeshNode?.observe(this, Observer {
             if (it != null) {
@@ -419,14 +439,14 @@ open class BaseMeshService : LifecycleService() {
                                 val elementCount = capibilities.numberOfElements.toInt()
                                 val provisioner = network.selectedProvisioner
                                 val unicast =
-                                    network.nextAvailableUnicastAddress(elementCount, provisioner)
+                                        network.nextAvailableUnicastAddress(elementCount, provisioner)
                                 network.assignUnicastAddress(unicast)
                                 var node = mNrfMeshManager?.unprovisionedMeshNode?.value
                                 if (node != null && node.provisioningCapabilities.availableOOBTypes.size > 0
-                                    && node.provisioningCapabilities.availableOOBTypes[0] == AuthenticationOOBMethods.NO_OOB_AUTHENTICATION
+                                        && node.provisioningCapabilities.availableOOBTypes[0] == AuthenticationOOBMethods.NO_OOB_AUTHENTICATION
                                 ) {
                                     node.nodeName =
-                                        mNrfMeshManager?.meshNetworkLiveData?.nodeName
+                                            mNrfMeshManager?.meshNetworkLiveData?.nodeName
                                     mNrfMeshManager?.meshManagerApi?.startProvisioning(node)
                                     Utils.printLog(TAG, "开始provisioning")
 //                                    LogFileUtil.writeLogToInnerFile(
@@ -444,10 +464,10 @@ open class BaseMeshService : LifecycleService() {
                             //todo  记录日志
                             if (e.message == ERROR_MSG_UNICAST_UNABLED) {
                                 callback.onError(
-                                    CallbackMsg(
-                                        CommonErrorMsg.PROVISION_UNICAST_UNABLED.code,
-                                        CommonErrorMsg.PROVISION_UNICAST_UNABLED.msg
-                                    )
+                                        CallbackMsg(
+                                                CommonErrorMsg.PROVISION_UNICAST_UNABLED.code,
+                                                CommonErrorMsg.PROVISION_UNICAST_UNABLED.msg
+                                        )
                                 )
                             }
                         } finally {
@@ -474,7 +494,7 @@ open class BaseMeshService : LifecycleService() {
         var deleteResult =
             mNrfMeshManager?.meshNetworkLiveData?.meshNetwork?.deleteNode(node) ?: false
         callback?.onNodeDeleted(
-            deleteResult, node
+                deleteResult, node
         )
     }
 
@@ -491,12 +511,12 @@ open class BaseMeshService : LifecycleService() {
     }
 
     internal fun sendMeshPdu(
-        method: String,
-        dst: Int,
-        message: MeshMessage,
-        callback: BaseCallback?,
-        timeOut: Boolean = false,
-        retry: Boolean = false
+            method: String,
+            dst: Int,
+            message: MeshMessage,
+            callback: BaseCallback?,
+            timeOut: Boolean = false,
+            retry: Boolean = false
     ) {
         Utils.printLog(TAG, "sendMeshPdu")
         mNrfMeshManager?.meshManagerApi?.createMeshPdu(dst, message)
@@ -513,8 +533,8 @@ open class BaseMeshService : LifecycleService() {
     }
 
     internal fun setSelectedModel(
-        element: Element?,
-        model: MeshModel?
+            element: Element?,
+            model: MeshModel?
     ) {
         mNrfMeshManager?.setSelectedElement(element)
         mNrfMeshManager?.setSelectedModel(model)
@@ -533,6 +553,7 @@ open class BaseMeshService : LifecycleService() {
     }
 
     internal fun setCurrentNetworkKey(networkKey: String) {
+        Log.d(TAG, "setCurrentNetworkKey:networkkey:" + networkKey)
         MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshNetworkLiveData?.networkKeys?.forEach {
             if (ByteUtil.bytesToHexString(it.key) == networkKey) {
                 mCurrentNetworkKey = it
@@ -541,10 +562,7 @@ open class BaseMeshService : LifecycleService() {
             } else {
                 it.isCurrent = 0
             }
-            Utils.printLog(
-                TAG,
-                "setCurrentNetworkKey:${ByteUtil.bytesToHexString(it.key)},isCurrent:${it.isCurrent}"
-            )
+            Log.d(TAG, "setCurrentNetworkKey:${ByteUtil.bytesToHexString(it.key)},isCurrent:${it.isCurrent}")
             MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager?.meshManagerApi?.meshNetwork?.let { meshNetwork ->
                 meshNetwork.updateNetKey(it)
             }
@@ -607,14 +625,14 @@ open class BaseMeshService : LifecycleService() {
     internal fun subscribeLightStatus(callback: MeshCallback) {
 //        MeshHandler.addRunnable(SUBSCRIBE_VENDOR_MODEL, false, false, callback)
         MeshHandler.addRunnable(
-            MeshMsgSender(
-                DOWNSTREAM_CALLBACK,
-                null,
-                null,
-                callback,
-                false,
-                false
-            )
+                MeshMsgSender(
+                        DOWNSTREAM_CALLBACK,
+                        null,
+                        null,
+                        callback,
+                        false,
+                        false
+                )
         )
     }
 
@@ -642,7 +660,7 @@ open class BaseMeshService : LifecycleService() {
         mNrfMeshManager?.meshMessageLiveData?.observe(this, Observer { meshMsg ->
             meshMsg?.apply {
                 Utils.printLog(
-                    TAG, """===>-mesh- meshMessageLiveDataResult:
+                        TAG, """===>-mesh- meshMessageLiveDataResult:
                             |${meshMsg}""".trimMargin()
                 )
 
@@ -659,20 +677,20 @@ open class BaseMeshService : LifecycleService() {
                         var callbackIterator = connectCallbacksIterator.next()
 
                         if (callbackIterator.value is MapCallback
-                            && meshMsg is VendorModelMessageStatus
+                                && meshMsg is VendorModelMessageStatus
                         ) {
                             var attrType =
-                                ByteUtil.bytesToHexString(
-                                    byteArrayOf(
-                                        parameter[1],
-                                        parameter[2]
+                                    ByteUtil.bytesToHexString(
+                                            byteArrayOf(
+                                                    parameter[1],
+                                                    parameter[2]
+                                            )
                                     )
-                                )
                             when (attrType) {
                                 ATTR_TYPE_COMMON_GET_QUADRUPLES -> {//获取四元组，pk、ps、dn、ds、pid
                                     decodeDevicePrimaryInfoAndFeedback(
-                                        callbackIterator,
-                                        connectCallbacksIterator
+                                            callbackIterator,
+                                            connectCallbacksIterator
                                     )
                                 }
                                 else -> {
@@ -683,12 +701,12 @@ open class BaseMeshService : LifecycleService() {
                                         if (meshMsg.mMessage is AccessMessage) {
                                             var pdus = (meshMsg.mMessage as AccessMessage).accessPdu
                                             Utils.printLog(
-                                                TAG,
-                                                "mesh msg opcode:${meshMsg.opCode},pus:${
-                                                    ByteUtil.bytesToHexString(
-                                                        pdus
-                                                    )
-                                                }"
+                                                    TAG,
+                                                    "mesh msg opcode:${meshMsg.opCode},pus:${
+                                                        ByteUtil.bytesToHexString(
+                                                                pdus
+                                                        )
+                                                    }"
                                             )
                                             map["accessPDU"] = ByteUtil.bytesToHexString(pdus)
                                         }
@@ -775,9 +793,9 @@ open class BaseMeshService : LifecycleService() {
      * @param uuid 设备产品唯一id，详情见(https://mxchip.yuque.com/vbs9010/lggpem/oi12gf)
      */
     private fun parseGroupCastParam(
-        message: VendorModelMessageStatus,
-        pid: String?,
-        uuid: String?
+            message: VendorModelMessageStatus,
+            pid: String?,
+            uuid: String?
     ) {
 
     }
@@ -789,15 +807,15 @@ open class BaseMeshService : LifecycleService() {
      * @param uuid 设备产品唯一类型，详情见(https://mxchip.yuque.com/vbs9010/lggpem/oi12gf)
      */
     private fun parseParam(
-        parameter: ByteArray,
-        pid: String?,
-        uuid: String?
+            parameter: ByteArray,
+            pid: String?,
+            uuid: String?
     ): String {
         if (parameter.isEmpty() || parameter.size < 2) {
             throw RuntimeException("received message params can not be null")
         }
         Utils.printLog(
-            TAG, "vendor msg:${ByteUtil.bytesToHexString(parameter)}"
+                TAG, "vendor msg:${ByteUtil.bytesToHexString(parameter)}"
         )
         //根据产品型号来解码对应的参数，参数以key&value&key&value形式来区分,key占两个字节，value占k个字节
         var res = "";
@@ -823,9 +841,9 @@ open class BaseMeshService : LifecycleService() {
      * 解析Pir传感器参数
      */
     private fun decodePirSensorParams(
-        pid: String?,
-        uuid: String?,
-        parameter: ByteArray
+            pid: String?,
+            uuid: String?,
+            parameter: ByteArray
     ): String {
         var res = "";
         val pirSensor = PirSensorBean();
@@ -835,7 +853,7 @@ open class BaseMeshService : LifecycleService() {
         var attrTypeLen = 2;
         while (i < parameter.size && parameter.size > 2) {
             val attrType: String = ByteUtil.bytesToHexString(
-                byteArrayOf(parameter[i], parameter[i + 1])
+                    byteArrayOf(parameter[i], parameter[i + 1])
             )
             //这里先不解析五元组
             if (attrType == ATTR_TYPE_COMMON_GET_QUADRUPLES) return "{}";
@@ -844,11 +862,11 @@ open class BaseMeshService : LifecycleService() {
                 ATTR_TYPE_GET_VERSION -> {
                     //解析版本号
                     attrValue = ByteUtil.bytesToHexString(
-                        byteArrayOf(
-                            parameter[ATTR_LEN + i],
-                            parameter[ATTR_LEN + i + 1],
-                            parameter[ATTR_LEN + i + 2]
-                        )
+                            byteArrayOf(
+                                    parameter[ATTR_LEN + i],
+                                    parameter[ATTR_LEN + i + 1],
+                                    parameter[ATTR_LEN + i + 2]
+                            )
                     )
                     pirSensor.version = generateVersionName(attrValue)
                     i += attrTypeLen + 3;
@@ -856,16 +874,16 @@ open class BaseMeshService : LifecycleService() {
                 DC.pirSensorCons[BIO_SENSER] -> {
                     //有人无人只占一个字节
                     attrValue = ByteUtil.bytesToHexString(
-                        byteArrayOf(parameter[ATTR_LEN + i])
+                            byteArrayOf(parameter[ATTR_LEN + i])
                     )
                     pirSensor.bioSenser =
-                        if (attrValue == DC.CODE_SWITCH_ON) BIO_SENSER_ON else BIO_SENSER_OFF
+                            if (attrValue == DC.CODE_SWITCH_ON) BIO_SENSER_ON else BIO_SENSER_OFF
                     i += attrTypeLen + 1
                 }
                 DC.pirSensorCons[REMAINING_ELECTRICITY] -> {
                     //电量只占一个字节
                     attrValue = ByteUtil.bytesToHexString(
-                        byteArrayOf(parameter[ATTR_LEN + i])
+                            byteArrayOf(parameter[ATTR_LEN + i])
                     )
                     pirSensor.remainingElectricity = attrValue.toInt(16).toString()
                     i += attrTypeLen + 1
@@ -890,9 +908,9 @@ open class BaseMeshService : LifecycleService() {
      * 解析插座，开关
      */
     private fun decodeSocketParams(
-        pid: String?,
-        uuid: String?,
-        parameter: ByteArray
+            pid: String?,
+            uuid: String?,
+            parameter: ByteArray
     ): String {
         var res = "";
         val socketBean = SocketBean();
@@ -902,7 +920,7 @@ open class BaseMeshService : LifecycleService() {
         var attrLen = 2;
         while (i < parameter.size && parameter.size > 2) {
             val attrType: String = ByteUtil.bytesToHexString(
-                byteArrayOf(parameter[i], parameter[i + 1])
+                    byteArrayOf(parameter[i], parameter[i + 1])
             )
             //这里先不解析五元组
             if (attrType == ATTR_TYPE_COMMON_GET_QUADRUPLES) return "{}";
@@ -911,37 +929,37 @@ open class BaseMeshService : LifecycleService() {
                 ATTR_TYPE_GET_VERSION -> {
                     //解析版本号
                     attrValue = ByteUtil.bytesToHexString(
-                        byteArrayOf(
-                            parameter[ATTR_LEN + i],
-                            parameter[ATTR_LEN + i + 1],
-                            parameter[ATTR_LEN + i + 2]
-                        )
+                            byteArrayOf(
+                                    parameter[ATTR_LEN + i],
+                                    parameter[ATTR_LEN + i + 1],
+                                    parameter[ATTR_LEN + i + 2]
+                            )
                     )
                     socketBean.version = generateVersionName(attrValue)
                     i += attrLen + 3;
                 }
                 DC.socketCons[SWITCH] -> {
                     attrValue = ByteUtil.bytesToHexString(
-                        byteArrayOf(parameter[ATTR_LEN + i])
+                            byteArrayOf(parameter[ATTR_LEN + i])
                     )
                     socketBean.switch =
-                        if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
+                            if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
                     i += attrLen + 1
                 }
                 DC.socketCons[SWITCH_SECOND] -> {
                     attrValue = ByteUtil.bytesToHexString(
-                        byteArrayOf(parameter[ATTR_LEN + i])
+                            byteArrayOf(parameter[ATTR_LEN + i])
                     )
                     socketBean.switchSecond =
-                        if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
+                            if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
                     i += attrLen + 1
                 }
                 DC.socketCons[SWITCH_THIRD] -> {
                     attrValue = ByteUtil.bytesToHexString(
-                        byteArrayOf(parameter[ATTR_LEN + i])
+                            byteArrayOf(parameter[ATTR_LEN + i])
                     )
                     socketBean.switchThird =
-                        if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
+                            if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
                     i += attrLen + 1
                 }
                 DC.socketCons[EVENT] -> {
@@ -960,9 +978,9 @@ open class BaseMeshService : LifecycleService() {
      * 解析灯的参数
      */
     private fun decodeLightParam(
-        pid: String?,
-        uuid: String?,
-        parameter: ByteArray
+            pid: String?,
+            uuid: String?,
+            parameter: ByteArray
     ): String {
         var res = "";
         val lightBean = LightBean();
@@ -971,7 +989,7 @@ open class BaseMeshService : LifecycleService() {
         var i = 1;
         while (i < parameter.size && parameter.size > 2) {
             val attrType: String = ByteUtil.bytesToHexString(
-                byteArrayOf(parameter[i], parameter[i + 1])
+                    byteArrayOf(parameter[i], parameter[i + 1])
             )
             //这里先不解析五元组
             if (attrType == ATTR_TYPE_COMMON_GET_QUADRUPLES) return "{}";
@@ -981,11 +999,11 @@ open class BaseMeshService : LifecycleService() {
                 ATTR_TYPE_GET_VERSION -> {
                     //解析版本号
                     attrValue = ByteUtil.bytesToHexString(
-                        byteArrayOf(
-                            parameter[ATTR_LEN + i],
-                            parameter[ATTR_LEN + i + 1],
-                            parameter[ATTR_LEN + i + 2]
-                        )
+                            byteArrayOf(
+                                    parameter[ATTR_LEN + i],
+                                    parameter[ATTR_LEN + i + 1],
+                                    parameter[ATTR_LEN + i + 2]
+                            )
                     )
                     lightBean.version = generateVersionName(attrValue)
                     i += ATTR_LEN + 3;
@@ -993,19 +1011,19 @@ open class BaseMeshService : LifecycleService() {
                 DC.lightCons[SWITCH] -> {
                     //开关只占一个字节
                     attrValue = ByteUtil.bytesToHexString(
-                        byteArrayOf(parameter[ATTR_LEN + i])
+                            byteArrayOf(parameter[ATTR_LEN + i])
                     )
 
                     lightBean.switch =
-                        if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
+                            if (attrValue == DC.CODE_SWITCH_ON) SWITCH_ON else SWITCH_OFF
                     i += ATTR_LEN + 1;
                 }
                 DC.lightCons[COLOR] -> {
 
                     var h = ByteUtil.byteArrayToIntWithBigEnd(
-                        byteArrayOf(
-                            parameter[ATTR_LEN + i], parameter[ATTR_LEN + i + 1]
-                        )
+                            byteArrayOf(
+                                    parameter[ATTR_LEN + i], parameter[ATTR_LEN + i + 1]
+                            )
                     )
                     var s = parameter[ATTR_LEN + i + 1 + 1].toInt()
 
@@ -1018,19 +1036,19 @@ open class BaseMeshService : LifecycleService() {
                 }
                 DC.lightCons[LIGHTNESS_LEVEL] -> {
                     lightBean.lightnessLevel = ByteUtil.byteArrayToInt(
-                        byteArrayOf(
-                            parameter[ATTR_LEN + i],
-                            parameter[ATTR_LEN + i + 1]
-                        )
+                            byteArrayOf(
+                                    parameter[ATTR_LEN + i],
+                                    parameter[ATTR_LEN + i + 1]
+                            )
                     )
                     i += ATTR_LEN + 2
                 }
                 DC.lightCons[COLOR_TEMPERATURE] -> {
                     lightBean.colorTemperature = ByteUtil.byteArrayToInt(
-                        byteArrayOf(
-                            parameter[ATTR_LEN + i],
-                            parameter[ATTR_LEN + i + 1]
-                        )
+                            byteArrayOf(
+                                    parameter[ATTR_LEN + i],
+                                    parameter[ATTR_LEN + i + 1]
+                            )
                     )
                     i += ATTR_LEN + 2
                 }
@@ -1058,9 +1076,9 @@ open class BaseMeshService : LifecycleService() {
     }
 
     fun parseLightStatus(
-        params: ByteArray,
-        callback: MapCallback,
-        map: HashMap<String, Any>
+            params: ByteArray,
+            callback: MapCallback,
+            map: HashMap<String, Any>
     ) {
 //        var modeByte = params[0]
 //        var modeBits = ByteUtil.byteTobitArray(modeByte)
@@ -1205,16 +1223,16 @@ open class BaseMeshService : LifecycleService() {
      * 解析四元组
      */
     private fun MeshMessage.decodeDevicePrimaryInfoAndFeedback(
-        callbackIterator: MutableMap.MutableEntry<String, Any>,
-        connectCallbacksIterator: MutableIterator<MutableMap.MutableEntry<String, Any>>
+            callbackIterator: MutableMap.MutableEntry<String, Any>,
+            connectCallbacksIterator: MutableIterator<MutableMap.MutableEntry<String, Any>>
     ) {
         Utils.printLog(
-            TAG,
-            "quadruple size:${parameter.size} ,content：${
-                String(
-                    parameter
-                )
-            }"
+                TAG,
+                "quadruple size:${parameter.size} ,content：${
+                    String(
+                            parameter
+                    )
+                }"
         )
 
         if (parameter.size >= 40 && callbackIterator.key == MeshSDK.CALLBACK_GET_IDENTITY) {
@@ -1226,13 +1244,13 @@ open class BaseMeshService : LifecycleService() {
                     when (quadrupleIndex) {
                         0 -> {//pk
                             var pkBytes =
-                                ByteArray(index - preIndex)
+                                    ByteArray(index - preIndex)
                             System.arraycopy(
-                                parameter,
-                                preIndex,
-                                pkBytes,
-                                0,
-                                pkBytes.size
+                                    parameter,
+                                    preIndex,
+                                    pkBytes,
+                                    0,
+                                    pkBytes.size
                             )
                             map.put("pk", String(pkBytes))
                             quadrupleIndex++
@@ -1240,13 +1258,13 @@ open class BaseMeshService : LifecycleService() {
                         }
                         1 -> {//ps
                             var psBytes =
-                                ByteArray(index - preIndex)
+                                    ByteArray(index - preIndex)
                             System.arraycopy(
-                                parameter,
-                                preIndex,
-                                psBytes,
-                                0,
-                                psBytes.size
+                                    parameter,
+                                    preIndex,
+                                    psBytes,
+                                    0,
+                                    psBytes.size
                             )
                             map.put("ps", String(psBytes))
                             quadrupleIndex++
@@ -1254,13 +1272,13 @@ open class BaseMeshService : LifecycleService() {
                         }
                         2 -> {//dn
                             var dnBytes =
-                                ByteArray(index - preIndex)
+                                    ByteArray(index - preIndex)
                             System.arraycopy(
-                                parameter,
-                                preIndex,
-                                dnBytes,
-                                0,
-                                dnBytes.size
+                                    parameter,
+                                    preIndex,
+                                    dnBytes,
+                                    0,
+                                    dnBytes.size
                             )
                             map.put("dn", String(dnBytes))
                             quadrupleIndex++
@@ -1268,13 +1286,13 @@ open class BaseMeshService : LifecycleService() {
                         }
                         3 -> {//ds
                             var dsBytes =
-                                ByteArray(index - preIndex)
+                                    ByteArray(index - preIndex)
                             System.arraycopy(
-                                parameter,
-                                preIndex,
-                                dsBytes,
-                                0,
-                                dsBytes.size
+                                    parameter,
+                                    preIndex,
+                                    dsBytes,
+                                    0,
+                                    dsBytes.size
                             )
                             map.put("ds", String(dsBytes))
                             quadrupleIndex++
@@ -1282,13 +1300,13 @@ open class BaseMeshService : LifecycleService() {
                         }
                         4 -> {//product_id
                             var pidBytes =
-                                ByteArray(index - preIndex)
+                                    ByteArray(index - preIndex)
                             System.arraycopy(
-                                parameter,
-                                preIndex,
-                                pidBytes,
-                                0,
-                                pidBytes.size
+                                    parameter,
+                                    preIndex,
+                                    pidBytes,
+                                    0,
+                                    pidBytes.size
                             )
                             map.put("pid", String(pidBytes))
                             quadrupleIndex++
@@ -1298,8 +1316,8 @@ open class BaseMeshService : LifecycleService() {
                 }
             }
             map.put(
-                "code",
-                Constants.ConnectState.COMMON_SUCCESS.code
+                    "code",
+                    Constants.ConnectState.COMMON_SUCCESS.code
             )
             map.forEach { (t, u) ->
                 Log.e(TAG, "key:$t,value:$u")
