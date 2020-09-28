@@ -113,10 +113,9 @@ object MeshSDK{
             scanResultCallback: ArrayMapCallback,
             errCallback: IntCallback
     ) {
-        if (isScanning() != null) {
-            if (isScanning()!!) {
-                stopScan()
-            }
+        if (isScanning()) {
+            Log.d(TAG,"===>-mesh-扫描前，发现正在扫描,现在先停止扫描")
+            stopScan()
         }
         disConnect()
         var scanCallback: ScanCallback = object :
@@ -1015,8 +1014,21 @@ object MeshSDK{
      */
     fun connect(context: Context, networkKey: String, callback: MapCallback) {
         init(context, object : BooleanCallback() {
-            override fun onResult(boolean: Boolean) {
-                if (boolean) {
+            override fun onResult(isInit: Boolean) {
+
+                if(!isInit){
+                    Log.d(TAG, "===>-发现初始化失败,连接结束")
+                    return
+                }
+
+                //如果有节点才去连接gatt
+                if (null == MeshHelper.getProvisionNode()
+                        || MeshHelper.getProvisionNode()!!.size <= 0) {
+                    Log.d(TAG, "===>-发现没有节点,连接结束")
+                    return
+                }
+
+                if (isInit) {
                     var map = HashMap<String, Any>()
                     doBaseCheck(null, map, callback)
                     //进行一下包含判断，因为重连的时候也会走这个
