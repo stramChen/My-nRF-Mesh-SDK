@@ -664,6 +664,26 @@ object MeshHelper {
         MeshProxyService.mMeshProxyService?.unSubscribeLightStatus()
     }
 
+    /**
+     * 检查设备数据的完整性,如果不完整，则把这个节点给删除掉
+     * true 完整
+     * false 不完整
+     */
+    fun checkDeviceDataIntegrity(uuid:String):Boolean{
+        getProvisionNode()?.forEach { node ->
+            if (node.uuid == uuid) {
+                if(node.elements?.values?.size == 0
+                        || node.elements?.values == null){
+                    Log.d(TAG,"===>-mesh- 检查到数据不完整，停止发送消息，并删除节点")
+                    deleteProvisionNode(getProvisionedNodeByUUID(uuid))
+                    return false
+                }
+            }
+        }
+        return true
+    }
+
+
     fun clear() {
         getMeshNetwork()?.apply {
             this.nodes?.clear()

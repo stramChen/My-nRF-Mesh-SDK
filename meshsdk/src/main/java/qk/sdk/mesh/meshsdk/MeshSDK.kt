@@ -807,6 +807,11 @@ object MeshSDK{
             timeout: Boolean = false,
             retry: Boolean = false
     ) {
+        //检查一下数据库数据的完整性，避免有脏数据
+        if(!MeshHelper.checkDeviceDataIntegrity(uuid)){
+            return
+        }
+
         //拼接参数
         val param = combineAttTypeAndAttValue(param);
         Utils.printLog(
