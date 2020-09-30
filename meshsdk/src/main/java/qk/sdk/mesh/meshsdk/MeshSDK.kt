@@ -53,6 +53,9 @@ object MeshSDK{
     fun init(context: Context, callback: BooleanCallback? = null) {
         mContext = context
         Utils.mContext = context
+        if (!LocalPreferences.isInit()) {
+            LocalPreferences.init(context)
+        }
         mContext?.apply {
             if (!Utils.isServiceExisted(this, "qk.sdk.mesh.meshsdk.MeshHelper\$MeshProxyService")) {
                 MeshHelper.restartService(applicationContext, object : MapCallback() {

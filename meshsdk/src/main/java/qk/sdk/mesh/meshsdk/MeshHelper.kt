@@ -29,7 +29,6 @@ object MeshHelper {
     // 初始化 mesh
     fun initMesh(context: Context) {
         context.startService(Intent(context, MeshProxyService::class.java))
-        LocalPreferences.init(context)
     }
 
     // 检查蓝牙权限
