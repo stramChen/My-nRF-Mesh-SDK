@@ -22,8 +22,6 @@ import qk.sdk.mesh.meshsdk.util.*
 import qk.sdk.mesh.meshsdk.util.Constants.ConnectState
 import java.lang.Thread.sleep
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 import qk.sdk.mesh.meshsdk.bean.DeviceConstantsCode as DC
 
 
@@ -114,7 +112,7 @@ object MeshSDK{
             errCallback: IntCallback
     ) {
         if (isScanning()) {
-            Log.d(TAG,"===>-mesh-扫描前，发现正在扫描,现在先停止扫描")
+            Log.d(TAG, "===>-mesh-扫描前，发现正在扫描,现在先停止扫描")
             stopScan()
         }
         disConnect()
@@ -171,16 +169,15 @@ object MeshSDK{
             //发现偶然会有在进入配网的时候连接还没断
             if(getGattConnectStatus() == BluetoothGatt.STATE_CONNECTED
                     || getGattConnectStatus() == BluetoothGatt.STATE_CONNECTING){
-                Log.d(TAG,"===>-mesh-配网前发现Gatt正在连接或者已连接，现在去断开连接")
+                Log.d(TAG, "===>-mesh-配网前发现Gatt正在连接或者已连接，现在去断开连接")
                 innerDisConnect()
             }
-            Log.d(TAG,"===>-mesh-配网前发现Gatt并没有断开连接,现在开始等待Gatt断开连接然后去配网")
+            Log.d(TAG, "===>-mesh-配网前发现Gatt并没有断开连接,现在开始等待Gatt断开连接然后去配网")
             MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager
-            ?.connectionState?.observe(MeshHelper.MeshProxyService.mMeshProxyService!!
-                            , object : Observer<CallbackMsg> {
+            ?.connectionState?.observe(MeshHelper.MeshProxyService.mMeshProxyService!!, object : Observer<CallbackMsg> {
                         override fun onChanged(msg: CallbackMsg?) {
-                            if(ConnectState.DISCONNECTED.code == msg?.code){
-                                Log.d(TAG,"===>-mesh-已经断开连接回调,现在要真的去配网了")
+                            if (ConnectState.DISCONNECTED.code == msg?.code) {
+                                Log.d(TAG, "===>-mesh-已经断开连接回调,现在要真的去配网了")
                                 MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager
                                         ?.connectionState?.removeObserver(this)
                                 realStartProvision(uuid, callback, networkKey)
@@ -1021,7 +1018,7 @@ object MeshSDK{
         init(context, object : BooleanCallback() {
             override fun onResult(isInit: Boolean) {
 
-                if(!isInit){
+                if (!isInit) {
                     Log.d(TAG, "===>-发现初始化失败,连接结束")
                     return
                 }
@@ -1059,8 +1056,13 @@ object MeshSDK{
                         //连接前检查一下需要释放的资源
                         checkResourceBeforeConnect()
 
-                        Utils.printLog(TAG, "===>-mesh- connect start scan")
                         setCurrentNetworkKey(networkKey)
+                        if (isScanning()) {
+                            Log.d(TAG, "===>-mesh-扫描前，发现正在扫描,现在先停止扫描")
+                            stopScan()
+                        }
+                        Utils.printLog(TAG, "===>-mesh- connect start scan")
+
                         MeshHelper.startScan(BleMeshManager.MESH_PROXY_UUID, object :
                                 ScanCallback {
                             override fun onScanResult(
