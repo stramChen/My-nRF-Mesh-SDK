@@ -263,6 +263,8 @@ object MeshSDK{
                                                                 ConnectState.PROVISION_SUCCESS.msg
                                                         )
                                                 )
+                                                //这里配网完成将设备的心跳状态置为在线
+                                                MeshHelper.MeshProxyService.mMeshProxyService?.mHeartBeatMap?.set(uuid, 1);
                                             }
                                             ConnectState.DISCONNECTED.code -> {
                                                 //连接断开，自动寻找代理节点重连
@@ -1286,7 +1288,7 @@ object MeshSDK{
     }
 
     /**
-     * 订阅两个组播地址D000,D002,D003
+     * 订阅三个组播地址D000,D002,D003
      */
     private fun subscribeThreeGroups() {
         createGroup(SUBSCRIBE_ALL_DEVICE, object : BooleanCallback() {
