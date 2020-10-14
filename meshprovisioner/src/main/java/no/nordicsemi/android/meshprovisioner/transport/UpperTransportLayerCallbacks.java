@@ -26,6 +26,8 @@ import java.util.UUID;
 
 import androidx.annotation.Nullable;
 
+import no.nordicsemi.android.meshprovisioner.NetworkKey;
+
 /**
  * Upper transport layer call backs
  */
@@ -48,7 +50,7 @@ public interface UpperTransportLayerCallbacks {
      *
      * @param aid application key identifier
      */
-    byte[] getApplicationKey(final int aid);
+    byte[] getApplicationKey(NetworkKey networkKey,final int aid);
 
 
     /**

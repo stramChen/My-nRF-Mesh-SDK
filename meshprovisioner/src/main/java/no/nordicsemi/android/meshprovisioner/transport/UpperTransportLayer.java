@@ -262,7 +262,7 @@ abstract class UpperTransportLayer extends AccessLayer {
             //If its a device key that was used to encrypt the message we need to create a device nonce to decrypt it
             nonce = createDeviceNonce(accessMessage.getAszmic(), accessMessage.getSequenceNumber(), accessMessage.getSrc(), accessMessage.getDst(), accessMessage.getIvIndex());
         } else {
-            key = mUpperTransportLayerCallbacks.getApplicationKey(accessMessage.getAid());
+            key = mUpperTransportLayerCallbacks.getApplicationKey(accessMessage.getNetworkKey(),accessMessage.getAid());
             if (key == null)
                 throw new IllegalArgumentException("Unable to find the app key to decrypt the message");
 

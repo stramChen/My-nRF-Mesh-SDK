@@ -401,6 +401,7 @@ public class MeshManagerApi implements MeshMngrApi {
                     break;
             }
         } catch (ExtendedInvalidCipherTextException ex) {
+            ex.printStackTrace();
             //TODO handle decryption failure
         }
     }
@@ -1157,10 +1158,11 @@ public class MeshManagerApi implements MeshMngrApi {
         }
 
         @Override
-        public byte[] getApplicationKey(final int aid) {
+        public byte[] getApplicationKey(NetworkKey networkKey,final int aid) {
             for (ApplicationKey key : mMeshNetwork.getAppKeys()) {
                 final byte[] k = key.getKey();
-                if (aid == SecureUtils.calculateK4(k)) {
+                if (aid == SecureUtils.calculateK4(k)
+                        && key.getBoundNetKeyIndex() == networkKey.keyIndex) {
                     return key.getKey();
                 }
             }

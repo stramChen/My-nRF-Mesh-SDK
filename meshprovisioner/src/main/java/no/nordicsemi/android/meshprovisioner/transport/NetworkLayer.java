@@ -247,7 +247,8 @@ abstract class NetworkLayer extends LowerTransportLayer {
      * @param ivIndex                 IV Index of the network.
      * @return complete {@link Message} that was successfully parsed or null otherwise.
      */
-    final Message parseMeshMessage(@NonNull final ProvisionedMeshNode node,
+    final Message parseMeshMessage(@NonNull NetworkKey networkKey,
+                                   @NonNull final ProvisionedMeshNode node,
                                    @NonNull final byte[] data,
                                    @NonNull final byte[] networkHeader,
                                    @NonNull final byte[] decryptedNetworkPayload,
@@ -263,7 +264,7 @@ abstract class NetworkLayer extends LowerTransportLayer {
         if (ctl == 1) {
             return parseControlMessage(provisioner.getProvisionerAddress(), data, networkHeader, decryptedNetworkPayload, src, sequenceNumber, ivIndex);
         } else {
-            return parseAccessMessage(data, networkHeader, decryptedNetworkPayload, src, sequenceNumber, ivIndex);
+            return parseAccessMessage(networkKey,data, networkHeader, decryptedNetworkPayload, src, sequenceNumber, ivIndex);
         }
     }
 
@@ -279,7 +280,8 @@ abstract class NetworkLayer extends LowerTransportLayer {
      * @return access message
      */
     @VisibleForTesting
-    private AccessMessage parseAccessMessage(@NonNull final byte[] data,
+    private AccessMessage parseAccessMessage(@NonNull NetworkKey networkKey,
+                                             @NonNull final byte[] data,
                                              @NonNull final byte[] networkHeader,
                                              @NonNull final byte[] decryptedNetworkPayload,
                                              final int src,
@@ -323,6 +325,7 @@ abstract class NetworkLayer extends LowerTransportLayer {
                     message.setTtl(ttl);
                     message.setSrc(src);
                     message.setDst(dst);
+                    message.setNetworkKey(networkKey);
                     parseUpperTransportPDU(message);
                     parseAccessLayerPDU(message);
                 }
@@ -347,6 +350,7 @@ abstract class NetworkLayer extends LowerTransportLayer {
                 message.setTtl(ttl);
                 message.setSrc(src);
                 message.setDst(dst);
+                message.setNetworkKey(networkKey);
                 message.setSequenceNumber(sequenceNumber);
                 parseUpperTransportPDU(message);
                 parseAccessLayerPDU(message);

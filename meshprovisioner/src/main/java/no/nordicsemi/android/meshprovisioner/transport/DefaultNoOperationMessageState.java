@@ -12,6 +12,7 @@ import java.util.UUID;
 import no.nordicsemi.android.meshprovisioner.Group;
 import no.nordicsemi.android.meshprovisioner.MeshManagerApi;
 import no.nordicsemi.android.meshprovisioner.MeshNetwork;
+import no.nordicsemi.android.meshprovisioner.NetworkKey;
 import no.nordicsemi.android.meshprovisioner.control.BlockAcknowledgementMessage;
 import no.nordicsemi.android.meshprovisioner.control.TransportControlMessage;
 import no.nordicsemi.android.meshprovisioner.opcodes.ApplicationMessageOpCodes;
@@ -50,7 +51,8 @@ class DefaultNoOperationMessageState extends MeshMessageState {
         return null;
     }
 
-    void parseMeshPdu(@NonNull final ProvisionedMeshNode node,
+    void parseMeshPdu(@NonNull final NetworkKey networkKey,
+                      @NonNull final ProvisionedMeshNode node,
                       @NonNull final byte[] pdu,
                       @NonNull final byte[] networkHeader,
                       @NonNull final byte[] decryptedNetworkPayload,
@@ -58,7 +60,7 @@ class DefaultNoOperationMessageState extends MeshMessageState {
                       @NonNull final byte[] sequenceNumber) {
         final Message message;
         try {
-            message = mMeshTransport.parseMeshMessage(node, pdu, networkHeader, decryptedNetworkPayload, ivIndex, sequenceNumber);
+            message = mMeshTransport.parseMeshMessage(networkKey,node, pdu, networkHeader, decryptedNetworkPayload, ivIndex, sequenceNumber);
             if (message != null) {
                 if (message instanceof AccessMessage) {
                     parseAccessMessage((AccessMessage) message);
