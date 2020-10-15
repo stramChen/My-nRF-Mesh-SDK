@@ -119,6 +119,7 @@ open class BaseMeshService : LifecycleService() {
 
     override fun onDestroy() {
         Log.d(TAG, "===>-mesh- service被销毁了<<<<<<<<<<<")
+        stopScan()
         disConnect()
         sServiceLifecycleLintener?.onDestory()
         super.onDestroy()
