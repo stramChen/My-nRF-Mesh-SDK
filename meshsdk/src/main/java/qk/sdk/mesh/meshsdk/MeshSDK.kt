@@ -3,6 +3,7 @@ package qk.sdk.mesh.meshsdk
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothGatt
 import android.content.Context
+import android.content.Intent
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -231,6 +232,7 @@ object MeshSDK{
                                                         ConnectState.COMMON_SUCCESS.msg
                                                 )
                                         )
+                                        isReconnect.set(false)
                                         isConnecting.set(false)
                                         //开始启动配置邀请
                                         MeshHelper.startProvision(mExtendedBluetoothDeviceMap[uuidUpcase]!!,
@@ -280,10 +282,11 @@ object MeshSDK{
                                                 }
                                                 //如果已经配网成功之后，突然断连接，则可能是网关配网成功后的
                                                 //蓝牙重启操作，因此需要进行重连尝试
-                                                if (hasProvisioned && needReconnect) {
-                                                    MeshHelper.unRegisterConnectListener()
-                                                    tryReconnectAfterProvison(networkKey, map, callback)
-                                                } else if (ConnectState.DISCONNECTED.code == msg.code && !hasProvisionStart) {
+//                                                if (hasProvisioned && needReconnect) {
+//                                                    MeshHelper.unRegisterConnectListener()
+//                                                    tryReconnectAfterProvison(networkKey, map, callback)
+//                                                } else
+                                                    if (ConnectState.DISCONNECTED.code == msg.code && !hasProvisionStart) {
                                                     doMapCallback(map, callback, msg)
                                                 } else {
                                                     MeshHelper.unRegisterConnectListener()
@@ -2071,6 +2074,13 @@ object MeshSDK{
      */
     fun clearAllMesh(booleanCallback: BooleanCallback?) {
         MeshHelper.MeshProxyService.mMeshProxyService?.deleteCurrentMeshNetwork(booleanCallback)
+    }
+
+    /**
+     * 停止服务
+     */
+    fun destoryService(context: Context) {
+        context.stopService(Intent(context, MeshHelper.MeshProxyService::class.java))
     }
 
     fun isScanning(): Boolean {
