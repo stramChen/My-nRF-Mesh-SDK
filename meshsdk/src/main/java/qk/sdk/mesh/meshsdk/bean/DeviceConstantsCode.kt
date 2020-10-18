@@ -64,35 +64,42 @@ const val ATTR_TYPE_VIRTUAL_BUTTON = "0700" // 虚拟按钮
 //佛照产品
 //产品PID
 //五路灯
-const val PRODUCT_ID_LIGHT_5 = "4752526"
+@JvmField
+val PRODUCT_ID_LIGHT_5 = MeshProduct(10004, arrayListOf("4752526"))
 
 //var PRODUCT_TYPE_LIGHT_2 = arrayListOf<String>("4752526")
 //var PRODUCT_TYPE_LIGHT_5 = arrayListOf<String>("3808464")
 
 //二路灯
-const val PRODUCT_ID_LIGHT_2 = "3808464"
+@JvmField
+val PRODUCT_ID_LIGHT_2 = MeshProduct(10003, arrayListOf("3808464","5494080"))
 
 //单火开关
-const val PRODUCT_ID_SOCKKET_SINGLE = "4284236"
+@JvmField
+val PRODUCT_ID_SOCKKET_SINGLE = MeshProduct(10006, arrayListOf("4284236","5504728"))
 
 //var PRODUCT_TYPE_SOCKET = arrayListOf<String>("4284236","4791464","4139203")
 //var PRODUCT_TYPE_SOCKET_DOBULE = arrayListOf<String>("4284236","4791464","4139203")
 //var PRODUCT_TYPE_SOCKET_TRIPLE = arrayListOf<String>("4284236","4791464","4139203")
 
 //双键单火开关
-const val PRODUCT_ID_SOCKKET_DOBULE = "4791464"
+@JvmField
+val PRODUCT_ID_SOCKKET_DOBULE = MeshProduct(10007, arrayListOf("4791464"))
 //三键单火开关
-const val PRODUCT_ID_SOCKKET_TRIPLE = "4139203"
+@JvmField
+val PRODUCT_ID_SOCKKET_TRIPLE = MeshProduct(10008, arrayListOf("4139203"))
 
 //Pir传感器
-const val PRODUCT_ID_PIR_SENSOR = "3987829"
+@JvmField
+val PRODUCT_ID_PIR_SENSOR = MeshProduct(10016, arrayListOf("3987829"))
 
-var PRODUCT_TYPE_PIR_SENSOR = arrayListOf<String>("3987829")
+//var PRODUCT_TYPE_PIR_SENSOR = arrayListOf<String>("3987829")
 
 //网关
-const val PRODUCT_ID_GATEWAY = "3808465"
+@JvmField
+val PRODUCT_ID_GATEWAY = MeshProduct(10060, arrayListOf("3808465"))
 
-var PRODUCT_TYPE_GATEWAY = arrayListOf<String>("3808465")
+//var PRODUCT_TYPE_GATEWAY = arrayListOf<String>("3808465")
 
 //智家精灵产品
 ////五路灯

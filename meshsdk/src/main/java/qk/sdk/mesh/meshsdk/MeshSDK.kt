@@ -21,12 +21,13 @@ import qk.sdk.mesh.meshsdk.mesh.BleMeshManager
 import qk.sdk.mesh.meshsdk.service.BaseMeshService
 import qk.sdk.mesh.meshsdk.util.*
 import qk.sdk.mesh.meshsdk.util.Constants.ConnectState
+import rx.schedulers.Schedulers
 import java.lang.Thread.sleep
 import java.util.concurrent.atomic.AtomicBoolean
 import qk.sdk.mesh.meshsdk.bean.DeviceConstantsCode as DC
 
 
-object MeshSDK{
+object MeshSDK {
     private val TAG = "MeshSDK"
     private var mContext: Context? = null
     private var mExtendedBluetoothDeviceMap = HashMap<String, ExtendedBluetoothDevice>()
@@ -169,16 +170,16 @@ object MeshSDK{
      * 注意：android的networkKey都必须是大写的
      */
     fun startProvision(uuid: String, networkKey: String, callback: MapCallback) {
-        if(getGattConnectStatus() != BluetoothGatt.STATE_DISCONNECTED){
+        if (getGattConnectStatus() != BluetoothGatt.STATE_DISCONNECTED) {
             //发现偶然会有在进入配网的时候连接还没断
-            if(getGattConnectStatus() == BluetoothGatt.STATE_CONNECTED
-                    || getGattConnectStatus() == BluetoothGatt.STATE_CONNECTING){
+            if (getGattConnectStatus() == BluetoothGatt.STATE_CONNECTED
+                    || getGattConnectStatus() == BluetoothGatt.STATE_CONNECTING) {
                 Log.d(TAG, "===>-mesh-配网前发现Gatt正在连接或者已连接，现在去断开连接")
                 innerDisConnect()
             }
             Log.d(TAG, "===>-mesh-配网前发现Gatt并没有断开连接,现在开始等待Gatt断开连接然后去配网")
             MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager
-            ?.connectionState?.observe(MeshHelper.MeshProxyService.mMeshProxyService!!, object : Observer<CallbackMsg> {
+                    ?.connectionState?.observe(MeshHelper.MeshProxyService.mMeshProxyService!!, object : Observer<CallbackMsg> {
                         override fun onChanged(msg: CallbackMsg?) {
                             if (ConnectState.DISCONNECTED.code == msg?.code) {
                                 Log.d(TAG, "===>-mesh-已经断开连接回调,现在要真的去配网了")
@@ -188,7 +189,7 @@ object MeshSDK{
                             }
                         }
                     })
-        }else{
+        } else {
             realStartProvision(uuid, callback, networkKey)
         }
     }
@@ -286,7 +287,7 @@ object MeshSDK{
 //                                                    MeshHelper.unRegisterConnectListener()
 //                                                    tryReconnectAfterProvison(networkKey, map, callback)
 //                                                } else
-                                                    if (ConnectState.DISCONNECTED.code == msg.code && !hasProvisionStart) {
+                                                if (ConnectState.DISCONNECTED.code == msg.code && !hasProvisionStart) {
                                                     doMapCallback(map, callback, msg)
                                                 } else {
                                                     MeshHelper.unRegisterConnectListener()
@@ -813,7 +814,7 @@ object MeshSDK{
             retry: Boolean = false
     ) {
         //检查一下数据库数据的完整性，避免有脏数据
-        if(!MeshHelper.checkDeviceDataIntegrity(uuid)){
+        if (!MeshHelper.checkDeviceDataIntegrity(uuid)) {
             return
         }
 
@@ -955,17 +956,17 @@ object MeshSDK{
         var param: ArrayList<Pair<String?, String?>?>? = ArrayList()
         properties?.forEach {
             it?.let {
-                when (productId) {
-                    PRODUCT_ID_LIGHT_2,
-                    PRODUCT_ID_LIGHT_5 -> {
+                when {
+                    PRODUCT_ID_LIGHT_2.productKeys.contains(productId)
+                            || PRODUCT_ID_LIGHT_5.productKeys.contains(productId) -> {
                         param!!.add(Pair(DC.lightCons[it], null))
                     }
-                    PRODUCT_ID_SOCKKET_SINGLE,
-                    PRODUCT_ID_SOCKKET_DOBULE,
-                    PRODUCT_ID_SOCKKET_TRIPLE -> {
+                    PRODUCT_ID_SOCKKET_SINGLE.productKeys.contains(productId)
+                            || PRODUCT_ID_SOCKKET_DOBULE.productKeys.contains(productId)
+                            || PRODUCT_ID_SOCKKET_TRIPLE.productKeys.contains(productId) -> {
                         param!!.add(Pair(DC.socketCons[it], null))
                     }
-                    PRODUCT_ID_PIR_SENSOR -> {
+                    PRODUCT_ID_PIR_SENSOR.productKeys.contains(productId) -> {
                         param!!.add(Pair(DC.pirSensorCons[it], null))
                     }
                     else -> {
@@ -1333,7 +1334,7 @@ object MeshSDK{
                     MeshHelper.MeshProxyService.mMeshProxyService?.getCurrentNetworkKeyStr();
             getAllApplicationKey(networkKey!!, object : ArrayStringCallback {
                 override fun onResult(result: ArrayList<String>) {
-//                    var newParam = ""
+//                    var newParam = ""2
                     var newParam = "0100" + "010100"
                     //如果消息有参数，消息参数需加上tid，规则：秒级时间戳余255
                     var timeCuts = MxMeshUtil.generateTid()
@@ -1860,7 +1861,7 @@ object MeshSDK{
                 Pair(DC.lightCons[COLOR_TEMPERATURE], null),
                 Pair(DC.lightCons[SWITCH], null)
         )
-        if (productID.toString() == PRODUCT_ID_LIGHT_5) {
+        if (PRODUCT_ID_LIGHT_5.productKeys.contains(productID.toString())) {
             params.addAll(
                     listOf(
                             Pair(DC.lightCons[COLOR], null),
@@ -2041,30 +2042,40 @@ object MeshSDK{
         Utils.printLog(TAG, "===>-mesh- 开始 获取所有节点状态");
         getProvisionedNodes(object : ArrayMapCallback {
             override fun onResult(result: ArrayList<HashMap<String, Any>>) {
-                result.forEach {
-                    val productId = MxMeshUtil.getProductIdByUUID(it["uuid"] as String).toString();
-                    var param: List<String?>? = null
-                    when (productId) {
-                        PRODUCT_ID_LIGHT_2,
-                        PRODUCT_ID_LIGHT_5 -> {
-                            param = listOf(SWITCH)
-                        }
-                        PRODUCT_ID_SOCKKET_SINGLE,
-                        PRODUCT_ID_SOCKKET_DOBULE,
-                        PRODUCT_ID_SOCKKET_TRIPLE -> {
-                            param = listOf(SWITCH)
-                        }
-                        PRODUCT_ID_PIR_SENSOR -> {
-                            param = listOf(REMAINING_ELECTRICITY)
-                        }
+                rx.Observable.create<String> {
+                    result.forEach {
+                        fetchDeviceOnlineStatus(it, callback)
+                        sleep(300)
                     }
-                    getDeviceCurrentStatus(it["uuid"] as String,
-                            param, object : StringCallback() {
-                        override fun onResultMsg(msg: String) {
-                            callback.onResultMsg(msg)
-                        }
-                    })
-                }
+                }.subscribeOn(Schedulers.io()).subscribe()
+            }
+        })
+    }
+
+    /**
+     * 获取单个设备的在离线状态命令
+     */
+    fun fetchDeviceOnlineStatus(map: HashMap<String, Any>, callback: StringCallback) {
+        val productId = MxMeshUtil.getProductIdByUUID(map["uuid"] as String).toString();
+        var param: List<String?>? = null
+        when{
+            PRODUCT_ID_LIGHT_2.productKeys.contains(productId)
+                    || PRODUCT_ID_LIGHT_5.productKeys.contains(productId) -> {
+                param = listOf(SWITCH)
+            }
+            PRODUCT_ID_SOCKKET_SINGLE.productKeys.contains(productId)
+                    || PRODUCT_ID_SOCKKET_DOBULE.productKeys.contains(productId)
+                    || PRODUCT_ID_SOCKKET_TRIPLE.productKeys.contains(productId) -> {
+                param = listOf(SWITCH)
+            }
+            PRODUCT_ID_PIR_SENSOR.productKeys.contains(productId) -> {
+                param = listOf(REMAINING_ELECTRICITY)
+            }
+        }
+        getDeviceCurrentStatus(map["uuid"] as String,
+                param, object : StringCallback() {
+            override fun onResultMsg(msg: String) {
+                callback.onResultMsg(msg)
             }
         })
     }
@@ -2108,7 +2119,7 @@ object MeshSDK{
     /**
      * 设置gatt连接状态监听
      */
-    fun setBleConnectStatusListener(bleStatusCallbacks: BleStatusCallbacks){
+    fun setBleConnectStatusListener(bleStatusCallbacks: BleStatusCallbacks) {
         MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager
                 ?.setBleConnectListener(bleStatusCallbacks)
     }
