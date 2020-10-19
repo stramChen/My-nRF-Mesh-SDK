@@ -957,16 +957,16 @@ object MeshSDK {
         properties?.forEach {
             it?.let {
                 when {
-                    PRODUCT_ID_LIGHT_2.productKeys.contains(productId)
-                            || PRODUCT_ID_LIGHT_5.productKeys.contains(productId) -> {
+                    PRODUCT_ID_LIGHT_2.productIds.contains(productId)
+                            || PRODUCT_ID_LIGHT_5.productIds.contains(productId) -> {
                         param!!.add(Pair(DC.lightCons[it], null))
                     }
-                    PRODUCT_ID_SOCKKET_SINGLE.productKeys.contains(productId)
-                            || PRODUCT_ID_SOCKKET_DOBULE.productKeys.contains(productId)
-                            || PRODUCT_ID_SOCKKET_TRIPLE.productKeys.contains(productId) -> {
+                    PRODUCT_ID_SOCKKET_SINGLE.productIds.contains(productId)
+                            || PRODUCT_ID_SOCKKET_DOBULE.productIds.contains(productId)
+                            || PRODUCT_ID_SOCKKET_TRIPLE.productIds.contains(productId) -> {
                         param!!.add(Pair(DC.socketCons[it], null))
                     }
-                    PRODUCT_ID_PIR_SENSOR.productKeys.contains(productId) -> {
+                    PRODUCT_ID_PIR_SENSOR.productIds.contains(productId) -> {
                         param!!.add(Pair(DC.pirSensorCons[it], null))
                     }
                     else -> {
@@ -1861,7 +1861,7 @@ object MeshSDK {
                 Pair(DC.lightCons[COLOR_TEMPERATURE], null),
                 Pair(DC.lightCons[SWITCH], null)
         )
-        if (PRODUCT_ID_LIGHT_5.productKeys.contains(productID.toString())) {
+        if (PRODUCT_ID_LIGHT_5.productIds.contains(productID.toString())) {
             params.addAll(
                     listOf(
                             Pair(DC.lightCons[COLOR], null),
@@ -2059,16 +2059,16 @@ object MeshSDK {
         val productId = MxMeshUtil.getProductIdByUUID(map["uuid"] as String).toString();
         var param: List<String?>? = null
         when{
-            PRODUCT_ID_LIGHT_2.productKeys.contains(productId)
-                    || PRODUCT_ID_LIGHT_5.productKeys.contains(productId) -> {
+            PRODUCT_ID_LIGHT_2.productIds.contains(productId)
+                    || PRODUCT_ID_LIGHT_5.productIds.contains(productId) -> {
                 param = listOf(SWITCH)
             }
-            PRODUCT_ID_SOCKKET_SINGLE.productKeys.contains(productId)
-                    || PRODUCT_ID_SOCKKET_DOBULE.productKeys.contains(productId)
-                    || PRODUCT_ID_SOCKKET_TRIPLE.productKeys.contains(productId) -> {
+            PRODUCT_ID_SOCKKET_SINGLE.productIds.contains(productId)
+                    || PRODUCT_ID_SOCKKET_DOBULE.productIds.contains(productId)
+                    || PRODUCT_ID_SOCKKET_TRIPLE.productIds.contains(productId) -> {
                 param = listOf(SWITCH)
             }
-            PRODUCT_ID_PIR_SENSOR.productKeys.contains(productId) -> {
+            PRODUCT_ID_PIR_SENSOR.productIds.contains(productId) -> {
                 param = listOf(REMAINING_ELECTRICITY)
             }
         }

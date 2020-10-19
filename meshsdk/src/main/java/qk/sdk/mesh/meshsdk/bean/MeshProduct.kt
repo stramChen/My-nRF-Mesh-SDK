@@ -8,4 +8,4 @@ package qk.sdk.mesh.meshsdk.bean
 
 data class MeshProduct(
     var productType:Any,
-    var productKeys:ArrayList<String>)
+    var productIds:ArrayList<String>)
