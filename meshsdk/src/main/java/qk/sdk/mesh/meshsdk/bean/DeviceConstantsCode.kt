@@ -91,7 +91,7 @@ val PRODUCT_ID_SOCKKET_TRIPLE = MeshProduct(10008, arrayListOf("4139203"))
 
 //Pir传感器
 @JvmField
-val PRODUCT_ID_PIR_SENSOR = MeshProduct(10016, arrayListOf("3987829"))
+val PRODUCT_ID_PIR_SENSOR = MeshProduct(10016, arrayListOf("3987829","5504974"))
 
 //var PRODUCT_TYPE_PIR_SENSOR = arrayListOf<String>("3987829")
 
