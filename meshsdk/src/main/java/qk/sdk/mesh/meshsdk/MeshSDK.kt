@@ -1365,14 +1365,16 @@ object MeshSDK {
         var status: Int =
                 MeshHelper.MeshProxyService.mMeshProxyService?.mHeartBeatMap?.get(uuid.toUpperCase())
                         ?: 0
-        var heartCheckTime: Long =
-                MeshHelper.MeshProxyService.mMeshProxyService?.mHartBeanStatusMarkTime ?: 0
-        //当设备状态是11或者01,或者10且未超过心态时间的时候，考虑它是在线状态
-        if (status and 1 == 1
-                || status == 1
-                || (status == 2 && System.currentTimeMillis() - heartCheckTime <
-                        BaseMeshService.HEART_BEAT_CHECK_PERIOD * 1000)
-        ) return true;
+//        var heartCheckTime: Long =
+//                MeshHelper.MeshProxyService.mMeshProxyService?.mHartBeanStatusMarkTime ?: 0
+        //当设备状态是11或者01,或者10且未超过心跳间隔的时候，考虑它是在线状态
+//        if (status and 1 == 1
+//                || status == 1
+//                || (status == 2 && System.currentTimeMillis() - heartCheckTime <
+//                        BaseMeshService.HEART_BEAT_CHECK_PERIOD * 1000) )
+        if(status != 0){
+            return true;
+        }
         return false;
     }
 
