@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Handler
 import android.os.Looper
+import android.text.TextUtils
 import android.util.Log
 import androidx.lifecycle.Observer
 import com.google.gson.Gson
@@ -995,22 +996,28 @@ object MeshSDK {
     }
 
     fun resetNode(uuid: String) {
+
+        if(TextUtils.isEmpty(uuid)) return
+
         MeshHelper.getProvisionNode()?.forEach { node ->
             if (node.uuid == uuid) {
                 MeshHelper.setSelectedMeshNode(node)
+                //如果删除的设备是Gatt直连的设备，那么要去重连设备
                 if (getGattDirectConnectNode()?.uuid == node.uuid) {
                     deleyDisconnectDevice()
                 }
+
+                if(null != MeshHelper.getSelectedMeshNode()?.unicastAddress){
+                    val configNodeReset = ConfigNodeReset()
+                    MeshHelper.sendMessage(
+                            "",
+                            MeshHelper.getSelectedMeshNode()!!.unicastAddress,
+                            configNodeReset, null
+                    )
+                }
+                return@forEach
             }
         }
-
-        val configNodeReset = ConfigNodeReset()
-        MeshHelper.sendMessage(
-                "",
-                MeshHelper.getSelectedMeshNode()?.unicastAddress ?: 0,
-                configNodeReset, null
-        )
-
     }
 
     var isReconnect: AtomicBoolean = AtomicBoolean(false)
