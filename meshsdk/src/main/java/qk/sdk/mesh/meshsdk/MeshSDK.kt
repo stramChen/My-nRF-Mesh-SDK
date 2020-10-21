@@ -1015,7 +1015,7 @@ object MeshSDK {
                             configNodeReset, null
                     )
                 }
-                return@forEach
+                return
             }
         }
     }
