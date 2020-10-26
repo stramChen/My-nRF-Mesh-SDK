@@ -1039,9 +1039,11 @@ object MeshSDK {
                     return
                 }
 
+                var provisionMeshNodes = MeshHelper.getProvisionNodeWithSpecificNetworkKey(
+                        MeshHelper.getCurrentNetworkKeyStr()!!)
                 //如果有节点才去连接gatt
-                if (null == MeshHelper.getProvisionNode()
-                        || MeshHelper.getProvisionNode()!!.size <= 0) {
+                if (null == provisionMeshNodes
+                        || provisionMeshNodes.size <= 0) {
                     Log.d(TAG, "===>-发现没有节点,连接结束")
                     return
                 }
