@@ -396,6 +396,7 @@ open class BaseMeshService : LifecycleService() {
                                 val unicast =
                                         network.nextAvailableUnicastAddress(elementCount, provisioner)
                                 network.assignUnicastAddress(unicast)
+                                Log.d(TAG,"===>-mesh-准备给设备分配的地址是:"+unicast)
                                 var node = mNrfMeshManager?.unprovisionedMeshNode?.value
                                 if (node != null && node.provisioningCapabilities.availableOOBTypes.size == 1 && node.provisioningCapabilities.availableOOBTypes[0] == AuthenticationOOBMethods.NO_OOB_AUTHENTICATION) {
                                     node.nodeName =

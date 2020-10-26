@@ -141,6 +141,21 @@ object MeshHelper {
         return MeshProxyService.mMeshProxyService?.mNrfMeshManager?.nodes?.value
     }
 
+    // 根据指令的networkKey去获取下面的设备
+    fun getProvisionNodeWithSpecificNetworkKey(networkKey: String): ArrayList<ProvisionedMeshNode>? {
+        var allProvisionedMeshNodes = MeshProxyService.mMeshProxyService?.mNrfMeshManager?.nodes?.value
+        var subProvisionedMeshNodes = ArrayList<ProvisionedMeshNode>()
+        if (allProvisionedMeshNodes != null) {
+            for (meshNode in allProvisionedMeshNodes){
+                var nodeAppKey = MeshSDK.getAllNetworkKey()[meshNode.addedNetKeys[0].index]
+                if(nodeAppKey.equals(networkKey)){
+                    subProvisionedMeshNodes.add(meshNode)
+                }
+            }
+        }
+        return subProvisionedMeshNodes
+    }
+
     // 移除已经配置的 mesh 网络节点
     fun deleteProvisionNode(node: ProvisionedMeshNode?, callback: ProvisionCallback? = null) {
         rx.Observable.create<String> {

@@ -161,7 +161,7 @@ constructor(context: Context) : LoggableBleManager<BleMeshManagerCallbacks>(cont
 
         override fun onDeviceDisconnected() {
             //We reset the MTU to 23 upon disconnection
-            Log.d(TAG, "===>-mesh- 设备断开连接了")
+            Log.d(TAG, "===>-mesh-蓝牙层-设备断开连接了")
             overrideMtu(MTU_SIZE_DEFAULT)
             isDeviceReady = false
             isProvisioningComplete = false

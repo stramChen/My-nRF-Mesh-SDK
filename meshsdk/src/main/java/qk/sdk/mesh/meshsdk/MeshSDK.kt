@@ -588,9 +588,9 @@ object MeshSDK {
         isConnecting.set(false)
         isSubscribeDeviceStatusSuccessfully = false
         MeshHelper.MeshProxyService.mMeshProxyService?.mConnectCallback = null
+        Utils.printLog(TAG, "===>-mesh- 准备断开蓝牙连接")
         MeshHelper.disConnect()
         clearAllCallbacks()
-        Utils.printLog(TAG, "===>-mesh- 断开蓝牙连接")
     }
 
     /**
