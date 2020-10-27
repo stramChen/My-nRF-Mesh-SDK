@@ -182,7 +182,8 @@ object MeshSDK {
             MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager
                     ?.connectionState?.observe(MeshHelper.MeshProxyService.mMeshProxyService!!, object : Observer<CallbackMsg> {
                         override fun onChanged(msg: CallbackMsg?) {
-                            if (ConnectState.DISCONNECTED.code == msg?.code) {
+                            if (ConnectState.DISCONNECTED.code == msg?.code
+                                    || ConnectState.CONNECT_BLE_RESOURCE_FAILED.code == msg?.code) {
                                 Log.d(TAG, "===>-mesh-已经断开连接回调,现在要真的去配网了")
                                 MeshHelper.MeshProxyService.mMeshProxyService?.mNrfMeshManager
                                         ?.connectionState?.removeObserver(this)
@@ -1039,8 +1040,10 @@ object MeshSDK {
                     return
                 }
 
+                var currentNetworkKey = MeshHelper.getCurrentNetworkKeyStr();
+                Log.d(TAG,"当前的networkKey是:"+currentNetworkKey)
                 var provisionMeshNodes = MeshHelper.getProvisionNodeWithSpecificNetworkKey(
-                        MeshHelper.getCurrentNetworkKeyStr()!!)
+                        currentNetworkKey!!)
                 //如果有节点才去连接gatt
                 if (null == provisionMeshNodes
                         || provisionMeshNodes.size <= 0) {
@@ -1207,7 +1210,7 @@ object MeshSDK {
             }
 
             override fun onNetworkExportFailed(error: String?) {
-
+                Log.d(TAG,"===>-mesh-mesh network导出失败，原因:"+error)
             }
 
             override fun onNetworkExported(json: String) {
