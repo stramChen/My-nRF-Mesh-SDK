@@ -551,6 +551,7 @@ class NrfMeshManager(
         mSetupProvisionedNode = false
         mConnectedProxyAddress.postValue(null)
         mBleStatusCallback?.onDeviceDisconnected(device)
+        clearGatt()
     }
 
     override fun onLinkLossOccurred(device: BluetoothDevice) {
