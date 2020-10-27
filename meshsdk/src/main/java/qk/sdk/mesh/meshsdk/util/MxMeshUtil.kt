@@ -1,5 +1,6 @@
 package qk.sdk.mesh.meshsdk.util
 
+import android.text.TextUtils
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -36,6 +37,7 @@ object MxMeshUtil {
      */
     @JvmStatic
     fun getMacAddressIdByUUID(uuid: String): String {
+        if(TextUtils.isEmpty(uuid)) return ""
         var uuidHex = uuid.replace("-", "")
         var uuidHexBytes = ByteUtil.hexStringToBytes(uuidHex)
         var macAddressByte = ByteArray(6)

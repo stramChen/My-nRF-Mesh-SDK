@@ -259,8 +259,9 @@ open class BaseMeshService : LifecycleService() {
 
                                     }
                                     Log.d(
-                                            TAG, "===>-mesh- heart beat检查结果==uuid:${uuid}" +
-                                            "==result:${mHeartBeatMap[uuid]}"
+                                            TAG, "===>-mesh- heart beat检查结果==uuid:${uuid}"
+                                                +"===mac:${MxMeshUtil.getMacAddressIdByUUID(uuid?:"")}"
+                                                + "==result:${mHeartBeatMap[uuid]}"
                                     )
                                 }
                             }

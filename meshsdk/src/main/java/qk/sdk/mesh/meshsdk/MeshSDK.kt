@@ -235,7 +235,7 @@ object MeshSDK {
                                                         ConnectState.COMMON_SUCCESS.msg
                                                 )
                                         )
-                                        isReconnect.set(false)
+//                                        isReconnect.set(false)
                                         isConnecting.set(false)
                                         //开始启动配置邀请
                                         MeshHelper.startProvision(mExtendedBluetoothDeviceMap[uuidUpcase]!!,
@@ -273,34 +273,32 @@ object MeshSDK {
                                             }
                                             ConnectState.DISCONNECTED.code -> {
                                                 //连接断开，自动寻找代理节点重连
-                                                if (MeshSDK.needReconnect && !isReconnect.get()) {
+                                                if (MeshSDK.needReconnect
+//                                                        && !isReconnect.get()
+                                                ) {
                                                     tryReconnect(networkKey)
                                                 }
                                             }
                                             ConnectState.CONNECT_BLE_RESOURCE_FAILED.code -> {
                                                 isConnecting.set(false)
-                                                if (ConnectState.CONNECT_BLE_RESOURCE_FAILED.code == msg.code) {
-                                                    disConnect()
-                                                    MeshHelper.clearGatt()
-                                                }
-                                                //如果已经配网成功之后，突然断连接，则可能是网关配网成功后的
-                                                //蓝牙重启操作，因此需要进行重连尝试
-//                                                if (hasProvisioned && needReconnect) {
-//                                                    MeshHelper.unRegisterConnectListener()
-//                                                    tryReconnectAfterProvison(networkKey, map, callback)
-//                                                } else
-                                                if (ConnectState.DISCONNECTED.code == msg.code && !hasProvisionStart) {
-                                                    doMapCallback(map, callback, msg)
+                                                //出现了133错误,如果还没配网完成,那么去重新连接配网
+                                                Log.d(TAG, "===>-mesh-出现133错误,连接异常断开，现在尝试重新配网")
+                                                if (!hasProvisioned) {
+                                                    realStartProvision(uuid, callback, networkKey)
                                                 } else {
-                                                    MeshHelper.unRegisterConnectListener()
-                                                    doMapCallback(
-                                                            map,
-                                                            callback,
-                                                            CallbackMsg(
-                                                                    ConnectState.PROVISION_FAILED.code,
-                                                                    ConnectState.PROVISION_FAILED.msg
-                                                            )
-                                                    )
+                                                    if (ConnectState.DISCONNECTED.code == msg.code && !hasProvisionStart) {
+                                                        doMapCallback(map, callback, msg)
+                                                    } else {
+                                                        MeshHelper.unRegisterConnectListener()
+                                                        doMapCallback(
+                                                                map,
+                                                                callback,
+                                                                CallbackMsg(
+                                                                        ConnectState.PROVISION_FAILED.code,
+                                                                        ConnectState.PROVISION_FAILED.msg
+                                                                )
+                                                        )
+                                                    }
                                                 }
                                             }
                                             else -> {
@@ -998,7 +996,7 @@ object MeshSDK {
 
     fun resetNode(uuid: String) {
 
-        if(TextUtils.isEmpty(uuid)) return
+        if (TextUtils.isEmpty(uuid)) return
 
         MeshHelper.getProvisionNode()?.forEach { node ->
             if (node.uuid == uuid) {
@@ -1008,7 +1006,7 @@ object MeshSDK {
                     deleyDisconnectDevice()
                 }
 
-                if(null != MeshHelper.getSelectedMeshNode()?.unicastAddress){
+                if (null != MeshHelper.getSelectedMeshNode()?.unicastAddress) {
                     val configNodeReset = ConfigNodeReset()
                     MeshHelper.sendMessage(
                             "",
@@ -1021,7 +1019,7 @@ object MeshSDK {
         }
     }
 
-    var isReconnect: AtomicBoolean = AtomicBoolean(false)
+//    var isReconnect: AtomicBoolean = AtomicBoolean(false)
 
     //判断是否正在连接,为了避免多个连接请求调用的时候出现连接的问题，当有多个连接同时请求的时候
     //mGattConnectCallbacks会将请求缓存起来，当连接成功的时候，一并返回
@@ -1041,7 +1039,7 @@ object MeshSDK {
                 }
 
                 var currentNetworkKey = MeshHelper.getCurrentNetworkKeyStr();
-                Log.d(TAG,"当前的networkKey是:"+currentNetworkKey)
+                Log.d(TAG, "当前的networkKey是:" + currentNetworkKey)
                 var provisionMeshNodes = MeshHelper.getProvisionNodeWithSpecificNetworkKey(
                         currentNetworkKey!!)
                 //如果有节点才去连接gatt
@@ -1101,7 +1099,7 @@ object MeshSDK {
                                             ConnectCallback {
                                         override fun onConnect() {
                                             stopScan()
-                                            isReconnect.set(false)
+//                                            isReconnect.set(false)
                                             isConnecting.set(false)
                                             notifyAllGattConnectCallback(
                                                     CallbackMsg(
@@ -1115,12 +1113,23 @@ object MeshSDK {
                                             Utils.printLog(
                                                     TAG,
                                                     "===>-mesh-connect onConnectStateChange:${msg.msg}" +
-                                                            ",needReconnect:$needReconnect" +
-                                                            ",isReconnect:$isReconnect"
+                                                            ",needReconnect:$needReconnect"
+//                                                            + ",isReconnect:$isReconnect"
                                             )
-                                            if (msg.code == ConnectState.DISCONNECTED.code && needReconnect && !isReconnect.get()) {//连接断开，自动寻找代理节点重连
+                                            if ((msg.code == ConnectState.DISCONNECTED.code
+                                                            || msg.code == ConnectState.CONNECT_BLE_RESOURCE_FAILED.code)
+                                                    && needReconnect
+//                                                    && !isReconnect.get()
+                                            ) {//连接断开，自动寻找代理节点重连
+                                                if(msg.code == ConnectState.DISCONNECTED.code){
+                                                    Log.d(TAG, "===>-mesh-连连断开了")
+                                                }
+                                                if(msg.code == ConnectState.CONNECT_BLE_RESOURCE_FAILED.code){
+                                                    Log.d(TAG, "===>-mesh-出现133错误,连接异常断开")
+                                                }
                                                 tryReconnect(networkKey)
                                             }
+
                                         }
 
                                         override fun onError(msg: CallbackMsg) {
@@ -1168,10 +1177,10 @@ object MeshSDK {
             )
             return
         }
-        if (!isReconnect.get()) {
-            isReconnect.set(true)
+//        if (!isReconnect.get()) {
+//            isReconnect.set(true)
             reconnectAndSubscribeDeviceStatus(networkKey)
-        }
+//        }
     }
 
     /**
@@ -1210,7 +1219,7 @@ object MeshSDK {
             }
 
             override fun onNetworkExportFailed(error: String?) {
-                Log.d(TAG,"===>-mesh-mesh network导出失败，原因:"+error)
+                Log.d(TAG, "===>-mesh-mesh network导出失败，原因:" + error)
             }
 
             override fun onNetworkExported(json: String) {
@@ -1384,7 +1393,7 @@ object MeshSDK {
 //                || status == 1
 //                || (status == 2 && System.currentTimeMillis() - heartCheckTime <
 //                        BaseMeshService.HEART_BEAT_CHECK_PERIOD * 1000) )
-        if(status != 0){
+        if (status != 0) {
             return true;
         }
         return false;
@@ -1414,7 +1423,8 @@ object MeshSDK {
                     var param = msg.parameter
                     if (param.size == 1) {
                         var eleIndex =
-                                node?.elements?.values?.indexOf(node?.elements?.get(msg.src)) ?: 0
+                                node?.elements?.values?.indexOf(node?.elements?.get(msg.src))
+                                        ?: 0
                         switchMap["$eleIndex"] = param[0].toInt()
                         map["OnOffSwitch"] = switchMap
                         Utils.printLog(
@@ -1615,7 +1625,8 @@ object MeshSDK {
             var index = 0
             Thread(Runnable {
                 node.elements.values.forEach { eleValue ->
-                    modelTotalSize = modelTotalSize.plus(eleValue.meshModels?.values?.size ?: 0)
+                    modelTotalSize = modelTotalSize.plus(eleValue.meshModels?.values?.size
+                            ?: 0)
                     eleValue.meshModels?.values?.forEach { meshModel ->
                         if (meshModel.boundAppKeyIndexes?.size ?: 0 > 0 && (meshModel is GenericOnOffServerModel || meshModel is VendorModel)) {
                             sleep(500)
@@ -2072,7 +2083,7 @@ object MeshSDK {
     fun fetchDeviceOnlineStatus(map: HashMap<String, Any>, callback: StringCallback) {
         val productId = MxMeshUtil.getProductIdByUUID(map["uuid"] as String).toString();
         var param: List<String?>? = null
-        when{
+        when {
             PRODUCT_ID_LIGHT_2.productIds.contains(productId)
                     || PRODUCT_ID_LIGHT_5.productIds.contains(productId) -> {
                 param = listOf(SWITCH)

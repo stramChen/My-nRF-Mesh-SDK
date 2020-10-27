@@ -526,6 +526,7 @@ class NrfMeshManager(
 
     override fun onDeviceDisconnected(device: BluetoothDevice) {
         Utils.printLog(TAG, "===>-mesh-蓝牙层-设备已断开连接 Disconnected")
+        clearGatt()
         mConnectionState.postValue(
                 CallbackMsg(
                         DISCONNECTED.code,
@@ -551,7 +552,6 @@ class NrfMeshManager(
         mSetupProvisionedNode = false
         mConnectedProxyAddress.postValue(null)
         mBleStatusCallback?.onDeviceDisconnected(device)
-        clearGatt()
     }
 
     override fun onLinkLossOccurred(device: BluetoothDevice) {
