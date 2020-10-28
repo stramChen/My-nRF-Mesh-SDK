@@ -285,10 +285,11 @@ object MeshSDK {
                                             ConnectState.CONNECT_BLE_RESOURCE_FAILED.code -> {
                                                 isConnecting.set(false)
                                                 //出现了133错误,如果还没配网完成,那么去重新连接配网
-                                                if (!hasProvisioned && retryTimes<1) {
+                                                if (!hasProvisioned && retryTimes<10) {
                                                     Log.d(TAG, "===>-mesh-出现133错误,连接异常断开，现在尝试重新配网")
                                                     ++retryTimes
                                                     innerDisConnect()
+                                                    MeshHelper.clearGatt()
                                                     realStartProvision(uuid, callback, networkKey)
                                                 } else {
                                                     retryTimes = 0
