@@ -285,7 +285,7 @@ object MeshSDK {
                                             ConnectState.CONNECT_BLE_RESOURCE_FAILED.code -> {
                                                 isConnecting.set(false)
                                                 //出现了133错误,如果还没配网完成,那么去重新连接配网
-                                                if (!hasProvisioned && retryTimes<2) {
+                                                if (!hasProvisioned && retryTimes<1) {
                                                     Log.d(TAG, "===>-mesh-出现133错误,连接异常断开，现在尝试重新配网")
                                                     ++retryTimes
                                                     innerDisConnect()
@@ -1218,20 +1218,27 @@ object MeshSDK {
         })
     }
 
-    fun exportMeshNetwork(callback: StringCallback) {
-        MeshHelper.exportMeshNetwork(object : NetworkExportUtils.NetworkExportCallbacks {
-            override fun onNetworkExported() {
+    fun exportMeshNetwork(context: Context,callback: StringCallback) {
+        init(context, object : BooleanCallback() {
+            override fun onResult(init: Boolean) {
+                if (init){
+                    MeshHelper.exportMeshNetwork(object : NetworkExportUtils.NetworkExportCallbacks {
+                        override fun onNetworkExported() {
 //                callback.onResultMsg(NrfMeshManager.EXPORT_PATH + "meshJson.json")
-            }
+                        }
 
-            override fun onNetworkExportFailed(error: String?) {
-                Log.d(TAG, "===>-mesh-mesh network导出失败，原因:" + error)
-            }
+                        override fun onNetworkExportFailed(error: String?) {
+                            Log.d(TAG, "===>-mesh-mesh network导出失败，原因:" + error)
+                        }
 
-            override fun onNetworkExported(json: String) {
-                callback.onResultMsg(json)
+                        override fun onNetworkExported(json: String) {
+                            callback.onResultMsg(json)
+                        }
+                    })
+                }
             }
         })
+
     }
 
     fun importMeshNetwork(json: String, callback: StringCallback) {
