@@ -2,6 +2,7 @@ package qk.sdk.mesh.meshsdk
 
 import android.content.Context
 import android.content.Intent
+import android.text.TextUtils
 import android.util.Log
 import no.nordicsemi.android.meshprovisioner.*
 import no.nordicsemi.android.meshprovisioner.transport.*
@@ -142,19 +143,25 @@ object MeshHelper {
     }
 
     // 根据指令的networkKey去获取下面的设备
-    fun getProvisionNodeWithSpecificNetworkKey(networkKey: String): ArrayList<ProvisionedMeshNode>? {
-        var allProvisionedMeshNodes = MeshProxyService.mMeshProxyService?.mNrfMeshManager?.nodes?.value
+    fun getProvisionNodeWithSpecificNetworkKey(specificNetworkKey: String): ArrayList<ProvisionedMeshNode>? {
+        val allProvisionedMeshNodes = MeshProxyService.mMeshProxyService?.mNrfMeshManager?.nodes?.value
         var subProvisionedMeshNodes = ArrayList<ProvisionedMeshNode>()
         if (allProvisionedMeshNodes != null) {
             for (meshNode in allProvisionedMeshNodes){
-                var nodeAppKey = MeshSDK.getAllNetworkKey()[meshNode.addedNetKeys[0].index]
-                if(nodeAppKey.equals(networkKey)){
+                val nodeNetKeyIndex = meshNode.addedNetKeys[0].index;
+                val nodeNetKeyStr = getNetworkKeyStr(nodeNetKeyIndex)
+
+                if(TextUtils.isEmpty(nodeNetKeyStr)) continue
+
+                if(nodeNetKeyStr.equals(specificNetworkKey)){
                     subProvisionedMeshNodes.add(meshNode)
                 }
             }
         }
         return subProvisionedMeshNodes
     }
+
+
 
     // 移除已经配置的 mesh 网络节点
     fun deleteProvisionNode(node: ProvisionedMeshNode?, callback: ProvisionCallback? = null) {
@@ -496,6 +503,16 @@ object MeshHelper {
         MeshProxyService.mMeshProxyService?.getMeshNetwork()?.netKeys?.forEach {
             if (it.keyIndex == index) {
                 return it
+            }
+        }
+        return null
+    }
+
+    // 获取当前 mesh 网络的 network key
+    fun getNetworkKeyStr(index: Int): String? {
+        MeshProxyService.mMeshProxyService?.getMeshNetwork()?.netKeys?.forEach {
+            if (it.keyIndex == index) {
+                return ByteUtil.bytesToHexString(it.key)
             }
         }
         return null

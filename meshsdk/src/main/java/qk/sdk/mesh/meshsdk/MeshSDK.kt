@@ -43,6 +43,8 @@ object MeshSDK {
     private const val PUBLISH_INTERVAL = 88 //25秒
     private const val PUBLISH_TTL = 5
 
+    private var retryTimes = 0;
+
     private var isSubscribeDeviceStatusSuccessfully = false;
 
     //这里记录一下全局的手动点击的时间戳，外层的key是uuid，内层的key是属性名,value是时间戳
@@ -258,6 +260,7 @@ object MeshSDK {
 
                                         when (msg.code) {
                                             ConnectState.PROVISION_SUCCESS.code -> {
+                                                retryTimes = 0
                                                 hasProvisioned = true
                                                 map.clear()
                                                 doMapCallback(
@@ -282,10 +285,13 @@ object MeshSDK {
                                             ConnectState.CONNECT_BLE_RESOURCE_FAILED.code -> {
                                                 isConnecting.set(false)
                                                 //出现了133错误,如果还没配网完成,那么去重新连接配网
-                                                Log.d(TAG, "===>-mesh-出现133错误,连接异常断开，现在尝试重新配网")
-                                                if (!hasProvisioned) {
+                                                if (!hasProvisioned && retryTimes<2) {
+                                                    Log.d(TAG, "===>-mesh-出现133错误,连接异常断开，现在尝试重新配网")
+                                                    ++retryTimes
+                                                    innerDisConnect()
                                                     realStartProvision(uuid, callback, networkKey)
                                                 } else {
+                                                    retryTimes = 0
                                                     if (ConnectState.DISCONNECTED.code == msg.code && !hasProvisionStart) {
                                                         doMapCallback(map, callback, msg)
                                                     } else {
