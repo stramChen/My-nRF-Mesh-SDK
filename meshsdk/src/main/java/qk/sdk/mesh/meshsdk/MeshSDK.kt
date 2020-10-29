@@ -198,6 +198,10 @@ object MeshSDK {
         }
     }
 
+    public fun stopProvision(){
+        disConnect()
+    }
+
 
     /**
      * 真的要开始配网了
@@ -276,7 +280,13 @@ object MeshSDK {
                                             }
                                             ConnectState.DISCONNECTED.code -> {
                                                 //连接断开，自动寻找代理节点重连
-                                                if (MeshSDK.needReconnect
+                                                if(!hasProvisioned){
+                                                    Log.d(TAG, "===>-mesh-发现配网过程中连接断开了，现在尝试去重连")
+                                                    ++retryTimes
+                                                    innerDisConnect()
+                                                    realStartProvision(uuid, callback, networkKey)
+                                                }
+                                                else if (MeshSDK.needReconnect
 //                                                        && !isReconnect.get()
                                                 ) {
                                                     tryReconnect(networkKey)
