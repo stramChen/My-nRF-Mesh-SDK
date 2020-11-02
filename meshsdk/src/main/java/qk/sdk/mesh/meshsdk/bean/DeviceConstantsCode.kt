@@ -35,6 +35,7 @@ const val SUBSCRIBE_ALL_DEVICE_ADDR: Int = 0xD000;
 //设备同步组播地址
 const val ALL_DEVICE_SYNC: String = "D002";
 const val ALL_DEVICE_SYNC_ADDR: Int = 0xD002;
+
 //本地联动组播地址
 const val LOCAL_LINKAGE: String = "D003";
 const val LOCAL_LINKAGE_ADDR: Int = 0xD003;
@@ -61,70 +62,7 @@ const val ATTR_TYPE_GET_VERSION = "0500" // 获取设备固件版本号
 const val ATTR_TYPE_REBOOT_GATEWAY = "0600" // 重启设备
 const val ATTR_TYPE_VIRTUAL_BUTTON = "0700" // 虚拟按钮
 
-//佛照产品
-//产品PID
-//五路灯
-@JvmField
-val PRODUCT_ID_LIGHT_5 = MeshProduct(10004, arrayListOf("4752526"))
-
-//var PRODUCT_TYPE_LIGHT_2 = arrayListOf<String>("4752526")
-//var PRODUCT_TYPE_LIGHT_5 = arrayListOf<String>("3808464")
-
-//二路灯
-@JvmField
-val PRODUCT_ID_LIGHT_2 = MeshProduct(10003, arrayListOf("3808464","5494080"))
-
-//单火开关
-@JvmField
-val PRODUCT_ID_SOCKKET_SINGLE = MeshProduct(10006, arrayListOf("4284236","5504728"))
-
-//var PRODUCT_TYPE_SOCKET = arrayListOf<String>("4284236","4791464","4139203")
-//var PRODUCT_TYPE_SOCKET_DOBULE = arrayListOf<String>("4284236","4791464","4139203")
-//var PRODUCT_TYPE_SOCKET_TRIPLE = arrayListOf<String>("4284236","4791464","4139203")
-
-//双键单火开关
-@JvmField
-val PRODUCT_ID_SOCKKET_DOBULE = MeshProduct(10007, arrayListOf("4791464"))
-//三键单火开关
-@JvmField
-val PRODUCT_ID_SOCKKET_TRIPLE = MeshProduct(10008, arrayListOf("4139203"))
-
-//Pir传感器
-@JvmField
-val PRODUCT_ID_PIR_SENSOR = MeshProduct(10016, arrayListOf("3987829","5504974"))
-
-//var PRODUCT_TYPE_PIR_SENSOR = arrayListOf<String>("3987829")
-
-//网关
-@JvmField
-val PRODUCT_ID_GATEWAY = MeshProduct(10060, arrayListOf("3808465"))
-
-//var PRODUCT_TYPE_GATEWAY = arrayListOf<String>("3808465")
-
-//智家精灵产品
-////五路灯
-//const val PRODUCT_ID_LIGHT_5 = "5049550"
-//
-////二路灯
-//const val PRODUCT_ID_LIGHT_2 = "5005926"
-////单火开关
-//const val PRODUCT_ID_SOCKKET_SINGLE = "5005932"
-//
-////双键单火开关
-//const val PRODUCT_ID_SOCKKET_DOBULE = "5005934"
-//
-////三键单火开关
-//const val PRODUCT_ID_SOCKKET_TRIPLE = "5005929"
-//
-////Pir传感器
-//const val PRODUCT_ID_PIR_SENSOR = "5005928"
-//
-////网关
-//const val PRODUCT_ID_GATEWAY = "5005925"
-
-
 object DeviceConstantsCode {
-
 
     /*************************************灯****************************************/
 
@@ -137,12 +75,12 @@ object DeviceConstantsCode {
     const val CODE_SWITCH_OFF = "00";
 
     val lightCons: HashMap<String, String> = hashMapOf(
-        SWITCH to "0001",//开关
-        COLOR to "2301",//颜色hsv
-        LIGHTNESS_LEVEL to "2101",//亮度
-        COLOR_TEMPERATURE to "2201",//色温
-        MODE_NUMBER to "04F0",
-        EVENT to "09F0"
+            SWITCH to "0001",//开关
+            COLOR to "2301",//颜色hsv
+            LIGHTNESS_LEVEL to "2101",//亮度
+            COLOR_TEMPERATURE to "2201",//色温
+            MODE_NUMBER to "04F0",
+            EVENT to "09F0"
     )
 
     /*************************************灯***************************************/
@@ -151,10 +89,10 @@ object DeviceConstantsCode {
 
     //内部封装相关操作码
     val socketCons: HashMap<String, String> = hashMapOf(
-        SWITCH to "0001",
-        SWITCH_SECOND to "2401",
-        SWITCH_THIRD to "2501",
-        EVENT to "09F0"
+            SWITCH to "0001",
+            SWITCH_SECOND to "2401",
+            SWITCH_THIRD to "2501",
+            EVENT to "09F0"
     )
 
     /*************************************插座/单火开关***************************************/
@@ -164,19 +102,55 @@ object DeviceConstantsCode {
 
     //内部封装相关操作码
     val pirSensorCons: HashMap<String, String> = hashMapOf(
-        BIO_SENSER to "0104",
-        REMAINING_ELECTRICITY to "0401",
-        EVENT to "09F0"
+            BIO_SENSER to "0104",
+            REMAINING_ELECTRICITY to "0401",
+            EVENT to "09F0"
     )
 
     /*************************************PIR传感器***************************************/
 
-    /*************************************Mesh 网关****************************************/
+//    /*************************************Mesh 网关****************************************/
+//
+//    //内部封装相关操作码
+//    val MeshGateWayCons: HashMap<String, String> = hashMapOf(
+//    )
 
-    //内部封装相关操作码
-    val MeshGateWayCons: HashMap<String, String> = hashMapOf(
-    )
-    /*************************************PIR传感器***************************************/
 
+    //2路灯
+    @JvmField
+    var PRODUCT_ID_LIGHT_2 = MeshProduct(0, arrayListOf())
+    private const val CID_LIGHT_2 = 100103
 
+    //五路灯
+    @JvmField
+    var PRODUCT_ID_LIGHT_5 = MeshProduct(0, arrayListOf())
+    private const val CID_LIGHT_5 = 100104
+
+    //单火开关
+    @JvmField
+    var PRODUCT_ID_SOCKKET_SINGLE = MeshProduct(0, arrayListOf())
+    private const val CID_SOCKET_1 = 100303
+
+    //双键单火开关
+    @JvmField
+    var PRODUCT_ID_SOCKKET_DOBULE = MeshProduct(0, arrayListOf())
+    private const val CID_SOCKET_2 = 100304
+
+    //三键单火开关
+    @JvmField
+    var PRODUCT_ID_SOCKKET_TRIPLE = MeshProduct(0, arrayListOf())
+    private const val CID_SOCKET_3 = 100305
+
+    //Pir传感器
+    var PRODUCT_ID_PIR_SENSOR = MeshProduct(0, arrayListOf())
+    private const val CID_PIR_SENSOR = 130102
+
+    fun initMeshProductConfig(productMap: Map<Int, ArrayList<String>>) {
+        PRODUCT_ID_LIGHT_5 = MeshProduct(CID_LIGHT_5, productMap[CID_LIGHT_5] ?: error(""))
+        PRODUCT_ID_LIGHT_2 = MeshProduct(CID_LIGHT_2, productMap[CID_LIGHT_2] ?: error(""))
+        PRODUCT_ID_SOCKKET_SINGLE = MeshProduct(CID_SOCKET_1, productMap[CID_SOCKET_1] ?: error(""))
+        PRODUCT_ID_SOCKKET_DOBULE = MeshProduct(CID_SOCKET_2, productMap[CID_SOCKET_2] ?: error(""))
+        PRODUCT_ID_SOCKKET_TRIPLE = MeshProduct(CID_SOCKET_3, productMap[CID_SOCKET_3] ?: error(""))
+        PRODUCT_ID_PIR_SENSOR = MeshProduct(CID_PIR_SENSOR, productMap[CID_PIR_SENSOR] ?: error(""))
+    }
 }

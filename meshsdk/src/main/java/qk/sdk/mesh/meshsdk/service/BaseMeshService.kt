@@ -824,16 +824,16 @@ open class BaseMeshService : LifecycleService() {
         //根据产品型号来解码对应的参数，参数以key&value&key&value形式来区分,key占两个字节，value占k个字节
         var res = "";
         when {
-            PRODUCT_ID_LIGHT_2.productIds.contains(pid)
-                    || PRODUCT_ID_LIGHT_5.productIds.contains(pid) -> {
+            DC.PRODUCT_ID_LIGHT_2.productIds.contains(pid)
+                    || DC.PRODUCT_ID_LIGHT_5.productIds.contains(pid) -> {
                 res = decodeLightParam(pid, uuid, parameter)
             }
-            PRODUCT_ID_SOCKKET_SINGLE.productIds.contains(pid)
-                    || PRODUCT_ID_SOCKKET_DOBULE.productIds.contains(pid)
-                    || PRODUCT_ID_SOCKKET_TRIPLE.productIds.contains(pid) -> {
+            DC.PRODUCT_ID_SOCKKET_SINGLE.productIds.contains(pid)
+                    || DC.PRODUCT_ID_SOCKKET_DOBULE.productIds.contains(pid)
+                    || DC.PRODUCT_ID_SOCKKET_TRIPLE.productIds.contains(pid) -> {
                 res = decodeSocketParams(pid, uuid, parameter)
             }
-            PRODUCT_ID_PIR_SENSOR.productIds.contains(pid) -> {
+            DC.PRODUCT_ID_PIR_SENSOR.productIds.contains(pid) -> {
                 res = decodePirSensorParams(pid, uuid, parameter)
             }
         }
